@@ -1,0 +1,320 @@
+{% extends 'base.html' %}
+{% block title %}Dk Dealer - {{base}}{% endblock title %}
+{% block content %} 
+<div class="main">
+    <div class="quickButtons">
+        <div>
+            <span><a href="{% url 'deals_app:base' base 'hot' %}">Hot</a></span>
+        </div>
+        <div>
+            <span><a href="{% url 'deals_app:base' base 'newest' %}">New</a></span>
+        </div>
+        <div>
+            <a href="{% url 'deals_app:addPost' %}">
+                <span>Add post</span>
+                <i class="fas fa-plus-circle"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="content">
+        {% for post in posts %}
+            <div class="post">
+                <div class="postImage">
+                    <a href="{% url 'deals_app:post' post.slug %}">
+                        <img src="{{post.thumbnail.url}}">
+                    </a>
+                </div>
+                <div class="postLeft">
+                    <div class="postTitle"><a href="{% url 'deals_app:post' post.slug %}">{{post.title}}</a></div>
+                    <div class="postSecondaryDetails">
+                        <div class="postAuthor"><a href="{% url 'profile_app:profile' post.user.id %}">{{post.user}}</a></div>
+                        <div class="postTimestamp">{{post.date_created}}</div>
+                    </div>
+                </div>
+                <div class="postRight">
+                    <div class="postPrice">
+                        <div class="newPrice">{{post.new_price}} dkk</div>
+                        <div class="oldPrice">{{post.old_price}} dkk</div>
+                    </div>
+                    <div class="voteComponent" data-id="{{post.id}}" data-votestatus="{{post.voteStatus}}">
+                        <div class="downVote color{{post.voteStatus}}" data-vote=-1>
+                            <i class="fas fa-thumbs-down" data-vote=-1></i>
+                            <div data-vote=-1>dårlig pris</div>
+                        </div>
+                        <i class="fas fa-caret-left" data-vote=1></i>
+                        <div class="postScore">{% if post.vote_score %}{{post.vote_score}} {% else %} 0 {% endif %}</div>
+                        <i class="fas fa-caret-right" data-vote=-1></i>
+                        <div class="upVote color{{post.voteStatus}}" data-vote=1>
+                            <i class="fas fa-gavel" data-vote=1></i>
+                            <div data-vote=1>slår pris</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+        
+    </div>
+        <div class="pageButtonsContainer">
+            <div class="pageButton"><a href="{% url 'deals_app:base' base order '0' %}">0</a></div>
+            <div class="pageButton" >
+                {% if currentPage != 0 %}
+                <div><a href="{% url 'deals_app:base' base order previousPage %}"><i class="fas fa-caret-left"></i></a></div>
+                {% endif %}
+                <div class="currentPage">Page {{currentPage}}</div>
+                <div><a href="{% url 'deals_app:base' base order nextPage %}"><i class="fas fa-caret-right"></i></a></div>
+            </div>
+            <div class="pageButton"><a href="{% url 'deals_app:base' base order '5' %} ">5</a></div>
+        </div>
+</div>
+
+<style>
+
+a {
+  color: inherit;
+  text-decoration: inherit; 
+}
+
+a:hover {
+    text-decoration: underline; 
+
+}
+
+.main .quickButtons {
+    color:#EF7B72;
+    height:4.5em;
+    align-items: center;
+    display: flex;
+    font-weight:500;
+}
+
+.main .quickButtons span, .main .quickButtons i {
+    margin-right:.25em;
+    cursor:pointer;
+}
+
+.main .quickButtons div {
+    margin-right:2em;
+}
+
+.quickButtons a {
+    text-decoration: none;
+}
+
+.content {
+    flex-grow: 1;
+    background:white;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+}
+
+.post {
+    margin:2em;
+    display:flex;
+    align-items:center;
+    cursor:pointer;
+    color:#545454;
+    text-decoration:none;
+}
+
+.postLeft {
+    width:50%;
+    padding:2em;
+}
+
+.postImage img{
+    height:8em;
+    width:auto;
+}
+
+.postTitle {
+    font-size:1.1em;
+    width:100%;
+    margin-bottom:.5em;
+}
+
+.postSecondaryDetails {
+    font-size:.7em;
+    display:flex;
+}
+
+.postTimestamp {
+    margin-left:2em;
+    color:#9D9D9C;
+}
+
+.postAuthor {
+    font-weight:500;
+    color: #EF7B72;
+}
+
+.postRight {
+    display:flex;
+    justify-content:space-around;
+    width:50%;
+}
+
+.postPrice {
+    display:flex;
+    align-items:center;
+}
+
+.oldPrice {
+    color: #9D9D9C;
+    text-decoration:line-through;
+    text-decoration-thickness: 2px;
+}
+
+.newPrice {
+    margin-right:.5em;
+    color:#EF7B72;
+}
+
+.voteComponent {
+    display:flex;
+    align-items:center;
+}
+
+.upVote, .downVote {
+    margin:0 .5em;
+    align-items:center;
+    display:flex;
+    flex-direction:column;
+}
+
+.upVote.color1, .upVote:hover{
+    color:#9DC86C;
+}
+
+.downVote.color-1, .downVote:hover{ 
+    color:#EF7C43;
+}
+
+.upVote div, .downVote div{
+    font-size:.6em;
+    padding:.2em;
+}
+
+.postScore {
+    padding: 0 .25em;
+}
+
+.pageButtonsContainer {
+    display:flex;
+    justify-content:space-between;
+    width:25%;
+    margin:2em auto;
+}
+
+.pageButtonsContainer .pageButton {
+    background:white;
+    display:flex;
+    padding:1em;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    color: #EF7B72;
+}
+
+.pageButtonsContainer .currentPage {
+    color:#545454;
+    padding:0 1em;
+}
+
+.pageButton .fas {
+    color: #545454;
+}
+
+</style>
+
+
+<script>
+
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    var csrftoken = getCookie('csrftoken');
+
+document.addEventListener('DOMContentLoaded', function() {
+
+    let voteContainers = document.querySelectorAll('.voteComponent')
+    Array.from(voteContainers).forEach(voteContainer => {
+
+        voteContainer.addEventListener('click', (e)=>{
+            let pk = voteContainer.dataset.id
+            let voteOption = e.target.dataset.vote
+            console.log(voteOption)
+            console.log(voteContainer.dataset.votestatus)
+            if (Number(voteOption) != Number(voteContainer.dataset.votestatus)) {
+
+                fetch(`/post/${pk}/vote`, {
+                    method: "POST",
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken,
+                    },
+
+                    //make sure to serialize your JSON body
+                    body: JSON.stringify({
+                        "vote": voteOption
+                    })
+                })
+                .then((response) => {                
+                    return response.clone().json()
+                }).then(function(data) {
+                            console.log(data.count)
+                            voteContainer.children[2].innerHTML = data.count
+                        if (voteOption == 1) {
+                            voteContainer.dataset.votestatus = 1
+                            voteContainer.children[0].classList.remove('color-1')
+                            voteContainer.children[4].classList.add('color1')
+                        } else {
+                            voteContainer.dataset.votestatus = -1
+                            voteContainer.children[0].classList.add('color-1')
+                            voteContainer.children[4].classList.remove('color1')
+
+                        }
+                    
+                })
+            }
+
+            else {
+                fetch(`/post/${pk}/vote`, {
+                    method: "DELETE",
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken,
+                    }
+                })
+                .then((response) => {        
+                return response.clone().json()
+
+                }).then(function(data) {
+                    console.log(data)
+                    console.log(data.count)
+
+                    voteContainer.children[2].innerHTML = data.count
+                    
+                    voteContainer.dataset.votestatus = "";
+                    voteContainer.children[0].classList.remove('color-1')
+                    voteContainer.children[4].classList.remove('color1')
+                })
+            }   
+        })
+    });
+
+})
+</script>
+{% endblock content %}

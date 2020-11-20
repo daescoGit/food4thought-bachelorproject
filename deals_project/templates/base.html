@@ -1,0 +1,321 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}DkDeals{% endblock %}</title>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300;0,400;0,500;0,600;0,700;1,500&display=swap" rel="stylesheet"> 
+    <link href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css" rel="stylesheet">
+    <link href="{% static 'filepond.css' %}" rel="stylesheet">
+</head>
+<body style="visibility: hidden;">
+    <nav class="navContainer">
+        <div class="leftNav">
+            <a href="" class="logo"><img src="{% static 'dk logo.svg' %}" /></a>
+            <a href="{% url 'deals_app:base' 'all' %}">All</a>
+            <a href="{% url 'deals_app:base' 'our-picks' %}">Our Picks</a>
+            <div class="categoryDropdown">
+                <a class="categoryBtn" href="">
+                    <span>Categories</span>
+                    <i class="fa fa-angle-down" aria-hidden="true"></i>
+                </a>
+                <div class="categoryDropdownContent">
+                    {% for category in categories %}
+                        <a class="categoryDropdownItem" href="{% url 'deals_app:base' category.slug %}">{{category}}</a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="rightNav">
+            <div class="searchContainer">
+                <i class="fas fa-search"></i>
+                <input placeholder="Search">
+            </div>
+        {% if user.is_authenticated %}
+            <div class="userDropdown">
+                <a class="dropbtn" href="">
+                    <div class="profileImage">
+                        <img src="{{loggedProfileImage.url}}">
+                    </div>
+                    <span>{{user}}</span>
+                    <i class="fa fa-angle-down" aria-hidden="true"></i>
+                </a>
+                <div class="userDropdownContent">
+                    <a class="userDropdownItem" href="{% url 'profile_app:profile' user.id %}">Profile</a>
+                    <!-- <a class="userDropdownItem" href="">Chats</a> -->
+		    <a class="userDropdownItem" href="{% url 'login_app:edit_account' %}">Account settings</a>
+                    <a class="userDropdownItem" href="{% url 'login_app:logout' %}">Logout</a>
+                </div>
+            </div>
+        </div> 
+            {% else %}
+            <div class="navLinks">
+                <a class="navLink" href="{% url 'login_app:login' %}">Login</a>
+                <a class="navLink" href="{% url 'login_app:register' %}">Register</a>
+            </div>
+        </div>
+            {% endif %}
+    </nav>
+    <div class="messagesContainer">
+        {% if messages %}
+            {% for message in messages %}
+            <div class=" {{message.tags}} ">
+                {{message}} 
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        {% if errors %}
+            {% for error in errors %}
+            <div class="error">
+                {{error}} 
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+    {% block content %}
+    {% endblock %}
+    <!-- FilePond Stuff -->
+    <script src="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.js"></script>
+    <script src="{% static 'filepond.js' %}"></script>
+    <script src="{% static 'filepond-plugin-file-validate-size.js' %}"></script>
+    <script src="{% static 'filepond-plugin-file-validate-type.js' %}"></script>
+    <script src="{% static 'filepond-plugin-file-encode.js' %}"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            document.body.style.visibility = 'visible';
+        });
+    </script>
+</body>
+</html>
+
+<style>
+
+* {
+    font-family: 'Rubik', sans-serif;
+}
+
+body {
+    display:flex;
+    flex-direction:column;
+}
+
+button {
+	background: none;
+        color: inherit;
+        border: none;
+        padding: 0;
+        font: inherit;
+        cursor: pointer;
+        outline: inherit;
+}
+
+
+.main {
+    width:60em;
+    margin: 0 auto;
+    flex-grow:1;
+    display: flex;
+    flex-direction: column;
+}
+
+.navContainer {
+    font-weight:500;
+    color:#555454;
+    display:flex;
+    justify-content:space-around;
+    width:100%;
+    background-color:white;
+    box-shadow: 2px 5px 15px 0px #DCDDDC;
+    padding: .5em 0;
+    align-items:center;
+}
+
+.navContainer a {
+    text-decoration: none;
+}
+
+.navContainer a:visited {
+    color:#646464;
+}
+
+.leftNav {
+    display:flex;
+    align-items:center;
+    width:40%;
+    justify-content:space-around;
+}
+
+.categoriesBtn {
+    justify-content:space-between;
+}
+
+.rightNav {
+    display:flex;
+    align-items:center;
+    width:60%;
+    justify-content:space-around;
+}
+
+.success, .error {
+    display:flex;
+    width:100%;
+    background:#93EF72;
+    color:white;
+    position:absolute;
+    justify-content:center;
+    animation: fadein 2s forwards;
+}
+
+.error {
+    background:#ef7272;
+}
+
+@keyframes fadein {
+    from { opacity:0; padding: 0; }
+    to {opacity:1; padding:.25em 0; }
+}
+
+.messagesContainer {
+    animation: fadeout 2s forwards;
+    animation-delay:5s;
+}
+
+@keyframes fadeout {
+    from { opacity:1 }
+    to {opacity:0;}
+}
+
+body {
+    background: #F8F7F7;
+    width:100%;
+    height:100%;
+    padding:0;
+    margin:0;
+}
+
+.logo img{
+    height:3em;
+}
+
+.searchContainer {
+    display:flex;
+    border:1px solid #dadada;
+    box-shadow: 0px 1px 5px 0px #DCDDDC;
+    padding:.5em;
+    border-radius:1em;
+    width:40%;
+}
+
+.searchContainer i {
+    color: #dadada;
+    margin-right:.5em;
+    display:flex;
+}
+
+.searchContainer input {
+    border: none;
+    font-weight:500;
+    color: #555454;
+    flex:1;
+}
+
+.navLinks a {
+    margin:0 .5em;    
+}
+
+.categoryDropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.categoryDropdown:hover .categoryDropdownContent {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.categoryDropdownContent {
+    display: none;
+    position: absolute;
+    background:#F8F9FA;
+    min-width: 20em;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+    padding:1em;
+}
+
+.categoryDropdownItem {
+    display:inline-block;
+    margin: .5em;
+}
+
+.userDropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.userDropdownContent {
+    display: none;
+    position: absolute;
+    background:#F8F9FA;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+}
+
+.userDropdownContent a {
+  padding: 12px 16px;
+  display: block;
+}
+
+.userDropdownContent a:hover {background-color: #f1f1f1}
+
+.userDropdown:hover .userDropdownContent {
+  display: block;
+}
+
+.userDropdown:hover .dropbtn {
+  background-color: white;
+}
+
+.dropbtn {
+    display:flex;
+    align-items:center;
+    justify-content:space-around;
+}
+
+.dropbtn span {
+    margin:0 .2em 0 1em;
+}
+
+.dropbtn img {
+    height:100%;
+    overflow:hidden;
+    border-radius:50%;
+}
+
+.profileImage:before {
+    content:"";
+    display:block;
+    padding-top: 100%;
+}
+
+.profileImage {
+    position:relative;
+    width: 3em;
+    overflow: hidden;
+    border-radius:50%;
+}
+
+.profileImage img {
+    position: absolute;
+    top: 0;
+    left:0;
+    right:0;
+    bottom:0;
+    object-fit: cover;
+    width:100%;
+}
+
+</style>
