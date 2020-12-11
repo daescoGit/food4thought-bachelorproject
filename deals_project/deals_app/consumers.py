@@ -13,32 +13,28 @@ import channels.layers
 from django.core import serializers
 from django.shortcuts import get_object_or_404
 
-# this needs to:
-# listen to new comments on posts (if OP)
-# listen to new replies to own comments
-# mark as read on click (front end)
-# sync across instances 
+
+# todo: 
+# expand to "my watched (activity categories/posts/etc)"
 # try-except db calls?
+# signal for updates on status=read (replace front end dummy system to keep integrity+sync devices)
+# fix user ref from id to name
+# (potential front end) reference post, date
 
 class NotificationConsumer(JsonWebsocketConsumer):
 
     def connect(self):
-
         personal_group = 'personal_group_'+str(self.scope["user"].id)
         async_to_sync(self.channel_layer.group_add)(personal_group, self.channel_name)
         payload = []
 
         # all unread comments from own post
         unread_from_OP = Comment.objects.exclude(user=self.scope["user"]).filter(post__user=self.scope["user"]).filter(read_by_author=False)
-
         for single_unread in unread_from_OP:
             payload.append(single_unread)
 
         # all unread replies from own comments
         unread_from_replies = Quote.objects.exclude(quoter__user=self.scope["user"]).filter(quotee__user=self.scope["user"]).filter(quotee__read_by_author=False)
-        
-        #put these in custom method probably & clean up   
-
         for quote_ref in unread_from_replies:
             single_unread = Comment.objects.get(id=quote_ref.quoter.id)
             payload.append(single_unread)
@@ -46,7 +42,6 @@ class NotificationConsumer(JsonWebsocketConsumer):
         serialized_payload = serializers.serialize('json', payload)
         
         # no need to use group for initial on-load payload
-        # this part could be just via views too
         async_to_sync(self.channel_layer.send)(self.channel_name, {
             'type': 'events.alarm',
             'data': {
@@ -77,39 +72,26 @@ class NotificationConsumer(JsonWebsocketConsumer):
     @receiver(signals.post_save, sender=Quote)
     def comment_signal(sender, instance, **kwargs):
         layer = channels.layers.get_channel_layer()
-
         # we cannot access self or request.user, so we need to examine the incoming comment and send accordingly
         # if comment on user's post // send to the group of comment-post-user
         # group is useful here for sync if user is connected on multiple devices
+        
+        def typeHandler(post, target):
+            serialized_payload = serializers.serialize('json', [post])
+            async_to_sync(layer.group_send)('personal_group_'+str(target), {
+                'type': 'events.alarm',
+                'data': {
+                    'multi': False,
+                    'data': serialized_payload
+                }
+            })
+
         if sender == Quote and instance.quoter.read_by_author == False and instance.quoter.user != instance.quotee.user:
-            serialized_payload = serializers.serialize('json', [instance.quoter])
-            async_to_sync(layer.group_send)('personal_group_'+str(instance.quotee.user.id), {
-                'type': 'events.alarm',
-                'data': {
-                    'multi': False,
-                    'data': serialized_payload
-                }
-            })
+            typeHandler(instance.quoter, instance.quotee.user.id)
         if sender == Comment and instance.is_quote == False and instance.read_by_author == False and instance.user != instance.post.user:
-            serialized_payload = serializers.serialize('json', [instance])
-            async_to_sync(layer.group_send)('personal_group_'+str(instance.post.user.id), {
-                'type': 'events.alarm',
-                'data': {
-                    'multi': False,
-                    'data': serialized_payload
-                }
-            })
-        # clean up into method?
+            typeHandler(instance, instance.post.user.id)
 
-
-
-
-
-
-
-
-
-
+# (NOT WORKING ATM)
 # todo:
 # broadcast/group
 # hook up to user
@@ -146,48 +128,5 @@ class UserStatusConsumer(WebsocketConsumer):
         print("e", event)
         self.send(event['message'])
 
-# sync consumer
-
-""" class ChatConsumer(WebsocketConsumer):
-    def connect(self):
-        self.room_name = self.scope['url_route']['kwargs']['room_name']
-        self.room_group_name = 'chat_%s' % self.room_name
-
-        # Join room group
-        async_to_sync(self.channel_layer.group_add)(
-            self.room_group_name,
-            self.channel_name
-        )
-
-        self.accept()
-
-    def disconnect(self, close_code):
-        # Leave room group
-        async_to_sync(self.channel_layer.group_discard)(
-            self.room_group_name,
-            self.channel_name
-        )
-
-    # Receive message from WebSocket
-    def receive(self, text_data):
-        text_data_json = json.loads(text_data)
-        message = text_data_json['message']
-
-        # Send message to room group
-        async_to_sync(self.channel_layer.group_send)(
-            self.room_group_name,
-            {
-                'type': 'xy',
-                'message': message
-            }
-        )
-
-    # Receive message from room group
-    def xy(self, event):
-        message = event['message'] #dbu #Comment.objects.count() # event['message']
-
-        # Send message to WebSocket
-        self.send(text_data=json.dumps({
-            'message': message
-        }))
- """
+class LiveCommentConsumer(WebsocketConsumer):
+    pass
