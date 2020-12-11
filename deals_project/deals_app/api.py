@@ -18,25 +18,25 @@ from rest_framework import generics, permissions
 #         print('reeeeeeee')
 
 def newComment(request, post_id):
-        if request.method == 'POST':
-            if request.user.is_authenticated:   
-                data = JSONParser().parse(request)
-                data['user'] = request.user.id
-                data['post'] = post_id
-                commentSerializer = CommentSerializer(data=data)
-                if commentSerializer.is_valid():
-                    commentSerializer.save()
-
-                    if data.get('quotee'):
-                        print(commentSerializer['pk'].value)
-                        data['quoter'] = commentSerializer['pk'].value
-                        quoteSerializer = QuoteSerializer(data=data)
-                        if quoteSerializer.is_valid():
-                            quoteSerializer.save()
-                        return JsonResponse({"pk":commentSerializer['pk'].value}, status=200)
+    if request.method == 'POST':
+        if request.user.is_authenticated:   
+            data = JSONParser().parse(request)
+            data['user'] = request.user.id
+            data['post'] = post_id
+            if data.get('quotee'):
+                data["is_quote"] = True
+            commentSerializer = CommentSerializer(data=data)
+            if commentSerializer.is_valid():
+                commentSerializer.save()
+                if data.get('quotee'):
+                    data['quoter'] = commentSerializer['pk'].value
+                    quoteSerializer = QuoteSerializer(data=data)
+                    if quoteSerializer.is_valid():
+                        quoteSerializer.save()
                     return JsonResponse({"pk":commentSerializer['pk'].value}, status=200)
-                return JsonResponse(commentSerializer.errors, status=400)
-            return JsonResponse({'status':'false','message':'Not logged in'}, status=400)
+                return JsonResponse({"pk":commentSerializer['pk'].value}, status=200)
+            return JsonResponse(commentSerializer.errors, status=400)
+        return JsonResponse({'status':'false','message':'Not logged in'}, status=400)
 
 
 def deleteComment(request, post_id):

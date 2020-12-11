@@ -2,6 +2,10 @@ from django.contrib.auth.models import User
 from django.db import models
 from datetime import datetime    
 from django.db.models.signals import pre_save, post_save, post_delete
+import channels.layers
+from asgiref.sync import async_to_sync
+from django.dispatch import receiver
+import json
 
 from django.utils.text import slugify
 
@@ -55,6 +59,8 @@ class Comment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     body = models.CharField(max_length=200)
     date_created = models.DateTimeField(auto_now_add=True)
+    read_by_author = models.BooleanField(default=False)
+    is_quote = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['date_created']
@@ -98,3 +104,5 @@ def update_post_votes(sender, instance, *args, **kwargs):
 
 post_save.connect(update_post_votes, sender=Vote)
 post_delete.connect(update_post_votes, sender=Vote)
+
+# for channels consumer
