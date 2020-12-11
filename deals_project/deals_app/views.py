@@ -1,10 +1,11 @@
 from django.shortcuts import render, get_object_or_404, reverse, redirect
 from profile_app.models import UserProfile
-from .models import Post, Comment, PostImage, Category, Quote
+from .models import Post, Comment, PostImage, Category, Quote, Postcode
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from datetime import datetime
 from .serializers import CommentSerializer
+from django.core.serializers import serialize
 from django.contrib import messages
 from .forms import PostForm
 from django.forms.models import model_to_dict
@@ -23,12 +24,22 @@ def addPost(request):
         form = PostForm(request.POST)
         if form.is_valid():
             post = Post()
+            postcode = Postcode()
 
+            postcode.code = form.cleaned_data['postcode_code']
+            postcode.text = form.cleaned_data['postcode_text']
+            postcode.save()
+            
+            post.postcode = postcode
             post.title = form.cleaned_data['title']
             post.description = form.cleaned_data['description']
             post.old_price = form.cleaned_data['old_price']
             post.new_price = form.cleaned_data['new_price']
             post.expiration_date = form.cleaned_data['expiration_date']
+            post.lng = form.cleaned_data['lng']
+            post.lat = form.cleaned_data['lat']
+            post.address_line_1 = form.cleaned_data['address_line_1']
+            post.address_line_2 = form.cleaned_data['address_line_2']
             category = get_object_or_404(Category, pk=form.cleaned_data['category'])
             post.category = category
 
@@ -87,7 +98,7 @@ def addPost(request):
 #     return render(request, 'deals_app/hottest.html', {'posts':posts})
 
 class Base(View):
-    def get(self, request, base='all', order='newest', page=0, *args, **kwargs):
+    def get(self, request, base='all', order='newest', page=0, location=2000, *args, **kwargs):
 
         filters = models.Q()
 
@@ -132,8 +143,9 @@ class Base(View):
 
         print(nextPage)
         print(previousPage)
-
-        return render(request, 'deals_app/hottest.html', {'posts':posts, 'base':base, 'currentPage':page, 'order': order, 'nextPage': nextPage, 'previousPage': previousPage})
+        jsonPosts = serialize('json', posts)  # the fields needed for products
+        category = base.replace("-", " ")
+        return render(request, 'deals_app/hottest.html', {'posts':posts, 'jsonPosts':jsonPosts, 'base':base, 'category':category, 'currentPage':page, 'order': order, 'nextPage': nextPage, 'previousPage': previousPage})
     
 
 def post(request, slug):
@@ -179,6 +191,8 @@ def edit(request, slug):
             post.old_price = form.cleaned_data['old_price']
             post.new_price = form.cleaned_data['new_price']
             post.expiration_date = form.cleaned_data['expiration_date']
+            post.lng = form.cleaned_data['lng']
+            post.lat = form.cleaned_data['lat']
             category = get_object_or_404(Category, pk=form.cleaned_data['category'])
             post.category = category
 

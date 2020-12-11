@@ -1,72 +1,89 @@
 {% extends 'base.html' %}
-{% block title %}Dk Dealer - {{base}}{% endblock title %}
+{% block title %}Dk Dealer - {{category}}{% endblock title %}
 {% block content %} 
-<div class="main">
-    <div class="quickButtons">
-        <div>
-            <span><a href="{% url 'deals_app:base' base 'hot' %}">Hot</a></span>
-        </div>
-        <div>
-            <span><a href="{% url 'deals_app:base' base 'newest' %}">New</a></span>
-        </div>
-        <div>
-            <a href="{% url 'deals_app:addPost' %}">
-                <span>Add post</span>
-                <i class="fas fa-plus-circle"></i>
-            </a>
+<div class="mapContentContainer">
+    <div class="mapContainer">
+        <div id="map">
         </div>
     </div>
+    <div class="main">
+        <div class="categoryTitle">
+            {{category}}
+        </div>
+        <div class="quickButtons">
+            <div>
+                <span><a href="{% url 'deals_app:base' base 'hot' %}">Hot</a></span>
+            </div>
+            <div>
+                <span><a href="{% url 'deals_app:base' base 'newest' %}">New</a></span>
+            </div>
+            <div>
+                <span><a href="{% url 'deals_app:base' base order '1000' %}">Location</a></span>
+            </div>
+            <div>
+                <a href="{% url 'deals_app:addPost' %}">
+                    <span>Add post</span>
+                    <i class="fas fa-plus-circle"></i>
+                </a>
+            </div>
+        </div>
 
-    <div class="content">
-        {% for post in posts %}
-            <div class="post">
-                <div class="postImage">
-                    <a href="{% url 'deals_app:post' post.slug %}">
-                        <img src="{{post.thumbnail.url}}">
-                    </a>
-                </div>
-                <div class="postLeft">
-                    <div class="postTitle"><a href="{% url 'deals_app:post' post.slug %}">{{post.title}}</a></div>
-                    <div class="postSecondaryDetails">
-                        <div class="postAuthor"><a href="{% url 'profile_app:profile' post.user.id %}">{{post.user}}</a></div>
-                        <div class="postTimestamp">{{post.date_created}}</div>
-                    </div>
-                </div>
-                <div class="postRight">
-                    <div class="postPrice">
-                        <div class="newPrice">{{post.new_price}} dkk</div>
-                        <div class="oldPrice">{{post.old_price}} dkk</div>
-                    </div>
-                    <div class="voteComponent" data-id="{{post.id}}" data-votestatus="{{post.voteStatus}}">
-                        <div class="downVote color{{post.voteStatus}}" data-vote=-1>
-                            <i class="fas fa-thumbs-down" data-vote=-1></i>
-                            <div data-vote=-1>dårlig pris</div>
+        <div class="content">
+            <div id="posts">
+            {% for post in posts %}
+                <div class="postAnchor" id="mapId-{{post.id}}">
+                    <div class="post postId-{{post.id}}">
+                        <div class="postImage">
+                            <a href="{% url 'deals_app:post' post.slug %}">
+                                <img src="{{post.thumbnail.url}}">
+                            </a>
                         </div>
-                        <i class="fas fa-caret-left" data-vote=1></i>
-                        <div class="postScore">{% if post.vote_score %}{{post.vote_score}} {% else %} 0 {% endif %}</div>
-                        <i class="fas fa-caret-right" data-vote=-1></i>
-                        <div class="upVote color{{post.voteStatus}}" data-vote=1>
-                            <i class="fas fa-gavel" data-vote=1></i>
-                            <div data-vote=1>slår pris</div>
+                        <div class="postLeft">
+                            <div class="postTitle"><a href="{% url 'deals_app:post' post.slug %}">{{post.title}}</a></div>
+                            <div class="postSecondaryDetails">
+                                <div class="postAuthor"><a href="{% url 'profile_app:profile' post.user.id %}">{{post.user}}</a></div>
+                                <div class="postTimestamp">{{post.date_created}}</div>
+                            </div>
+                        </div>
+                        <div class="postRight">
+                            <div class="postPrice">
+                                <div class="newPrice">{{post.new_price}} dkk</div>
+                                <div class="oldPrice">{{post.old_price}} dkk</div>
+                            </div>
+                            <div class="voteComponent" data-id="{{post.id}}" data-votestatus="{{post.voteStatus}}">
+                                <div class="downVote color{{post.voteStatus}}" data-vote=-1>
+                                    <i class="fas fa-thumbs-down" data-vote=-1></i>
+                                    <div data-vote=-1>dårlig pris</div>
+                                </div>
+                                <i class="fas fa-caret-left" data-vote=1></i>
+                                <div class="postScore">{% if post.vote_score %}{{post.vote_score}} {% else %} 0 {% endif %}</div>
+                                <i class="fas fa-caret-right" data-vote=-1></i>
+                                <div class="upVote color{{post.voteStatus}}" data-vote=1>
+                                    <i class="fas fa-gavel" data-vote=1></i>
+                                    <div data-vote=1>slår pris</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+            {% endfor %}
             </div>
-        {% endfor %}
-        
-    </div>
-        <div class="pageButtonsContainer">
-            <div class="pageButton"><a href="{% url 'deals_app:base' base order '0' %}">0</a></div>
-            <div class="pageButton" >
-                {% if currentPage != 0 %}
-                <div><a href="{% url 'deals_app:base' base order previousPage %}"><i class="fas fa-caret-left"></i></a></div>
-                {% endif %}
-                <div class="currentPage">Page {{currentPage}}</div>
-                <div><a href="{% url 'deals_app:base' base order nextPage %}"><i class="fas fa-caret-right"></i></a></div>
-            </div>
-            <div class="pageButton"><a href="{% url 'deals_app:base' base order '5' %} ">5</a></div>
         </div>
+            <div class="pageButtonsContainer">
+                <div class="pageButton"><a href="{% url 'deals_app:base' base order '0' %}">0</a></div>
+                <div class="pageButton" >
+                    {% if currentPage != 0 %}
+                    <div><a href="{% url 'deals_app:base' base order previousPage %}"><i class="fas fa-caret-left"></i></a></div>
+                    {% endif %}
+                    <div class="currentPage">Page {{currentPage}}</div>
+                    <div><a href="{% url 'deals_app:base' base order nextPage %}"><i class="fas fa-caret-right"></i></a></div>
+                </div>
+                <div class="pageButton"><a href="{% url 'deals_app:base' base order '5' %} ">5</a></div>
+            </div>
+    </div>
 </div>
+
+{{ jsonPosts|json_script:'jsonPosts' }}
 
 <style>
 
@@ -77,15 +94,20 @@ a {
 
 a:hover {
     text-decoration: underline; 
+}
 
+.active {
+    box-shadow: 0 0 10px 0 rgba(239,123,114, 1)!important;
 }
 
 .main .quickButtons {
     color:#EF7B72;
-    height:4.5em;
+    padding:1em 0;
     align-items: center;
     display: flex;
     font-weight:500;
+    margin: 0 2em;
+
 }
 
 .main .quickButtons span, .main .quickButtons i {
@@ -97,23 +119,46 @@ a:hover {
     margin-right:2em;
 }
 
+.main .categoryTitle {
+    margin-top:1em;
+    display:flex;
+    color:#EF7B72;
+    width:100%;
+    font-size:2em;
+    justify-content:center;
+}
+
+.categoryTitle {
+  text-transform: capitalize;
+}
+
 .quickButtons a {
     text-decoration: none;
 }
 
 .content {
+    height:90%;
+    overflow-y: scroll;
+    scroll-behavior: smooth;
     flex-grow: 1;
     background:white;
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    margin: 0 2em;
+}
+
+.postAnchor {
+    padding:1em;
 }
 
 .post {
-    margin:2em;
+    padding: 0 1em;
     display:flex;
     align-items:center;
     cursor:pointer;
     color:#545454;
     text-decoration:none;
+    box-shadow: 0px 8px 16px 0px rgba(239,123,114,0);
+    transition: box-shadow 1s;
 }
 
 .postLeft {
@@ -222,6 +267,38 @@ a:hover {
     color: #545454;
 }
 
+
+/* MAPBOX */
+
+.marker {
+    width:2em;
+    height:2em;
+    border-radius:50%;
+    background-position:center;
+    background-color:red;
+    opacity:0.6;
+}
+
+#map { position: absolute; top: 0; bottom: 0; width: 100%; }
+
+.mapContentContainer {
+    display: flex;
+    height:calc(100vh - 5em);
+
+}
+
+.mapContainer {
+    position: relative;
+    width: 100% !important;
+    flex: 1;
+    display: flex;
+}
+
+.mapContentContainer .main {
+    width:50%;
+    flex-grow:unset;
+}
+
 </style>
 
 
@@ -316,5 +393,57 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
 })
+
+
+let postsArray = JSON.parse(JSON.parse(document.querySelector('#jsonPosts').textContent));
+    
+    console.log(postsArray)
+	// TO MAKE THE MAP APPEAR YOU MUST
+	// ADD YOUR ACCESS TOKEN FROM
+	// https://account.mapbox.com
+	mapboxgl.accessToken = 'pk.eyJ1IjoiaXAzbHk1IiwiYSI6ImNrMGM1ZXg2bjB5cXgzYm53bHAyem5ldmkifQ.LM4FfJrdUcagfWYHuDUjww';
+    var map = new mapboxgl.Map({
+    container: 'map', // container id
+    style: 'mapbox://styles/mapbox/streets-v11', // style URL
+    center: [12.569177797899329, 55.69267934271247], // starting position [lng, lat]
+    zoom: 12 // starting zoom
+    });
+
+map.on('load', function () {
+    map.resize();
+});
+
+
+
+
+postsArray.forEach(post=>{
+    post.coordinates = {
+            "lng": post.fields.lng,
+            "lat": post.fields.lat
+        }
+    let el = document.createElement('a');
+    el.className = `marker postId-${post.pk}`
+    el.style.height = "20px";
+    el.style.width = "20px";
+    el.href=`#mapId-${post.pk}`
+
+    new mapboxgl.Marker(el).setLngLat(post.coordinates).addTo(map);
+    
+    el.addEventListener('click', function () {
+        removeActiveClassFromProperty()
+        let activeElements = document.querySelectorAll(`.postId-${post.pk}`)
+        activeElements.forEach((element)=> {
+            console.log(activeElements)
+            element.classList.add('active');
+        })
+    })
+})
+
+function removeActiveClassFromProperty() {
+    let properties = document.querySelectorAll('.active')
+    properties.forEach(function (postDiv) {
+        postDiv.classList.remove('active')
+    })
+}
 </script>
 {% endblock content %}

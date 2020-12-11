@@ -52,6 +52,29 @@
             <div class="formSingle">
                 <label>Images<span class="asterisk">*</span></label>
                 <input class="multiFiles" type="file" multiple>
+            </div>
+            <div class="pairContainer">
+                <div class="formPair">
+                    <label>Langnitude<span class="asterisk">*</span></label>
+                    <div class="inputContainer">
+                        {{form.lng}}
+                    </div>
+                </div>
+                
+                <div class="formPair">
+                    <label>Latitude<span class="asterisk">*</span></label>
+                    <div class="inputContainer">
+                        {{form.lat}}
+                    </div>
+                </div>
+            </div>
+            <div class="formSingle">
+                <label>Location</label>
+                <div class="mapContainer">
+                    <div class="pointer"><i class="fas fa-map-marker"></i></div>
+                    <div id="map">
+                    </div>
+                </div>
         </form>
         <div>
             {{ form.errors }}
@@ -63,6 +86,47 @@
 </div>
 
 <script>
+
+    let oldLng = document.querySelector('#id_lng').value;
+    let oldLat = document.querySelector('#id_lat').value;
+
+
+    mapboxgl.accessToken = 'pk.eyJ1IjoiaXAzbHk1IiwiYSI6ImNrMGM1ZXg2bjB5cXgzYm53bHAyem5ldmkifQ.LM4FfJrdUcagfWYHuDUjww';
+    var map = new mapboxgl.Map({
+    container: 'map', // container id
+    style: 'mapbox://styles/mapbox/streets-v11', // style URL
+    center: [oldLng, oldLat], // starting position [lng, lat]
+    zoom: 12 // starting zoom
+    });
+
+    map.on('load', function () {
+    map.resize();
+    });
+
+// GET COORDINATES //
+
+    let pointer = document.querySelector('.pointer');
+
+    map.on('mousedown', function(e){
+        pointer.classList.add('pointerActive')
+    })
+
+    map.on('mouseup', function(e){
+        pointer.classList.remove('pointerActive')
+        var center = map.getCenter();
+        var {longitude, latitude} = map.getCenter();
+
+        let lngInput = document.querySelector('#id_lng')
+        let latInput = document.querySelector('#id_lat')
+
+        lngInput.value = center.lng
+        latInput.value = center.lat
+    });
+
+
+
+
+
     document.addEventListener('DOMContentLoaded', function() {
 
         function getCookie(name) {
@@ -301,6 +365,40 @@ label {
     color:transparent;
 }
 
+/* MAPBOX */
+
+.pointer {
+    font-size:2em;
+    position:absolute;
+    top: 50%;
+    left: 50%;
+    margin-right: -50%;
+    z-index:99;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    color:#EF7B72;
+    transition: transform .25s ease-in-out;
+}
+
+.pointerActive {
+    transform:translate(-50%, -65%) rotate(5deg);
+}
+
+#map { position: absolute; top: 0; bottom: 0; width: 100%; }
+
+.mapContentContainer {
+    display: flex;
+    height:calc(100vh - 5em);
+
+}
+
+.mapContainer {
+    position: relative;
+    width: 100% !important;
+    height:20em;
+    flex: 1;
+    display: flex;
+}
 
 </style>
 {% endblock content %}

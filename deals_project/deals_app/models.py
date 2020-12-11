@@ -15,10 +15,21 @@ class Category(models.Model):
     def get_absolute_url(self):
         return reverse("deals_app:post", kwargs={"slug": self.slug})
 
+class Postcode(models.Model):
+    code = models.IntegerField()
+    region = models.CharField(max_length=200)
+
+    def __str__(self):
+        return self.code
+
 class Post(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=80, null=True)
     slug = models.SlugField(unique=True)
+    description = models.CharField(max_length=200)
+    address_line_1 = models.CharField(max_length=200)
+    address_line_2 = models.CharField(max_length=200)
+    postcode = models.ForeignKey(Postcode, on_delete=models.CASCADE)
     description = models.CharField(max_length=200)
     new_price = models.IntegerField()
     old_price = models.IntegerField()
@@ -28,6 +39,8 @@ class Post(models.Model):
     category = models.ForeignKey(Category, on_delete=models.PROTECT, null=True)
     staff_picked = models.BooleanField(default=False)
     expiration_date = models.DateField()
+    lng = models.FloatField()
+    lat = models.FloatField()
 
     def __str__(self):
         return self.title
@@ -55,6 +68,7 @@ class Comment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     body = models.CharField(max_length=200)
     date_created = models.DateTimeField(auto_now_add=True)
+
 
     class Meta:
         ordering = ['date_created']

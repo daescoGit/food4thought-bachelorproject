@@ -5,8 +5,8 @@ from django.db.models.signals import post_save
      
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
-    summary = models.CharField(max_length=200, null=True)
-    image = models.ImageField(upload_to='images/profile/', null=True)
+    summary = models.CharField(max_length=200, default="This is your summary! Write something about yourself!")
+    image = models.ImageField(upload_to='images/profile/', default="images/profile/1.jpg")
 
     # Create your models here.
 

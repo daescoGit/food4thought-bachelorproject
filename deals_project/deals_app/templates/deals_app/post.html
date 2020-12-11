@@ -80,6 +80,11 @@
                 </div>
             </div>
         </div>
+        <div class="mapContainer">
+            <div class="marker"></div>
+            <div id="map">
+            </div>
+        </div>
         <div class="line"></div>
         <div class="subHeaderComments">Comments ({{commentCount}})</div>
         <div class="commentsContainer">
@@ -124,7 +129,7 @@
             {% if user.is_authenticated %}
             <div class="createComment">
                 <div class="commentHeader">
-                    <div class="commentProfileImage"><img src="{{profileImage.url}}"></div>
+                    <div class="commentProfileImage"><img src="{{user.profile.image.url}}"></div>
                     <div class="commentAuthor"><a href="{% url 'profile_app:profile' user.id %}">{{user}}</a></div>
                 </div>
                 <div class="commentBody">
@@ -144,6 +149,8 @@
 
 
 {{ post.id|json_script:"postId" }}
+{{ post.lng|json_script:"postLng" }}
+{{ post.lat|json_script:"postLat" }}
 
 <script>
 
@@ -318,7 +325,7 @@
                 commentsContainer.innerHTML += 
                     `<div class="comment" id="${data.pk}">
                     <div class="commentHeader">
-                        <div class="commentProfileImage"><img src="{{profileImage.url}}"></div>
+                        <div class="commentProfileImage"><img src="{{user.profile.image.url}}"></div>
                         <div class="commentAuthor">{{user}}</div>
                         <div class="commentTimestamp">{% now "SHORT_DATETIME_FORMAT" %}</div>
                     </div>
@@ -371,7 +378,7 @@
                 commentsContainer.innerHTML += `
                 <div class="comment" id="${data.pk}">
                 <div class="commentHeader">
-                    <div class="commentProfileImage"><img src="{{profileImage.url}}"></div>
+                    <div class="commentProfileImage"><img src="{{user.profile.image.url}}"></div>
                     <div class="commentAuthor"><a href="{% url 'profile_app:profile' user.id %}">{{user}}</a></div>
                     <div class="commentTimestamp">{% now "SHORT_DATETIME_FORMAT" %}</div>
                 </div>
@@ -464,6 +471,31 @@
             }   
         })
 
+        const lng = JSON.parse(document.getElementById('postLng').textContent);
+        const lat = JSON.parse(document.getElementById('postLat').textContent);
+
+    mapboxgl.accessToken = 'pk.eyJ1IjoiaXAzbHk1IiwiYSI6ImNrMGM1ZXg2bjB5cXgzYm53bHAyem5ldmkifQ.LM4FfJrdUcagfWYHuDUjww';
+    var map = new mapboxgl.Map({
+    container: 'map', // container id
+    style: 'mapbox://styles/mapbox/streets-v11', // style URL
+    center: [lng, lat], // starting position [lng, lat]
+    zoom: 12 // starting zoom
+    });
+
+    map.on('load', function () {
+    map.resize();
+    });
+
+    let coordinates = {
+            "lng": lng,
+            "lat": lat
+        }
+    let el = document.createElement('a');
+    el.className = `marker`
+    el.style.height = "20px";
+    el.style.width = "20px";
+
+    new mapboxgl.Marker(el).setLngLat(coordinates).addTo(map);
 
 </script>
 
@@ -834,6 +866,33 @@ a:hover {
     color:#545454;
 }
 
+/* MAPBOX */
+
+#map { position: absolute; top: 0; bottom: 0; width: 100%; }
+
+.mapContentContainer {
+    display: flex;
+    height:calc(100vh - 5em);
+
+}
+
+.mapContainer {
+    margin-top:2em;
+    position: relative;
+    width: 100% !important;
+    height:20em;
+    flex: 1;
+    display: flex;
+}
+
+.marker {
+    width:2em;
+    height:2em;
+    border-radius:50%;
+    background-position:center;
+    background-color:red;
+    opacity:0.6;
+}
 </style>
 
 {% endblock content %}
