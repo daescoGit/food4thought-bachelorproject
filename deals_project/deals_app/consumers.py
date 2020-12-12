@@ -1,25 +1,21 @@
 import json
+import channels.layers
 from asgiref.sync import async_to_sync
-from channels.db import database_sync_to_async
-from channels.generic.websocket import WebsocketConsumer, AsyncWebsocketConsumer, JsonWebsocketConsumer
-from channels.consumer import AsyncConsumer
+from channels.generic.websocket import WebsocketConsumer, JsonWebsocketConsumer
 from .models import Post, Comment, Quote
 from django.contrib.auth.models import User
-from django.contrib.auth.decorators import login_required
-import asyncio
 from django.db.models import signals
 from django.dispatch import receiver
-import channels.layers
 from django.core import serializers
-from django.shortcuts import get_object_or_404
 
 
 # todo: 
-# expand to "my watched (activity categories/posts/etc)"
+# expand to "my watched" (activity categories/posts/etc)
 # try-except db calls?
 # signal for updates on status=read (replace front end dummy system to keep integrity+sync devices)
 # fix user ref from id to name
 # (potential front end) reference post, date
+# seperate into own app?
 
 class NotificationConsumer(JsonWebsocketConsumer):
 
@@ -36,8 +32,7 @@ class NotificationConsumer(JsonWebsocketConsumer):
         # all unread replies from own comments
         unread_from_replies = Quote.objects.exclude(quoter__user=self.scope["user"]).filter(quotee__user=self.scope["user"]).filter(quotee__read_by_author=False)
         for quote_ref in unread_from_replies:
-            single_unread = Comment.objects.get(id=quote_ref.quoter.id)
-            payload.append(single_unread)
+            payload.append(quote_ref.quotee)
 
         serialized_payload = serializers.serialize('json', payload)
         
