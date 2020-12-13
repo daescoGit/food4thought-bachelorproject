@@ -6,7 +6,7 @@ from .models import Post, Comment, Quote
 from django.contrib.auth.models import User
 from django.db.models import signals
 from django.dispatch import receiver
-from django.core import serializers
+from django.shortcuts import get_object_or_404
 
 
 # todo: 
@@ -16,6 +16,7 @@ from django.core import serializers
 # fix user ref from id to name
 # (potential front end) reference post, date
 # seperate into own app?
+# delete signal for if a post get deleted
 
 class NotificationConsumer(JsonWebsocketConsumer):
 
@@ -24,24 +25,32 @@ class NotificationConsumer(JsonWebsocketConsumer):
         async_to_sync(self.channel_layer.group_add)(personal_group, self.channel_name)
         payload = []
 
+        def loop_handler(query_set, is_quote):
+            for obj in query_set:
+                if is_quote:
+                    obj = obj.quoter
+                data = {
+                    "id": obj.id,
+                    "body": obj.body,
+                    "user": obj.user.username,
+                    "is_quote": is_quote
+                }
+                payload.append(data)
+
         # all unread comments from own post
-        unread_from_OP = Comment.objects.exclude(user=self.scope["user"]).filter(post__user=self.scope["user"]).filter(read_by_author=False)
-        for single_unread in unread_from_OP:
-            payload.append(single_unread)
+        unread_from_OP = Comment.objects.exclude(user=self.scope["user"]).filter(post__user=self.scope["user"]).filter(read_by_author=False).order_by('-date_created')
+        loop_handler(unread_from_OP, False)
 
         # all unread replies from own comments
-        unread_from_replies = Quote.objects.exclude(quoter__user=self.scope["user"]).filter(quotee__user=self.scope["user"]).filter(quotee__read_by_author=False)
-        for quote_ref in unread_from_replies:
-            payload.append(quote_ref.quotee)
-
-        serialized_payload = serializers.serialize('json', payload)
+        unread_from_replies = Quote.objects.exclude(quoter__user=self.scope["user"]).filter(quotee__user=self.scope["user"]).filter(quoter__read_by_author=False).order_by('-quotee__date_created')
+        loop_handler(unread_from_replies, True)
         
         # no need to use group for initial on-load payload
         async_to_sync(self.channel_layer.send)(self.channel_name, {
             'type': 'events.alarm',
             'data': {
                 'multi': True,
-                'data': serialized_payload,
+                'data': payload,
             }})
         self.accept()
 
@@ -54,10 +63,10 @@ class NotificationConsumer(JsonWebsocketConsumer):
 
     def receive_json(self, content, **kwargs):
         print(f"Received event: {content}")
-        comment = Comment.objects.get(pk=content["pk"])
+        comment = get_object_or_404(Comment, id=content["id"])
+        print(comment)
         comment.read_by_author = True
         comment.save()
-        print(comment)
 
     def events_alarm(self, event):
         self.send_json(event['data'])
@@ -65,6 +74,7 @@ class NotificationConsumer(JsonWebsocketConsumer):
     @staticmethod # avoid requiring self arg for signal method
     @receiver(signals.post_save, sender=Comment)
     @receiver(signals.post_save, sender=Quote)
+    #@receiver(signals.post_delete, sender=Comment)
     def comment_signal(sender, instance, **kwargs):
         layer = channels.layers.get_channel_layer()
         # we cannot access self or request.user, so we need to examine the incoming comment and send accordingly
@@ -72,12 +82,18 @@ class NotificationConsumer(JsonWebsocketConsumer):
         # group is useful here for sync if user is connected on multiple devices
         
         def typeHandler(post, target):
-            serialized_payload = serializers.serialize('json', [post])
+            payload = [{
+                "id": post.id,
+                "body": post.body,
+                "user": post.user.username,
+                "is_quote": post.is_quote
+            }]
+
             async_to_sync(layer.group_send)('personal_group_'+str(target), {
                 'type': 'events.alarm',
                 'data': {
                     'multi': False,
-                    'data': serialized_payload
+                    'data': payload
                 }
             })
 
