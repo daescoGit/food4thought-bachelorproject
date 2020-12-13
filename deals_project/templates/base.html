@@ -1,16 +1,22 @@
 {% load static %}
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8">
     <title>{% block title %}DkDeals{% endblock %}</title>
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
-    <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300;0,400;0,500;0,600;0,700;1,500&display=swap" rel="stylesheet"> 
-    <link href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
+        integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300;0,400;0,500;0,600;0,700;1,500&display=swap"
+        rel="stylesheet">
+    <link href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css"
+        rel="stylesheet">
     <link href="{% static 'filepond.css' %}" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.0.0/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.0.0/mapbox-gl.css" rel="stylesheet" />
 </head>
+
 <body style="visibility: hidden;">
     <nav class="navContainer">
         <div class="leftNav">
@@ -24,7 +30,7 @@
                 </a>
                 <div class="categoryDropdownContent">
                     {% for category in categories %}
-                        <a class="categoryDropdownItem" href="{% url 'deals_app:base' category.slug %}">{{category}}</a>
+                    <a class="categoryDropdownItem" href="{% url 'deals_app:base' category.slug %}">{{category}}</a>
                     {% endfor %}
                 </div>
             </div>
@@ -34,7 +40,14 @@
                 <i class="fas fa-search"></i>
                 <input placeholder="Search">
             </div>
-        {% if user.is_authenticated %}
+            {% if user.is_authenticated %}
+            <div id="notification-group">
+                <label for="notification-icon" id="notification-label"
+                    onclick="toggleHidden('#notification-list')"></label>
+                <i class="far fa-bell" id="notification-icon"></i>
+                <div id="notification-counter"></div>
+                <div id="notification-list" class="hidden"></div>
+            </div>
             <div class="userDropdown">
                 <a class="dropbtn" href="">
                     <div class="profileImage">
@@ -46,34 +59,34 @@
                 <div class="userDropdownContent">
                     <a class="userDropdownItem" href="{% url 'profile_app:profile' user.id %}">Profile</a>
                     <!-- <a class="userDropdownItem" href="">Chats</a> -->
-		    <a class="userDropdownItem" href="{% url 'login_app:edit_account' %}">Account settings</a>
+                    <a class="userDropdownItem" href="{% url 'login_app:edit_account' %}">Account settings</a>
                     <a class="userDropdownItem" href="{% url 'login_app:logout' %}">Logout</a>
                 </div>
             </div>
-        </div> 
-            {% else %}
-            <div class="navLinks">
-                <a class="navLink" href="{% url 'login_app:login' %}">Login</a>
-                <a class="navLink" href="{% url 'login_app:register' %}">Register</a>
-            </div>
         </div>
-            {% endif %}
+        {% else %}
+        <div class="navLinks">
+            <a class="navLink" href="{% url 'login_app:login' %}">Login</a>
+            <a class="navLink" href="{% url 'login_app:register' %}">Register</a>
+        </div>
+        </div>
+        {% endif %}
     </nav>
     <div class="messagesContainer">
         {% if messages %}
-            {% for message in messages %}
-            <div class=" {{message.tags}} ">
-                {{message}} 
-            </div>
-            {% endfor %}
+        {% for message in messages %}
+        <div class=" {{message.tags}} ">
+            {{message}}
+        </div>
+        {% endfor %}
         {% endif %}
 
         {% if errors %}
-            {% for error in errors %}
-            <div class="error">
-                {{error}} 
-            </div>
-            {% endfor %}
+        {% for error in errors %}
+        <div class="error">
+            {{error}}
+        </div>
+        {% endfor %}
         {% endif %}
     </div>
     {% block content %}
@@ -88,31 +101,192 @@
         window.addEventListener('DOMContentLoaded', (event) => {
             document.body.style.visibility = 'visible';
         });
+
+        toggleHidden = (elem) => {
+            e = document.querySelector(elem)
+            e.classList.toggle("hidden");
+        }
+
+        handleQuery = (e) => {
+            // creating new div for incomming comment
+            const element = document.createElement("div")
+            element.setAttribute("id", 'comment-' + e.pk);
+            const text = document.createTextNode(e.fields.user + (e.fields.is_quote == true ? ' Replied ' : ' Commented ') + e.fields.body);
+            element.appendChild(text);
+            document.querySelector('#notification-list').appendChild(element);
+
+            // attaching event listener dynamically
+            element.onclick = () => {
+                toggleHidden('#comment-' + e.pk)
+                // todo: navigate to comment
+                counter -= 1
+                counterDiv.innerHTML = counter;
+                // send back comment id to be updated in db
+                NotifierSocket.send(JSON.stringify({
+                    'pk': e.pk
+                }));
+            }
+            counter += 1
+        }
+
+        let counter = 0;
+        const counterDiv = document.querySelector('#notification-counter');
+        counterDiv.innerHTML = counter;
     </script>
+
+    <!-- Status socket -->
+    <script>
+        const statusSocket = new WebSocket(
+            'ws://'
+            + window.location.host
+            + '/ws/status/'
+        );
+        console.log(statusSocket)
+
+        statusSocket.onmessage = function (e) {
+            console.log("status ws message", e)
+            console.log(e.data)
+            if (parseInt(e.data) == "{{post.user.id}}") {
+                document.querySelector('#status-test').innerHTML = e.data;
+            }
+        }
+
+        statusSocket.onopen = function (e) {
+            console.log("status ws open", e)
+        }
+
+        statusSocket.onclose = function (e) {
+            console.log('status ws closed', e);
+        }
+    </script>
+
+    {% if user.is_authenticated %}
+    <!-- Notification socket -->
+    <script>
+        const loc = window.location
+        let wsStart = "ws://"
+        if (loc.protocol == 'https:') {
+            wsStart = 'wss://'
+        }
+        let endpoint = wsStart + loc.host + "/ws/notifier/"
+        console.log(endpoint)
+
+        NotifierSocket = new WebSocket(endpoint);
+
+        NotifierSocket.onopen = function (message) {
+            console.log("notif open", message);
+        }
+
+        NotifierSocket.onmessage = function (e) {
+            const jData = JSON.parse(e.data);
+            // initial unreads
+            if (jData.multi == true) {
+                const jComments = JSON.parse(jData.data)
+                jComments.forEach(elem => {
+                    handleQuery(elem)
+                });
+            }
+            // incomming
+            else {
+                const jComment = JSON.parse(jData.data)
+                console.log(e.data)
+                console.log(jComment)
+                handleQuery(jComment[0])
+            }
+            counterDiv.innerHTML = counter;
+        }
+
+        NotifierSocket.onerror = function (message) {
+            console.log("notif error", message);
+        }
+
+        NotifierSocket.onclose = function (message) {
+            console.log("notif close", message);
+        }
+    </script>
+    {% endif %}
 </body>
+
 </html>
 
 <style>
+    * {
+        font-family: 'Rubik', sans-serif;
+    }
 
-* {
-    font-family: 'Rubik', sans-serif;
-}
+    body {
+        display: flex;
+        flex-direction: column;
+    }
 
-body {
-    display:flex;
-    flex-direction:column;
-}
-
-button {
-	background: none;
+    button {
+        background: none;
         color: inherit;
         border: none;
         padding: 0;
         font: inherit;
         cursor: pointer;
         outline: inherit;
-}
+    }
 
+    #notification-list {
+        position: absolute;
+        text-align: initial;
+        z-index: 1;
+        background: #fff;
+        padding: 1em;
+        /* fix position */
+        right: 2em;
+        -webkit-box-shadow: 0px 0px 3px 0px rgba(0, 0, 0, 0.33);
+        box-shadow: 0px 0px 3px 0px rgba(0, 0, 0, 0.33);
+        border-radius: 0.2em;
+        max-height: 15em;
+        overflow-y: scroll;
+        width: 15em;
+        overflow-x: hidden;
+    }
+
+    #notification-group {
+        text-align: center;
+    }
+
+    #notification-icon {
+        font-size: 1.2em;
+    }
+
+    #notification-list>div {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        border-bottom: 1px solid #e1e1e1;
+        padding: 0.4em 0;
+        cursor: pointer;
+    }
+
+    #notification-list>div:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    #notification-list>div:first-child {
+        padding-top: 0;
+    }
+
+    #notification-counter {
+        color: #bf7474;
+    }
+
+    #notification-label {
+        width: 1.2em;
+        height: 2.5em;
+        display: block;
+        position: absolute;
+        cursor: pointer;
+    }
+
+    .hidden {
+        display: none;
+    }
 
 .main {
     width:60em;
