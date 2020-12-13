@@ -33,17 +33,25 @@ class NotificationConsumer(JsonWebsocketConsumer):
                     "id": obj.id,
                     "body": obj.body,
                     "user": obj.user.username,
-                    "is_quote": is_quote
+                    "is_quote": is_quote,
+                    "slug": obj.post.slug
                 }
-                payload.append(data)
-
-        # all unread comments from own post
-        unread_from_OP = Comment.objects.exclude(user=self.scope["user"]).filter(post__user=self.scope["user"]).filter(read_by_author=False).order_by('-date_created')
-        loop_handler(unread_from_OP, False)
+                # comment may already be in payload from quotes
+                if payload != []:
+                    for item in payload:
+                        if data["id"] == item["id"]:
+                            continue
+                        payload.append(data)
+                else:
+                    payload.append(data)
 
         # all unread replies from own comments
         unread_from_replies = Quote.objects.exclude(quoter__user=self.scope["user"]).filter(quotee__user=self.scope["user"]).filter(quoter__read_by_author=False).order_by('-quotee__date_created')
         loop_handler(unread_from_replies, True)
+
+        # all unread comments from own post
+        unread_from_OP = Comment.objects.exclude(user=self.scope["user"]).filter(post__user=self.scope["user"]).filter(read_by_author=False).order_by('-date_created')
+        loop_handler(unread_from_OP, False)
         
         # no need to use group for initial on-load payload
         async_to_sync(self.channel_layer.send)(self.channel_name, {
@@ -86,7 +94,8 @@ class NotificationConsumer(JsonWebsocketConsumer):
                 "id": post.id,
                 "body": post.body,
                 "user": post.user.username,
-                "is_quote": post.is_quote
+                "is_quote": post.is_quote,
+                "slug": post.post.slug
             }]
 
             async_to_sync(layer.group_send)('personal_group_'+str(target), {

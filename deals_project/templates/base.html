@@ -42,11 +42,10 @@
             </div>
             {% if user.is_authenticated %}
             <div id="notification-group">
-                <label for="notification-icon" id="notification-label"
-                    onclick="toggleHidden('#notification-list')"></label>
+                <label for="notification-icon" id="notification-label"></label>
                 <i class="far fa-bell" id="notification-icon"></i>
                 <div id="notification-counter"></div>
-                <div id="notification-list" class="hidden"></div>
+                <div id="notification-list"></div>
             </div>
             <div class="userDropdown">
                 <a class="dropbtn" href="">
@@ -102,29 +101,29 @@
             document.body.style.visibility = 'visible';
         });
 
-        toggleHidden = (elem) => {
-            e = document.querySelector(elem)
-            e.classList.toggle("hidden");
-        }
-
         handleQuery = (e) => {
             // creating new div for incomming comment
-            const element = document.createElement("div")
-            element.setAttribute("id", 'comment-' + e.pk);
-            const text = document.createTextNode(e.fields.user + (e.fields.is_quote == true ? ' Replied ' : ' Commented ') + e.fields.body);
-            element.appendChild(text);
-            document.querySelector('#notification-list').appendChild(element);
+            const element = document.createElement("div");
+            element.setAttribute("id", 'comment-' + e.id);
+
+            const rType = e.is_quote == true ? ' replied ' : ' commented ';
+            const stylable = document.createElement("span");
+            //stylable.setAttribute("class", 'notification-instance');
+            const text = document.createTextNode(e.user + rType + e.body);
+            stylable.appendChild(text)
+
+            element.appendChild(stylable);
+            document.querySelector('#notification-list').prepend(element);
 
             // attaching event listener dynamically
             element.onclick = () => {
-                toggleHidden('#comment-' + e.pk)
-                // todo: navigate to comment
                 counter -= 1
                 counterDiv.innerHTML = counter;
                 // send back comment id to be updated in db
                 NotifierSocket.send(JSON.stringify({
-                    'pk': e.pk
+                    'id': e.id
                 }));
+                window.location.href = "/post/" + e.slug + "#body-" + e.id;
             }
             counter += 1
         }
@@ -146,9 +145,6 @@
         statusSocket.onmessage = function (e) {
             console.log("status ws message", e)
             console.log(e.data)
-            if (parseInt(e.data) == "{{post.user.id}}") {
-                document.querySelector('#status-test').innerHTML = e.data;
-            }
         }
 
         statusSocket.onopen = function (e) {
@@ -179,19 +175,19 @@
 
         NotifierSocket.onmessage = function (e) {
             const jData = JSON.parse(e.data);
+            console.log(jData)
+            const jComments = jData.data;
             // initial unreads
             if (jData.multi == true) {
-                const jComments = JSON.parse(jData.data)
+
                 jComments.forEach(elem => {
                     handleQuery(elem)
                 });
             }
             // incomming
             else {
-                const jComment = JSON.parse(jData.data)
-                console.log(e.data)
-                console.log(jComment)
-                handleQuery(jComment[0])
+
+                handleQuery(jComments[0])
             }
             counterDiv.innerHTML = counter;
         }
@@ -231,19 +227,20 @@
 
     #notification-list {
         position: absolute;
-        text-align: initial;
         z-index: 1;
-        background: #fff;
+        background: #F8F9FA;
         padding: 1em;
-        /* fix position */
-        right: 2em;
-        -webkit-box-shadow: 0px 0px 3px 0px rgba(0, 0, 0, 0.33);
-        box-shadow: 0px 0px 3px 0px rgba(0, 0, 0, 0.33);
-        border-radius: 0.2em;
         max-height: 15em;
         overflow-y: scroll;
         width: 15em;
         overflow-x: hidden;
+        display: none;
+        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    }
+
+
+    #notification-group:hover #notification-list {
+        display: block;
     }
 
     #notification-group {
@@ -259,8 +256,9 @@
         overflow: hidden;
         text-overflow: ellipsis;
         border-bottom: 1px solid #e1e1e1;
-        padding: 0.4em 0;
+        padding: 0.5em 0;
         cursor: pointer;
+        text-align: left;
     }
 
     #notification-list>div:last-child {
@@ -284,215 +282,225 @@
         cursor: pointer;
     }
 
-    .hidden {
-        display: none;
+    .main {
+        width: 60em;
+        margin: 0 auto;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
     }
 
-.main {
-    width:60em;
-    margin: 0 auto;
-    flex-grow:1;
-    display: flex;
-    flex-direction: column;
-}
+    .navContainer {
+        font-weight: 500;
+        color: #555454;
+        display: flex;
+        justify-content: space-around;
+        width: 100%;
+        background-color: white;
+        box-shadow: 2px 5px 15px 0px #DCDDDC;
+        padding: .5em 0;
+        align-items: center;
+        height: 4em;
+    }
 
-.navContainer {
-    font-weight:500;
-    color:#555454;
-    display:flex;
-    justify-content:space-around;
-    width:100%;
-    background-color:white;
-    box-shadow: 2px 5px 15px 0px #DCDDDC;
-    padding: .5em 0;
-    align-items:center;
-    height:4em;
-}
+    .navContainer a {
+        text-decoration: none;
+    }
 
-.navContainer a {
-    text-decoration: none;
-}
+    .navContainer a:visited {
+        color: #646464;
+    }
 
-.navContainer a:visited {
-    color:#646464;
-}
+    .leftNav {
+        display: flex;
+        align-items: center;
+        width: 40%;
+        justify-content: space-around;
+    }
 
-.leftNav {
-    display:flex;
-    align-items:center;
-    width:40%;
-    justify-content:space-around;
-}
+    .categoriesBtn {
+        justify-content: space-between;
+    }
 
-.categoriesBtn {
-    justify-content:space-between;
-}
+    .rightNav {
+        display: flex;
+        align-items: center;
+        width: 60%;
+        justify-content: space-around;
+    }
 
-.rightNav {
-    display:flex;
-    align-items:center;
-    width:60%;
-    justify-content:space-around;
-}
+    .success,
+    .error {
+        display: flex;
+        width: 100%;
+        background: #93EF72;
+        color: white;
+        position: absolute;
+        justify-content: center;
+        animation: fadein 2s forwards;
+    }
 
-.success, .error {
-    display:flex;
-    width:100%;
-    background:#93EF72;
-    color:white;
-    position:absolute;
-    justify-content:center;
-    animation: fadein 2s forwards;
-}
+    .error {
+        background: #ef7272;
+    }
 
-.error {
-    background:#ef7272;
-}
+    @keyframes fadein {
+        from {
+            opacity: 0;
+            padding: 0;
+        }
 
-@keyframes fadein {
-    from { opacity:0; padding: 0; }
-    to {opacity:1; padding:.25em 0; }
-}
+        to {
+            opacity: 1;
+            padding: .25em 0;
+        }
+    }
 
-.messagesContainer {
-    animation: fadeout 2s forwards;
-    animation-delay:5s;
-}
+    .messagesContainer {
+        animation: fadeout 2s forwards;
+        animation-delay: 5s;
+    }
 
-@keyframes fadeout {
-    from { opacity:1 }
-    to {opacity:0;}
-}
+    @keyframes fadeout {
+        from {
+            opacity: 1
+        }
 
-body {
-    background: #F8F7F7;
-    width:100%;
-    height:100%;
-    padding:0;
-    margin:0;
-}
+        to {
+            opacity: 0;
+        }
+    }
 
-.logo img{
-    height:3em;
-}
+    body {
+        background: #F8F7F7;
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        margin: 0;
+    }
 
-.searchContainer {
-    display:flex;
-    border:1px solid #dadada;
-    box-shadow: 0px 1px 5px 0px #DCDDDC;
-    padding:.5em;
-    border-radius:1em;
-    width:40%;
-}
+    .logo img {
+        height: 3em;
+    }
 
-.searchContainer i {
-    color: #dadada;
-    margin-right:.5em;
-    display:flex;
-}
+    .searchContainer {
+        display: flex;
+        border: 1px solid #dadada;
+        box-shadow: 0px 1px 5px 0px #DCDDDC;
+        padding: .5em;
+        border-radius: 1em;
+        width: 40%;
+    }
 
-.searchContainer input {
-    border: none;
-    font-weight:500;
-    color: #555454;
-    flex:1;
-}
+    .searchContainer i {
+        color: #dadada;
+        margin-right: .5em;
+        display: flex;
+    }
 
-.navLinks a {
-    margin:0 .5em;    
-}
+    .searchContainer input {
+        border: none;
+        font-weight: 500;
+        color: #555454;
+        flex: 1;
+    }
 
-.categoryDropdown {
-    position: relative;
-    display: inline-block;
-}
+    .navLinks a {
+        margin: 0 .5em;
+    }
 
-.categoryDropdown:hover .categoryDropdownContent {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-}
+    .categoryDropdown {
+        position: relative;
+        display: inline-block;
+    }
 
-.categoryDropdownContent {
-    display: none;
-    position: absolute;
-    background:#F8F9FA;
-    min-width: 20em;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    z-index: 1;
-    padding:1em;
-}
+    .categoryDropdown:hover .categoryDropdownContent {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
 
-.categoryDropdownItem {
-    display:inline-block;
-    margin: .5em;
-}
+    .categoryDropdownContent {
+        display: none;
+        position: absolute;
+        background: #F8F9FA;
+        min-width: 20em;
+        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+        z-index: 1;
+        padding: 1em;
+    }
 
-.userDropdown {
-    position: relative;
-    display: inline-block;
-}
+    .categoryDropdownItem {
+        display: inline-block;
+        margin: .5em;
+    }
 
-.userDropdownContent {
-    display: none;
-    position: absolute;
-    background:#F8F9FA;
-    min-width: 160px;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    z-index: 1;
-}
+    .userDropdown {
+        position: relative;
+        display: inline-block;
+    }
 
-.userDropdownContent a {
-  padding: 12px 16px;
-  display: block;
-}
+    .userDropdownContent {
+        display: none;
+        position: absolute;
+        background: #F8F9FA;
+        min-width: 160px;
+        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+        z-index: 1;
+    }
 
-.userDropdownContent a:hover {background-color: #f1f1f1}
+    .userDropdownContent a {
+        padding: 12px 16px;
+        display: block;
+    }
 
-.userDropdown:hover .userDropdownContent {
-  display: block;
-}
+    .userDropdownContent a:hover {
+        background-color: #f1f1f1
+    }
 
-.userDropdown:hover .dropbtn {
-  background-color: white;
-}
+    .userDropdown:hover .userDropdownContent {
+        display: block;
+    }
 
-.dropbtn {
-    display:flex;
-    align-items:center;
-    justify-content:space-around;
-}
+    .userDropdown:hover .dropbtn {
+        background-color: white;
+    }
 
-.dropbtn span {
-    margin:0 .2em 0 1em;
-}
+    .dropbtn {
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+    }
 
-.dropbtn img {
-    height:100%;
-    overflow:hidden;
-    border-radius:50%;
-}
+    .dropbtn span {
+        margin: 0 .2em 0 1em;
+    }
 
-.profileImage:before {
-    content:"";
-    display:block;
-    padding-top: 100%;
-}
+    .dropbtn img {
+        height: 100%;
+        overflow: hidden;
+        border-radius: 50%;
+    }
 
-.profileImage {
-    position:relative;
-    width: 3em;
-    overflow: hidden;
-    border-radius:50%;
-}
+    .profileImage:before {
+        content: "";
+        display: block;
+        padding-top: 100%;
+    }
 
-.profileImage img {
-    position: absolute;
-    top: 0;
-    left:0;
-    right:0;
-    bottom:0;
-    object-fit: cover;
-    width:100%;
-}
+    .profileImage {
+        position: relative;
+        width: 3em;
+        overflow: hidden;
+        border-radius: 50%;
+    }
 
+    .profileImage img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        object-fit: cover;
+        width: 100%;
+    }
 </style>
