@@ -119,11 +119,13 @@
             element.onclick = () => {
                 counter -= 1
                 counterDiv.innerHTML = counter;
+                element.setAttribute("class", 'hidden')
                 // send back comment id to be updated in db
                 NotifierSocket.send(JSON.stringify({
                     'id': e.id
                 }));
-                window.location.href = "/post/" + e.slug + "#body-" + e.id;
+                const postURL = "/post/" + e.slug
+                location.href = postURL + "#body-" + e.id;
             }
             counter += 1
         }
@@ -275,7 +277,7 @@
     }
 
     #notification-label {
-        width: 1.2em;
+        width: 5em;
         height: 2.5em;
         display: block;
         position: absolute;
@@ -502,5 +504,9 @@
         bottom: 0;
         object-fit: cover;
         width: 100%;
+    }
+
+    .hidden {
+        display: none;
     }
 </style>
