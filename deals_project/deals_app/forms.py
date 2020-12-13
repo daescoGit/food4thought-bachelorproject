@@ -2,11 +2,11 @@ from django import forms
 from .models import Category
 
 categories = Category.objects.all()
-
-choices = []
+categoryChoices = []
 
 for category in categories:
-    choices.append((category.pk, category.name))
+    categoryChoices.append((category.pk, category.name))
+
 
 class DateInput(forms.DateInput):
     input_type = 'date'
@@ -16,5 +16,12 @@ class PostForm(forms.Form):
     description = forms.CharField(widget=forms.Textarea, max_length=200)
     new_price = forms.IntegerField()
     old_price = forms.IntegerField()
-    category = forms.ChoiceField(choices=choices)
+    category = forms.ChoiceField(choices=categoryChoices)
+    address_line_1 = forms.CharField(max_length=200)
+    address_line_2 = forms.CharField(max_length=200)
+    postcode_code = forms.IntegerField()
+    postcode_text = forms.CharField(max_length=200)
     expiration_date = forms.DateField(widget=DateInput)
+    lng = forms.FloatField()
+    lat = forms.FloatField()    
+

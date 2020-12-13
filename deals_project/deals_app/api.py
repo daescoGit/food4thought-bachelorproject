@@ -4,6 +4,7 @@ from django.http import HttpResponse, JsonResponse
 from .serializers import CommentSerializer, QuoteSerializer, VoteSerializer
 from rest_framework.parsers import JSONParser
 from rest_framework import generics, permissions
+import requests
 
 # class comment_detail(generics.ListCreateAPIView):
 #     def get_serializer_class(self):
@@ -83,5 +84,11 @@ def votePost(request, post_id):
         return JsonResponse({'message': 'vote does not exist'}, status=400)
 
 
+def getAddress(request):
+    data = JSONParser().parse(request)
+    lng = data["lng"]
+    lat = data["lat"]
+    response = requests.get(f'https://api.mapbox.com/geocoding/v5/mapbox.places/{lng},{lat}.json?access_token=pk.eyJ1IjoiaXAzbHk1IiwiYSI6ImNrMGM1ZXg2bjB5cXgzYm53bHAyem5ldmkifQ.LM4FfJrdUcagfWYHuDUjww')
+    return JsonResponse({'response': response.json()}, status=200)
 
 

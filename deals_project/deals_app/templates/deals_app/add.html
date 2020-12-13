@@ -52,6 +52,33 @@
             <div class="formSingle">
                 <label>Images<span class="asterisk">*</span></label>
                 <input class="multiFiles" type="file" multiple>
+            </div>
+            <div class="pairContainer">
+                <div class="formPair">
+                    <label>Address Line 1<span class="asterisk">*</span></label>
+                    <div class="inputContainer">
+                        {{form.address_line_1}}
+                    </div>
+                </div>
+                
+                <div class="formPair">
+                    <label>Address Line 2<span class="asterisk">*</span></label>
+                    <div class="inputContainer">
+                        {{form.address_line_2}}
+                    </div>
+                </div>
+            </div>
+            {{form.postcode_code.as_hidden}}
+            {{form.postcode_text.as_hidden}}
+            {{form.lng.as_hidden}}
+            {{form.lat.as_hidden}}
+            <div class="formSingle">
+                <label>Location</label>
+                <div class="mapContainer">
+                    <div class="pointer"><i class="fas fa-map-marker"></i></div>
+                    <div id="map">
+                    </div>
+                </div>
         </form>
         <div>
             {{ form.errors }}
@@ -146,6 +173,82 @@
         form.submit()
 
     }); 
+
+
+
+    mapboxgl.accessToken = 'pk.eyJ1IjoiaXAzbHk1IiwiYSI6ImNrMGM1ZXg2bjB5cXgzYm53bHAyem5ldmkifQ.LM4FfJrdUcagfWYHuDUjww';
+    var map = new mapboxgl.Map({
+    container: 'map', // container id
+    style: 'mapbox://styles/mapbox/streets-v11', // style URL
+    center: [12.569177797899329, 55.69267934271247], // starting position [lng, lat]
+    zoom: 12 // starting zoom
+    });
+
+    map.on('load', function () {
+    map.resize();
+    });
+
+// GET COORDINATES //
+
+    let pointer = document.querySelector('.pointer');
+
+    map.on('mousedown', function(e){
+        pointer.classList.add('pointerActive')
+    })
+
+    map.on('mouseup', function(e){
+        pointer.classList.remove('pointerActive')
+        var center = map.getCenter();
+        var {longitude, latitude} = map.getCenter();
+
+        let lngInput = document.querySelector('#id_lng')
+        let latInput = document.querySelector('#id_lat')
+        let addressLine1Input = document.querySelector('#id_address_line_1')
+        let addressLine2Input = document.querySelector('#id_address_line_2')
+        let postcodeCodeInput = document.querySelector('#id_postcode_code')
+        let postcodeTextInput = document.querySelector('#id_postcode_text')
+
+        lngInput.value = center.lng
+        latInput.value = center.lat
+
+        fetch(`get_address/`, {
+            method:"POST",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({
+                "lng":lngInput.value,
+                "lat":latInput.value
+            })
+        })
+        .then((response) => {
+            let res = response.json()
+            return res
+
+            }).then(function(data) {
+                
+                let addressArray = data.response.features
+                console.log(addressArray)
+
+                addressArray.forEach((node)=>{
+                    switch(node.place_type[0]) {
+                        case "address":
+                            addressLine1Input.value = node.address;
+                            addressLine2Input.value = node.text
+                            break;
+                        case "postcode":
+                            postcodeCodeInput.value = node.text;
+                            break;
+                        case "place":
+                            postcodeTextInput.value = node.text;
+                        }
+                    
+
+                })
+        })
+    });
 })
        
     
@@ -258,6 +361,41 @@ label {
     color:transparent;
 }
 
+
+/* MAPBOX */
+
+.pointer {
+    font-size:2em;
+    position:absolute;
+    top: 50%;
+    left: 50%;
+    margin-right: -50%;
+    z-index:99;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    color:#EF7B72;
+    transition: transform .25s ease-in-out;
+}
+
+.pointerActive {
+    transform:translate(-50%, -65%) rotate(5deg);
+}
+
+#map { position: absolute; top: 0; bottom: 0; width: 100%; }
+
+.mapContentContainer {
+    display: flex;
+    height:calc(100vh - 5em);
+
+}
+
+.mapContainer {
+    position: relative;
+    width: 100% !important;
+    height:20em;
+    flex: 1;
+    display: flex;
+}
 
 </style>
 {% endblock content %}

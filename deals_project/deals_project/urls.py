@@ -22,8 +22,8 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('', include('deals_app.urls')),
     path('users/', include('profile_app.urls')),
-    path('a/a/admin', admin.site.urls),
-    path('a/a/accounts/', include('login_app.urls'))
+    path('admin', admin.site.urls),
+    path('accounts/', include('login_app.urls'))
 ]
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
