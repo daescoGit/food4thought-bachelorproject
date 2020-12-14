@@ -17,14 +17,14 @@
             <a href="" class="logo"><img src="{% static 'dk logo.svg' %}" /></a>
             <a href="{% url 'deals_app:base' 'all' %}">All</a>
             <a href="{% url 'deals_app:base' 'our-picks' %}">Our Picks</a>
-            <div class="categoryDropdown">
-                <a class="categoryBtn" href="">
+            <div class="genericDropdown">
+                <a href="">
                     <span>Categories</span>
                     <i class="fa fa-angle-down" aria-hidden="true"></i>
                 </a>
-                <div class="categoryDropdownContent">
+                <div class="genericDropdownContent">
                     {% for category in categories %}
-                        <a class="categoryDropdownItem" href="{% url 'deals_app:base' category.slug %}">{{category}}</a>
+                        <a class="genericDropdownItem" href="{% url 'deals_app:base' category.slug %}">{{category}}</a>
                     {% endfor %}
                 </div>
             </div>
@@ -228,17 +228,17 @@ body {
     margin:0 .5em;    
 }
 
-.categoryDropdown {
+.genericDropdown {
     position: relative;
     display: inline-block;
 }
 
-.categoryDropdown:hover .categoryDropdownContent {
+.genericDropdown:hover .genericDropdownContent {
     display: grid;
     grid-template-columns: 1fr 1fr;
 }
 
-.categoryDropdownContent {
+.genericDropdownContent {
     display: none;
     position: absolute;
     background:#F8F9FA;
@@ -248,7 +248,7 @@ body {
     padding:1em;
 }
 
-.categoryDropdownItem {
+.genericDropdownItem {
     display:inline-block;
     margin: .5em;
 }
