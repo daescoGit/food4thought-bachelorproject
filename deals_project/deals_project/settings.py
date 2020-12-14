@@ -30,7 +30,8 @@ ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 # Application definition
 
 INSTALLED_APPS = [
-    'django_rq', ### <--- This is new
+    'channels',
+    'django_rq',  # <--- This is new
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -55,19 +56,19 @@ MIDDLEWARE = [
 
 
 RQ_QUEUES = {
-   'default': {
-      'HOST': 'localhost',
-      'PORT': '6379',
-      'DB': 0,
-      'DEFAULT_TIMEOUT': 360,
-   }
+    'default': {
+        'HOST': 'localhost',
+        'PORT': '6379',
+        'DB': 0,
+        'DEFAULT_TIMEOUT': 360,
+    }
 }
 
 # EMAIL SETTINGS
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_USE_TLS = True
-#EMAIL_USE_SSL = True ### <--- DON'T USE THIS - USE EMAIL_USE_TLS
+# EMAIL_USE_SSL = True ### <--- DON'T USE THIS - USE EMAIL_USE_TLS
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_HOST_USER = 'kea.verify.test@gmail.com'
@@ -94,7 +95,16 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'deals_project.wsgi.application'
-
+# Channels
+ASGI_APPLICATION = 'deals_project.asgi.application'
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [('localhost', 6379)],
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
@@ -142,4 +152,4 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR,'images')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'images')
