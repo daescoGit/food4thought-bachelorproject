@@ -1,16 +1,22 @@
 {% load static %}
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8">
     <title>{% block title %}DkDeals{% endblock %}</title>
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
-    <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300;0,400;0,500;0,600;0,700;1,500&display=swap" rel="stylesheet"> 
-    <link href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
+        integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300;0,400;0,500;0,600;0,700;1,500&display=swap"
+        rel="stylesheet">
+    <link href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css"
+        rel="stylesheet">
     <link href="{% static 'filepond.css' %}" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.0.0/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.0.0/mapbox-gl.css" rel="stylesheet" />
 </head>
+
 <body style="visibility: hidden;">
     <nav class="navContainer">
         <div class="leftNav">
@@ -34,7 +40,13 @@
                 <i class="fas fa-search"></i>
                 <input placeholder="Search">
             </div>
-        {% if user.is_authenticated %}
+            {% if user.is_authenticated %}
+            <div id="notification-group">
+                <label for="notification-icon" id="notification-label"></label>
+                <i class="far fa-bell" id="notification-icon"></i>
+                <div id="notification-counter"></div>
+                <div id="notification-list"></div>
+            </div>
             <div class="userDropdown">
                 <a class="dropbtn" href="">
                     <div class="profileImage">
@@ -46,34 +58,34 @@
                 <div class="userDropdownContent">
                     <a class="userDropdownItem" href="{% url 'profile_app:profile' user.id %}">Profile</a>
                     <!-- <a class="userDropdownItem" href="">Chats</a> -->
-		    <a class="userDropdownItem" href="{% url 'login_app:edit_account' %}">Account settings</a>
+                    <a class="userDropdownItem" href="{% url 'login_app:edit_account' %}">Account settings</a>
                     <a class="userDropdownItem" href="{% url 'login_app:logout' %}">Logout</a>
                 </div>
             </div>
-        </div> 
-            {% else %}
-            <div class="navLinks">
-                <a class="navLink" href="{% url 'login_app:login' %}">Login</a>
-                <a class="navLink" href="{% url 'login_app:register' %}">Register</a>
-            </div>
         </div>
-            {% endif %}
+        {% else %}
+        <div class="navLinks">
+            <a class="navLink" href="{% url 'login_app:login' %}">Login</a>
+            <a class="navLink" href="{% url 'login_app:register' %}">Register</a>
+        </div>
+        </div>
+        {% endif %}
     </nav>
     <div class="messagesContainer">
         {% if messages %}
-            {% for message in messages %}
-            <div class=" {{message.tags}} ">
-                {{message}} 
-            </div>
-            {% endfor %}
+        {% for message in messages %}
+        <div class=" {{message.tags}} ">
+            {{message}}
+        </div>
+        {% endfor %}
         {% endif %}
 
         {% if errors %}
-            {% for error in errors %}
-            <div class="error">
-                {{error}} 
-            </div>
-            {% endfor %}
+        {% for error in errors %}
+        <div class="error">
+            {{error}}
+        </div>
+        {% endfor %}
         {% endif %}
     </div>
     {% block content %}
@@ -88,23 +100,125 @@
         window.addEventListener('DOMContentLoaded', (event) => {
             document.body.style.visibility = 'visible';
         });
+
+        handleQuery = (e) => {
+            // creating new div for incomming comment
+            const element = document.createElement("div");
+            element.setAttribute("id", 'comment-' + e.id);
+
+            const rType = e.is_quote == true ? ' replied ' : ' commented ';
+            const stylable = document.createElement("span");
+            //stylable.setAttribute("class", 'notification-instance');
+            const text = document.createTextNode(e.user + rType + e.body);
+            stylable.appendChild(text)
+
+            element.appendChild(stylable);
+            document.querySelector('#notification-list').prepend(element);
+
+            // attaching event listener dynamically
+            element.onclick = () => {
+                counter -= 1
+                counterDiv.innerHTML = counter;
+                element.setAttribute("class", 'hidden')
+                // send back comment id to be updated in db
+                NotifierSocket.send(JSON.stringify({
+                    'id': e.id
+                }));
+                const postURL = "/post/" + e.slug
+                location.href = postURL + "#body-" + e.id;
+            }
+            counter += 1
+        }
+
+        let counter = 0;
+        const counterDiv = document.querySelector('#notification-counter');
+        counterDiv.innerHTML = counter;
     </script>
+
+    <!-- Status socket -->
+    <script>
+        const statusSocket = new WebSocket(
+            'ws://'
+            + window.location.host
+            + '/ws/status/'
+        );
+        console.log(statusSocket)
+
+        statusSocket.onmessage = function (e) {
+            console.log("status ws message", e)
+            console.log(e.data)
+        }
+
+        statusSocket.onopen = function (e) {
+            console.log("status ws open", e)
+        }
+
+        statusSocket.onclose = function (e) {
+            console.log('status ws closed', e);
+        }
+    </script>
+
+    {% if user.is_authenticated %}
+    <!-- Notification socket -->
+    <script>
+        const loc = window.location
+        let wsStart = "ws://"
+        if (loc.protocol == 'https:') {
+            wsStart = 'wss://'
+        }
+        let endpoint = wsStart + loc.host + "/ws/notifier/"
+        console.log(endpoint)
+
+        NotifierSocket = new WebSocket(endpoint);
+
+        NotifierSocket.onopen = function (message) {
+            console.log("notif open", message);
+        }
+
+        NotifierSocket.onmessage = function (e) {
+            const jData = JSON.parse(e.data);
+            console.log(jData)
+            const jComments = jData.data;
+            // initial unreads
+            if (jData.multi == true) {
+
+                jComments.forEach(elem => {
+                    handleQuery(elem)
+                });
+            }
+            // incomming
+            else {
+
+                handleQuery(jComments[0])
+            }
+            counterDiv.innerHTML = counter;
+        }
+
+        NotifierSocket.onerror = function (message) {
+            console.log("notif error", message);
+        }
+
+        NotifierSocket.onclose = function (message) {
+            console.log("notif close", message);
+        }
+    </script>
+    {% endif %}
 </body>
+
 </html>
 
 <style>
+    * {
+        font-family: 'Rubik', sans-serif;
+    }
 
-* {
-    font-family: 'Rubik', sans-serif;
-}
+    body {
+        display: flex;
+        flex-direction: column;
+    }
 
-body {
-    display:flex;
-    flex-direction:column;
-}
-
-button {
-	background: none;
+    button {
+        background: none;
         color: inherit;
         border: none;
         padding: 0;
@@ -321,4 +435,286 @@ body {
     width:100%;
 }
 
+#notification-list {
+    position: absolute;
+    z-index: 1;
+    background: #F8F9FA;
+    padding: 1em;
+    max-height: 15em;
+    overflow-y: scroll;
+    width: 15em;
+    overflow-x: hidden;
+    display: none;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+}
+
+
+#notification-group:hover #notification-list {
+    display: block;
+}
+
+#notification-group {
+    text-align: center;
+}
+
+#notification-icon {
+    font-size: 1.2em;
+}
+
+#notification-list>div {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-bottom: 1px solid #e1e1e1;
+    padding: 0.5em 0;
+    cursor: pointer;
+    text-align: left;
+}
+
+#notification-list>div:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+#notification-list>div:first-child {
+    padding-top: 0;
+}
+
+#notification-counter {
+    color: #bf7474;
+}
+
+#notification-label {
+    width: 5em;
+    height: 2.5em;
+    display: block;
+    position: absolute;
+    cursor: pointer;
+}
+
+.main {
+    width: 60em;
+    margin: 0 auto;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.navContainer {
+    font-weight: 500;
+    color: #555454;
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    background-color: white;
+    box-shadow: 2px 5px 15px 0px #DCDDDC;
+    padding: .5em 0;
+    align-items: center;
+    height: 4em;
+}
+
+.navContainer a {
+    text-decoration: none;
+}
+
+.navContainer a:visited {
+    color: #646464;
+}
+
+.leftNav {
+    display: flex;
+    align-items: center;
+    width: 40%;
+    justify-content: space-around;
+}
+
+.categoriesBtn {
+    justify-content: space-between;
+}
+
+.rightNav {
+    display: flex;
+    align-items: center;
+    width: 60%;
+    justify-content: space-around;
+}
+
+.success,
+.error {
+    display: flex;
+    width: 100%;
+    background: #93EF72;
+    color: white;
+    position: absolute;
+    justify-content: center;
+    animation: fadein 2s forwards;
+}
+
+.error {
+    background: #ef7272;
+}
+
+@keyframes fadein {
+    from {
+        opacity: 0;
+        padding: 0;
+    }
+
+    to {
+        opacity: 1;
+        padding: .25em 0;
+    }
+}
+
+.messagesContainer {
+    animation: fadeout 2s forwards;
+    animation-delay: 5s;
+}
+
+@keyframes fadeout {
+    from {
+        opacity: 1
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+body {
+    background: #F8F7F7;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.logo img {
+    height: 3em;
+}
+
+.searchContainer {
+    display: flex;
+    border: 1px solid #dadada;
+    box-shadow: 0px 1px 5px 0px #DCDDDC;
+    padding: .5em;
+    border-radius: 1em;
+    width: 40%;
+}
+
+.searchContainer i {
+    color: #dadada;
+    margin-right: .5em;
+    display: flex;
+}
+
+.searchContainer input {
+    border: none;
+    font-weight: 500;
+    color: #555454;
+    flex: 1;
+}
+
+.navLinks a {
+    margin: 0 .5em;
+}
+
+.categoryDropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.categoryDropdown:hover .categoryDropdownContent {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.categoryDropdownContent {
+    display: none;
+    position: absolute;
+    background: #F8F9FA;
+    min-width: 20em;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+    padding: 1em;
+}
+
+.categoryDropdownItem {
+    display: inline-block;
+    margin: .5em;
+}
+
+.userDropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.userDropdownContent {
+    display: none;
+    position: absolute;
+    background: #F8F9FA;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+}
+
+.userDropdownContent a {
+    padding: 12px 16px;
+    display: block;
+}
+
+.userDropdownContent a:hover {
+    background-color: #f1f1f1
+}
+
+.userDropdown:hover .userDropdownContent {
+    display: block;
+}
+
+.userDropdown:hover .dropbtn {
+    background-color: white;
+}
+
+.dropbtn {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+}
+
+.dropbtn span {
+    margin: 0 .2em 0 1em;
+}
+
+.dropbtn img {
+    height: 100%;
+    overflow: hidden;
+    border-radius: 50%;
+}
+
+.profileImage:before {
+    content: "";
+    display: block;
+    padding-top: 100%;
+}
+
+.profileImage {
+    position: relative;
+    width: 3em;
+    overflow: hidden;
+    border-radius: 50%;
+}
+
+.profileImage img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    object-fit: cover;
+    width: 100%;
+}
+
+.hidden {
+    display: none;
+}
 </style>
