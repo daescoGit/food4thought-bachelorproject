@@ -426,9 +426,6 @@
         map.resize();
     });
 
-
-
-
     postsArray.forEach(post => {
         post.coordinates = {
             "lng": post.fields.lng,
@@ -469,7 +466,6 @@
     }
 
     postListSocket.onmessage = function (e) {
-
         const jData = JSON.parse(e.data)
         let jFull = JSON.parse(jData.data)
         jPost = jFull[0].fields
@@ -500,6 +496,26 @@
             </div>`);
 
         // map stuff
+        jPost.coordinates = {
+            "lng": jPost.lng,
+            "lat": jPost.lat
+        }
+        let el = document.createElement('a');
+        el.className = `marker postId-${jPost.id}`
+        el.style.height = "20px";
+        el.style.width = "20px";
+        el.href = `#mapId-${jPost.id}`
+
+        new mapboxgl.Marker(el).setLngLat(jPost.coordinates).addTo(map);
+
+        el.addEventListener('click', function () {
+            removeActiveClassFromProperty()
+            let activeElements = document.querySelectorAll(`.postId-${jPost.id}`)
+            activeElements.forEach((element) => {
+                console.log(activeElements)
+                element.classList.add('active');
+            })
+        })
     }
 
     postListSocket.onerror = function (message) {
