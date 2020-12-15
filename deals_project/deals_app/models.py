@@ -74,7 +74,7 @@ class Comment(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
     read_by_author = models.BooleanField(default=False)
     is_quote = models.BooleanField(default=False)
-
+    private = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['date_created']

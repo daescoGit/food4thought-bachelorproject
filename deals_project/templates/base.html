@@ -166,10 +166,10 @@
         if (loc.protocol == 'https:') {
             wsStart = 'wss://'
         }
-        let endpoint = wsStart + loc.host + "/ws/notifier/"
-        console.log(endpoint)
+        let notifEndpoint = wsStart + loc.host + "/ws/notifier/"
+        console.log(notifEndpoint)
 
-        NotifierSocket = new WebSocket(endpoint);
+        NotifierSocket = new WebSocket(notifEndpoint);
 
         NotifierSocket.onopen = function (message) {
             console.log("notif open", message);

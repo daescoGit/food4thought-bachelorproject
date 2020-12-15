@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}Dk Dealer - {{category}}{% endblock title %}
-{% block content %} 
+{% block content %}
 <div class="mapContentContainer">
     <div class="mapContainer">
         <div id="map">
@@ -28,17 +28,19 @@
                     {% endfor %}
                 </div>
             </div>
+            {% if user.is_authenticated %}
             <div>
                 <a href="{% url 'deals_app:addPost' %}">
                     <span>Add post</span>
                     <i class="fas fa-plus-circle"></i>
                 </a>
             </div>
+            {% endif %}
         </div>
 
         <div class="content">
             <div id="posts">
-            {% for post in posts %}
+                {% for post in posts %}
                 <div class="postAnchor" id="mapId-{{post.id}}">
                     <div class="post postId-{{post.id}}">
                         <div class="postImage">
@@ -47,9 +49,11 @@
                             </a>
                         </div>
                         <div class="postLeft">
-                            <div class="postTitle"><a href="{% url 'deals_app:post' post.slug %}">{{post.title}}</a></div>
+                            <div class="postTitle"><a href="{% url 'deals_app:post' post.slug %}">{{post.title}}</a>
+                            </div>
                             <div class="postSecondaryDetails">
-                                <div class="postAuthor"><a href="{% url 'profile_app:profile' post.user.id %}">{{post.user}}</a></div>
+                                <div class="postAuthor"><a
+                                        href="{% url 'profile_app:profile' post.user.id %}">{{post.user}}</a></div>
                                 <div class="postTimestamp">{{post.date_created}}</div>
                             </div>
                         </div>
@@ -64,7 +68,8 @@
                                     <div data-vote=-1>dårlig pris</div>
                                 </div>
                                 <i class="fas fa-caret-left" data-vote=1></i>
-                                <div class="postScore">{% if post.vote_score %}{{post.vote_score}} {% else %} 0 {% endif %}</div>
+                                <div class="postScore">{% if post.vote_score %}{{post.vote_score}} {% else %} 0
+                                    {% endif %}</div>
                                 <i class="fas fa-caret-right" data-vote=-1></i>
                                 <div class="upVote color{{post.voteStatus}}" data-vote=1>
                                     <i class="fas fa-gavel" data-vote=1></i>
@@ -74,239 +79,249 @@
                         </div>
                     </div>
                 </div>
-            {% endfor %}
+                {% endfor %}
             </div>
         </div>
-            <div class="pageButtonsContainer">
-                <div class="pageButton"><a href="{% url 'deals_app:base' base order '0' currentLocation %}">0</a></div>
-                <div class="pageButton" >
-                    {% if currentPage != 0 %}
-                    <div><a href="{% url 'deals_app:base' base order previousPage currentLocation %}"><i class="fas fa-caret-left"></i></a></div>
-                    {% endif %}
-                    <div class="currentPage">Page {{currentPage}}</div>
-                    <div><a href="{% url 'deals_app:base' base order nextPage currentLocation %}"><i class="fas fa-caret-right"></i></a></div>
+        <div class="pageButtonsContainer">
+            <div class="pageButton"><a href="{% url 'deals_app:base' base order '0' %}">0</a></div>
+            <div class="pageButton">
+                {% if currentPage != 0 %}
+                <div><a href="{% url 'deals_app:base' base order previousPage %}"><i class="fas fa-caret-left"></i></a>
                 </div>
-                <div class="pageButton"><a href="{% url 'deals_app:base' base order '5' currentLocation %} ">5</a></div>
+                {% endif %}
+                <div class="currentPage">Page {{currentPage}}</div>
+                <div><a href="{% url 'deals_app:base' base order nextPage %}"><i class="fas fa-caret-right"></i></a>
+                </div>
             </div>
+            <div class="pageButton"><a href="{% url 'deals_app:base' base order '5' %} ">5</a></div>
+        </div>
     </div>
 </div>
 
 {{ jsonPosts|json_script:'jsonPosts' }}
 
 <style>
+    a {
+        color: inherit;
+        text-decoration: inherit;
+    }
 
-a {
-  color: inherit;
-  text-decoration: inherit; 
-}
+    a:hover {
+        text-decoration: underline;
+    }
 
-a:hover {
-    text-decoration: underline; 
-}
+    .active {
+        box-shadow: 0 0 10px 0 rgba(239, 123, 114, 1) !important;
+    }
 
-.active {
-    box-shadow: 0 0 10px 0 rgba(239,123,114, 1)!important;
-}
+    .main .quickButtons {
+        color: #EF7B72;
+        padding: 1em 0;
+        align-items: center;
+        display: flex;
+        font-weight: 500;
+        margin: 0 2em;
 
-.main .quickButtons {
-    color:#EF7B72;
-    padding:1em 0;
-    align-items: center;
-    display: flex;
-    font-weight:500;
-    margin: 0 2em;
+    }
 
-}
+    .main .quickButtons span,
+    .main .quickButtons i {
+        margin-right: .25em;
+        cursor: pointer;
+    }
 
-.main .quickButtons span, .main .quickButtons i {
-    margin-right:.25em;
-    cursor:pointer;
-}
+    .main .quickButtons div {
+        margin-right: 2em;
+    }
 
-.main .quickButtons div {
-    margin-right:2em;
-}
+    .main .categoryTitle {
+        margin-top: 1em;
+        display: flex;
+        color: #EF7B72;
+        width: 100%;
+        font-size: 2em;
+        justify-content: center;
+    }
 
-.main .categoryTitle {
-    margin-top:1em;
-    display:flex;
-    color:#EF7B72;
-    width:100%;
-    font-size:2em;
-    justify-content:center;
-}
+    .categoryTitle {
+        text-transform: capitalize;
+    }
 
-.categoryTitle {
-  text-transform: capitalize;
-}
+    .quickButtons a {
+        text-decoration: none;
+    }
 
-.quickButtons a {
-    text-decoration: none;
-}
+    .content {
+        height: 90%;
+        overflow-y: scroll;
+        scroll-behavior: smooth;
+        flex-grow: 1;
+        background: white;
+        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+        margin: 0 2em;
+    }
 
-.content {
-    height:90%;
-    overflow-y: scroll;
-    scroll-behavior: smooth;
-    flex-grow: 1;
-    background:white;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    margin: 0 2em;
-}
+    .postAnchor {
+        padding: 1em;
+    }
 
-.postAnchor {
-    padding:1em;
-}
+    .post {
+        padding: 0 1em;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        color: #545454;
+        text-decoration: none;
+        box-shadow: 0px 8px 16px 0px rgba(239, 123, 114, 0);
+        transition: box-shadow 1s;
+    }
 
-.post {
-    padding: 0 1em;
-    display:flex;
-    align-items:center;
-    cursor:pointer;
-    color:#545454;
-    text-decoration:none;
-    box-shadow: 0px 8px 16px 0px rgba(239,123,114,0);
-    transition: box-shadow 1s;
-}
+    .postLeft {
+        width: 50%;
+        padding: 2em;
+    }
 
-.postLeft {
-    width:50%;
-    padding:2em;
-}
+    .postImage img {
+        height: 8em;
+        width: auto;
+    }
 
-.postImage img{
-    height:8em;
-    width:auto;
-}
+    .postTitle {
+        font-size: 1.1em;
+        width: 100%;
+        margin-bottom: .5em;
+    }
 
-.postTitle {
-    font-size:1.1em;
-    width:100%;
-    margin-bottom:.5em;
-}
+    .postSecondaryDetails {
+        font-size: .7em;
+        display: flex;
+    }
 
-.postSecondaryDetails {
-    font-size:.7em;
-    display:flex;
-}
+    .postTimestamp {
+        margin-left: 2em;
+        color: #9D9D9C;
+    }
 
-.postTimestamp {
-    margin-left:2em;
-    color:#9D9D9C;
-}
+    .postAuthor {
+        font-weight: 500;
+        color: #EF7B72;
+    }
 
-.postAuthor {
-    font-weight:500;
-    color: #EF7B72;
-}
+    .postRight {
+        display: flex;
+        justify-content: space-around;
+        width: 50%;
+    }
 
-.postRight {
-    display:flex;
-    justify-content:space-around;
-    width:50%;
-}
+    .postPrice {
+        display: flex;
+        align-items: center;
+    }
 
-.postPrice {
-    display:flex;
-    align-items:center;
-}
+    .oldPrice {
+        color: #9D9D9C;
+        text-decoration: line-through;
+        text-decoration-thickness: 2px;
+    }
 
-.oldPrice {
-    color: #9D9D9C;
-    text-decoration:line-through;
-    text-decoration-thickness: 2px;
-}
+    .newPrice {
+        margin-right: .5em;
+        color: #EF7B72;
+    }
 
-.newPrice {
-    margin-right:.5em;
-    color:#EF7B72;
-}
+    .voteComponent {
+        display: flex;
+        align-items: center;
+    }
 
-.voteComponent {
-    display:flex;
-    align-items:center;
-}
+    .upVote,
+    .downVote {
+        margin: 0 .5em;
+        align-items: center;
+        display: flex;
+        flex-direction: column;
+    }
 
-.upVote, .downVote {
-    margin:0 .5em;
-    align-items:center;
-    display:flex;
-    flex-direction:column;
-}
+    .upVote.color1,
+    .upVote:hover {
+        color: #9DC86C;
+    }
 
-.upVote.color1, .upVote:hover{
-    color:#9DC86C;
-}
+    .downVote.color-1,
+    .downVote:hover {
+        color: #EF7C43;
+    }
 
-.downVote.color-1, .downVote:hover{ 
-    color:#EF7C43;
-}
+    .upVote div,
+    .downVote div {
+        font-size: .6em;
+        padding: .2em;
+    }
 
-.upVote div, .downVote div{
-    font-size:.6em;
-    padding:.2em;
-}
+    .postScore {
+        padding: 0 .25em;
+    }
 
-.postScore {
-    padding: 0 .25em;
-}
+    .pageButtonsContainer {
+        display: flex;
+        justify-content: space-between;
+        width: 25%;
+        margin: 2em auto;
+    }
 
-.pageButtonsContainer {
-    display:flex;
-    justify-content:space-between;
-    width:25%;
-    margin:2em auto;
-}
+    .pageButtonsContainer .pageButton {
+        background: white;
+        display: flex;
+        padding: 1em;
+        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+        color: #EF7B72;
+    }
 
-.pageButtonsContainer .pageButton {
-    background:white;
-    display:flex;
-    padding:1em;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    color: #EF7B72;
-}
+    .pageButtonsContainer .currentPage {
+        color: #545454;
+        padding: 0 1em;
+    }
 
-.pageButtonsContainer .currentPage {
-    color:#545454;
-    padding:0 1em;
-}
-
-.pageButton .fas {
-    color: #545454;
-}
+    .pageButton .fas {
+        color: #545454;
+    }
 
 
-/* MAPBOX */
+    /* MAPBOX */
 
-.marker {
-    width:2em;
-    height:2em;
-    border-radius:50%;
-    background-position:center;
-    background-color:red;
-    opacity:0.6;
-}
+    .marker {
+        width: 2em;
+        height: 2em;
+        border-radius: 50%;
+        background-position: center;
+        background-color: red;
+        opacity: 0.6;
+    }
 
-#map { position: absolute; top: 0; bottom: 0; width: 100%; }
+    #map {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+    }
 
-.mapContentContainer {
-    display: flex;
-    height:calc(100vh - 5em);
+    .mapContentContainer {
+        display: flex;
+        height: calc(100vh - 5em);
 
-}
+    }
 
-.mapContainer {
-    position: relative;
-    width: 100% !important;
-    flex: 1;
-    display: flex;
-}
+    .mapContainer {
+        position: relative;
+        width: 100% !important;
+        flex: 1;
+        display: flex;
+    }
 
-.mapContentContainer .main {
-    width:50%;
-    flex-grow:unset;
-}
-
+    .mapContentContainer .main {
+        width: 50%;
+        flex-grow: unset;
+    }
 </style>
 
 
@@ -330,128 +345,195 @@ a:hover {
 
     var csrftoken = getCookie('csrftoken');
 
-document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
 
-    let voteContainers = document.querySelectorAll('.voteComponent')
-    Array.from(voteContainers).forEach(voteContainer => {
+        let voteContainers = document.querySelectorAll('.voteComponent')
+        Array.from(voteContainers).forEach(voteContainer => {
 
-        voteContainer.addEventListener('click', (e)=>{
-            let pk = voteContainer.dataset.id
-            let voteOption = e.target.dataset.vote
-            console.log(voteOption)
-            console.log(voteContainer.dataset.votestatus)
-            if (Number(voteOption) != Number(voteContainer.dataset.votestatus)) {
+            voteContainer.addEventListener('click', (e) => {
+                let pk = voteContainer.dataset.id
+                let voteOption = e.target.dataset.vote
+                console.log(voteOption)
+                console.log(voteContainer.dataset.votestatus)
+                if (Number(voteOption) != Number(voteContainer.dataset.votestatus)) {
 
-                fetch(`/post/${pk}/vote`, {
-                    method: "POST",
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrftoken,
-                    },
+                    fetch(`/post/${pk}/vote`, {
+                        method: "POST",
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrftoken,
+                        },
 
-                    //make sure to serialize your JSON body
-                    body: JSON.stringify({
-                        "vote": voteOption
+                        //make sure to serialize your JSON body
+                        body: JSON.stringify({
+                            "vote": voteOption
+                        })
                     })
-                })
-                .then((response) => {                
-                    return response.clone().json()
-                }).then(function(data) {
+                        .then((response) => {
+                            return response.clone().json()
+                        }).then(function (data) {
                             console.log(data.count)
                             voteContainer.children[2].innerHTML = data.count
-                        if (voteOption == 1) {
-                            voteContainer.dataset.votestatus = 1
-                            voteContainer.children[0].classList.remove('color-1')
-                            voteContainer.children[4].classList.add('color1')
-                        } else {
-                            voteContainer.dataset.votestatus = -1
-                            voteContainer.children[0].classList.add('color-1')
-                            voteContainer.children[4].classList.remove('color1')
+                            if (voteOption == 1) {
+                                voteContainer.dataset.votestatus = 1
+                                voteContainer.children[0].classList.remove('color-1')
+                                voteContainer.children[4].classList.add('color1')
+                            } else {
+                                voteContainer.dataset.votestatus = -1
+                                voteContainer.children[0].classList.add('color-1')
+                                voteContainer.children[4].classList.remove('color1')
 
+                            }
+
+                        })
+                }
+
+                else {
+                    fetch(`/post/${pk}/vote`, {
+                        method: "DELETE",
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrftoken,
                         }
-                    
-                })
-            }
+                    })
+                        .then((response) => {
+                            return response.clone().json()
 
-            else {
-                fetch(`/post/${pk}/vote`, {
-                    method: "DELETE",
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrftoken,
-                    }
-                })
-                .then((response) => {        
-                return response.clone().json()
+                        }).then(function (data) {
+                            console.log(data)
+                            console.log(data.count)
 
-                }).then(function(data) {
-                    console.log(data)
-                    console.log(data.count)
+                            voteContainer.children[2].innerHTML = data.count
 
-                    voteContainer.children[2].innerHTML = data.count
-                    
-                    voteContainer.dataset.votestatus = "";
-                    voteContainer.children[0].classList.remove('color-1')
-                    voteContainer.children[4].classList.remove('color1')
-                })
-            }   
-        })
-    });
+                            voteContainer.dataset.votestatus = "";
+                            voteContainer.children[0].classList.remove('color-1')
+                            voteContainer.children[4].classList.remove('color1')
+                        })
+                }
+            })
+        });
 
-})
+    })
 
 
-let postsArray = JSON.parse(JSON.parse(document.querySelector('#jsonPosts').textContent));
-    
+    let postsArray = JSON.parse(JSON.parse(document.querySelector('#jsonPosts').textContent));
+
     console.log(postsArray)
-	// TO MAKE THE MAP APPEAR YOU MUST
-	// ADD YOUR ACCESS TOKEN FROM
-	// https://account.mapbox.com
-	mapboxgl.accessToken = 'pk.eyJ1IjoiaXAzbHk1IiwiYSI6ImNrMGM1ZXg2bjB5cXgzYm53bHAyem5ldmkifQ.LM4FfJrdUcagfWYHuDUjww';
+    // TO MAKE THE MAP APPEAR YOU MUST
+    // ADD YOUR ACCESS TOKEN FROM
+    // https://account.mapbox.com
+    mapboxgl.accessToken = 'pk.eyJ1IjoiaXAzbHk1IiwiYSI6ImNrMGM1ZXg2bjB5cXgzYm53bHAyem5ldmkifQ.LM4FfJrdUcagfWYHuDUjww';
     var map = new mapboxgl.Map({
-    container: 'map', // container id
-    style: 'mapbox://styles/mapbox/streets-v11', // style URL
-    center: [12.569177797899329, 55.69267934271247], // starting position [lng, lat]
-    zoom: 12 // starting zoom
+        container: 'map', // container id
+        style: 'mapbox://styles/mapbox/streets-v11', // style URL
+        center: [12.569177797899329, 55.69267934271247], // starting position [lng, lat]
+        zoom: 12 // starting zoom
     });
 
-map.on('load', function () {
-    map.resize();
-});
+    map.on('load', function () {
+        map.resize();
+    });
 
-
-
-
-postsArray.forEach(post=>{
-    post.coordinates = {
+    postsArray.forEach(post => {
+        post.coordinates = {
             "lng": post.fields.lng,
             "lat": post.fields.lat
         }
-    let el = document.createElement('a');
-    el.className = `marker postId-${post.pk}`
-    el.style.height = "20px";
-    el.style.width = "20px";
-    el.href=`#mapId-${post.pk}`
+        let el = document.createElement('a');
+        el.className = `marker postId-${post.pk}`
+        el.style.height = "20px";
+        el.style.width = "20px";
+        el.href = `#mapId-${post.pk}`
 
-    new mapboxgl.Marker(el).setLngLat(post.coordinates).addTo(map);
-    
-    el.addEventListener('click', function () {
-        removeActiveClassFromProperty()
-        let activeElements = document.querySelectorAll(`.postId-${post.pk}`)
-        activeElements.forEach((element)=> {
-            console.log(activeElements)
-            element.classList.add('active');
+        new mapboxgl.Marker(el).setLngLat(post.coordinates).addTo(map);
+
+        el.addEventListener('click', function () {
+            removeActiveClassFromProperty()
+            let activeElements = document.querySelectorAll(`.postId-${post.pk}`)
+            activeElements.forEach((element) => {
+                console.log(activeElements)
+                element.classList.add('active');
+            })
         })
     })
-})
 
-function removeActiveClassFromProperty() {
-    let properties = document.querySelectorAll('.active')
-    properties.forEach(function (postDiv) {
-        postDiv.classList.remove('active')
-    })
-}
+    function removeActiveClassFromProperty() {
+        let properties = document.querySelectorAll('.active')
+        properties.forEach(function (postDiv) {
+            postDiv.classList.remove('active')
+        })
+    }
+
+    // Live post socket
+    let postListEndpoint = (location.protocol == 'https:' ? 'wss://' : 'ws://') + location.host + "/ws/postList/"
+
+    postListSocket = new WebSocket(postListEndpoint);
+
+    postListSocket.onopen = function (message) {
+        console.log("post list open", message);
+    }
+
+    postListSocket.onmessage = function (e) {
+        const jData = JSON.parse(e.data)
+        let jFull = JSON.parse(jData.data)
+        jPost = jFull[0].fields
+        const jUsername = jData.username
+
+        currentPosts = document.querySelector('#posts')
+        currentPosts.insertAdjacentHTML("afterbegin",
+            `<div class="postAnchor" id="mapId-${jPost.id}">
+                <div class="post postId-${jPost.id}">
+                    <div class="postImage">
+                        <a href="/post/${jPost.slug}">
+                            <img src="/media/${jPost.thumbnail}">
+                        </a>
+                    </div>
+                    <div class="postLeft">
+                        <div class="postTitle"><a href="/post/${jPost.slug}">${jPost.title}</a>
+                        </div>
+                        <div class="postSecondaryDetails">
+                            <div class="postAuthor"><a
+                                    href="/post/${jPost.user}">${jUsername}</a></div>
+                            <div class="postTimestamp">${jPost.date_created}</div>
+                        </div>
+                    </div>
+                    <div class="postRight">
+                        <div>Other info</div>
+                    </div>
+                </div>
+            </div>`);
+
+        // map stuff
+        jPost.coordinates = {
+            "lng": jPost.lng,
+            "lat": jPost.lat
+        }
+        let el = document.createElement('a');
+        el.className = `marker postId-${jPost.id}`
+        el.style.height = "20px";
+        el.style.width = "20px";
+        el.href = `#mapId-${jPost.id}`
+
+        new mapboxgl.Marker(el).setLngLat(jPost.coordinates).addTo(map);
+
+        el.addEventListener('click', function () {
+            removeActiveClassFromProperty()
+            let activeElements = document.querySelectorAll(`.postId-${jPost.id}`)
+            activeElements.forEach((element) => {
+                console.log(activeElements)
+                element.classList.add('active');
+            })
+        })
+    }
+
+    postListSocket.onerror = function (message) {
+        console.log("post list error", message);
+    }
+
+    postListSocket.onclose = function (message) {
+        console.log("post list close", message);
+    }
 </script>
 {% endblock content %}
