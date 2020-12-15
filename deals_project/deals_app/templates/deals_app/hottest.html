@@ -20,12 +20,14 @@
             <div>
                 <span><a href="{% url 'deals_app:base' base order '1000' %}">Location</a></span>
             </div>
+            {% if user.is_authenticated %}
             <div>
                 <a href="{% url 'deals_app:addPost' %}">
                     <span>Add post</span>
                     <i class="fas fa-plus-circle"></i>
                 </a>
             </div>
+            {% endif %}
         </div>
 
         <div class="content">
