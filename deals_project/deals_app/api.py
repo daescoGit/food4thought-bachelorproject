@@ -24,6 +24,7 @@ def newComment(request, post_id):
             data = JSONParser().parse(request)
             data['user'] = request.user.id
             data['post'] = post_id
+            data['private'] = data.get('private')
             if data.get('quotee'):
                 data["is_quote"] = True
             commentSerializer = CommentSerializer(data=data)
