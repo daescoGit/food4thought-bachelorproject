@@ -88,6 +88,12 @@ def register(request):
         user_name = request.POST['user']
         email = request.POST['email']
         if password == confirm_password:
+            if User.objects.filter(username=user_name).exists():
+                context = {
+                    'error': 'User already exists'
+                }
+                return render(request, 'login_app/register.html', context)
+
             if User.objects.create_user(user_name, email, password):
                 return HttpResponseRedirect(reverse('login_app:login'))
             else:

@@ -6,6 +6,7 @@ import channels.layers
 from asgiref.sync import async_to_sync
 from django.dispatch import receiver
 import json
+import string
 
 from django.utils.text import slugify
 
@@ -38,6 +39,7 @@ class Post(models.Model):
     new_price = models.IntegerField()
     old_price = models.IntegerField()
     vote_score = models.IntegerField(default=0)
+    expired = models.BooleanField(default=False)
     thumbnail = models.ImageField(upload_to='images/')
     date_created = models.DateTimeField(auto_now_add=True)
     category = models.ForeignKey(Category, on_delete=models.PROTECT, null=True)
@@ -93,6 +95,9 @@ class Quote(models.Model):
         return '{} is quoting {}'.format(self.quoter, self.quotee)
 
 
+def reformat_category(instance, *args, **kwargs):
+    instance.name = string.capwords(instance.name)
+
 def create_slug(instance, new_slug=None):
     slug = slugify(instance.title)
     if new_slug is not None:
@@ -107,8 +112,6 @@ def create_slug(instance, new_slug=None):
 def pre_save_slug_receiver(sender, instance, *args, **kwargs):
     instance.slug = create_slug(instance)
 
-pre_save.connect(pre_save_slug_receiver, sender=Post)
-
 def update_post_votes(sender, instance, *args, **kwargs):
 
     post = Post.objects.get(id=instance.post.id)
@@ -116,6 +119,8 @@ def update_post_votes(sender, instance, *args, **kwargs):
         post.vote_score = (-post.voter.filter(vote=-1).count() + post.voter.filter(vote=1).count())
         post.save(update_fields=['vote_score'])
 
+pre_save.connect(pre_save_slug_receiver, sender=Post)
+pre_save.connect(reformat_category, sender=Category)
 post_save.connect(update_post_votes, sender=Vote)
 post_delete.connect(update_post_votes, sender=Vote)
 
