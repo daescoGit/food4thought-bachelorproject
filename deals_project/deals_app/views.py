@@ -17,6 +17,7 @@ from django.core.files.base import ContentFile
 from django.db import models
 from .utils.images import get_image_from_data_url
 import string
+from django.db.models import Count
 
 # Create your views here.
 def addPost(request):
@@ -40,8 +41,6 @@ def addPost(request):
 
             post.title = form.cleaned_data['title']
             post.description = form.cleaned_data['description']
-            post.old_price = form.cleaned_data['old_price']
-            post.new_price = form.cleaned_data['new_price']
             post.expiration_date = form.cleaned_data['expiration_date']
             post.lng = form.cleaned_data['lng']
             post.lat = form.cleaned_data['lat']
@@ -139,7 +138,7 @@ class Base(View):
             return print(order)
 
         order_by_popularity(order)
-        posts = Post.objects.filter(filters).order_by('-date_created')[(int(page) * 10): (int(page) + 10)]
+        posts = Post.objects.filter(filters).order_by('-date_created')[(int(page) * 10): (int(page) + 10)].annotate(num_comments=Count('comments'))
 
 
         if order == 'newest':
@@ -150,19 +149,16 @@ class Base(View):
             if request.user.is_authenticated:
                 if post.voter.filter(user=request.user).exists():
                     post.voteStatus = post.voter.get(user=request.user).vote
-
         # posts = reversed(sorted(posts, key=lambda a: a.voteCount))
         nextPage = page + 1
         previousPage = page - 1
 
-        print(nextPage)
-        print(previousPage)
         jsonPosts = serialize('json', posts)  # the fields needed for products
         category = base.replace("-", " ")
         category = string.capwords(category)
 
         postcodes = Postcode.objects.all()
-        return render(request, 'deals_app/hottest.html', {'posts':posts, 'postcodes':postcodes, 'jsonPosts':jsonPosts, 'base':base, 'currentCategory':category, 'currentPage':page, 'currentLocation': location, 'order': order, 'nextPage': nextPage, 'previousPage': previousPage})
+        return render(request, 'deals_app/index.html', {'posts':posts, 'postcodes':postcodes, 'jsonPosts':jsonPosts, 'base':base, 'currentCategory':category, 'currentPage':page, 'currentLocation': location, 'order': order, 'nextPage': nextPage, 'previousPage': previousPage})
     
 
 def post(request, slug):
@@ -220,8 +216,6 @@ def edit(request, slug):
 
             post.title = form.cleaned_data['title']
             post.description = form.cleaned_data['description']
-            post.old_price = form.cleaned_data['old_price']
-            post.new_price = form.cleaned_data['new_price']
             post.expiration_date = form.cleaned_data['expiration_date']
             post.lng = form.cleaned_data['lng']
             post.lat = form.cleaned_data['lat']

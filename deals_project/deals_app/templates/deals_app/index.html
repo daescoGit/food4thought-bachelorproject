@@ -73,27 +73,15 @@
                             <div class="postSecondaryDetails">
                                 <div class="postAuthor"><a
                                         href="{% url 'profile_app:profile' post.user.id %}">{{post.user}}</a></div>
-                                <div class="postTimestamp">{{post.date_created}}</div>
+                                <div class="postTimestamp">Created: {{post.date_created}}</div>
                             </div>
                         </div>
                         <div class="postRight">
-                            <div class="postPrice">
-                                <div class="newPrice">{{post.new_price}} dkk</div>
-                                <div class="oldPrice">{{post.old_price}} dkk</div>
-                            </div>
-                            <div class="voteComponent" data-id="{{post.id}}" data-votestatus="{{post.voteStatus}}">
-                                <div class="downVote color{{post.voteStatus}}" data-vote=-1>
-                                    <i class="fas fa-thumbs-down" data-vote=-1></i>
-                                    <div data-vote=-1>dårlig pris</div>
-                                </div>
-                                <i class="fas fa-caret-left" data-vote=1></i>
-                                <div class="postScore">{% if post.vote_score %}{{post.vote_score}} {% else %} 0
-                                    {% endif %}</div>
-                                <i class="fas fa-caret-right" data-vote=-1></i>
-                                <div class="upVote color{{post.voteStatus}}" data-vote=1>
-                                    <i class="fas fa-gavel" data-vote=1></i>
-                                    <div data-vote=1>slår pris</div>
-                                </div>
+                            <div class="postRightContainer">
+                                <div class="postCommentCount"><i class="fas fa-comment"></i> {{post.num_comments}}</div>
+                                <div class="postExpiredDate">Pickup time: {{post.expiration_date}}</div>
+                                <div class="postCategory">{{post.category}}</div>
+                                <div class="postPostcode">{{post.postcode.code}}</div>
                             </div>
                         </div>
                     </div>
@@ -235,18 +223,16 @@ a:hover {
     width:50%;
 }
 
-.postPrice {
+.postRightContainer {
     display:flex;
     align-items:center;
 }
 
-.oldPrice {
+.postExpiredDate {
     color: #9D9D9C;
-    text-decoration:line-through;
-    text-decoration-thickness: 2px;
 }
 
-.newPrice {
+.postCommentCount {
     margin-right:.5em;
     color:#EF7B72;
 }
@@ -354,7 +340,6 @@ a:hover {
     display:inline;
 }
 </style> 
-
 
 <script>
 

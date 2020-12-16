@@ -55,29 +55,11 @@
                         <div class="postTag">{{post.category}}</div>
                     </div>
                     <div>
-                        <div class="newPrice">{{post.new_price}}dkk</div>
-                        <div class="oldPrice">{{post.old_price}}dkk</div>
+                        <div class="postExpiredDate">Pickup date: {{post.expiration_date}}</div>
                     </div>
                 </div>
-
                 <div class="postBody">
                     {{post.description}}
-                </div>
-            </div>
-
-            <div class="rightContainer">
-                <div class="voteComponent" data-id="{{post.id}}" data-votestatus="{{post.voteStatus}}">
-                    <div class="upVote color{{post.voteStatus}}" data-vote=1>
-                        <i class="fas fa-gavel" data-vote=1></i>
-                        <div data-vote=1>slår pris</div>
-                    </div>
-                    <i class="fas fa-caret-up" data-vote=1></i>
-                    <div class="postScore">{% if post.vote_score %}{{post.vote_score}} {% else %} 0 {% endif %}</div>
-                    <i class="fas fa-caret-down" data-vote=-1></i>
-                    <div class="downVote color{{post.voteStatus}}" data-vote=-1>
-                        <i class="fas fa-thumbs-down" data-vote=-1></i>
-                        <div data-vote=-1>dårlig pris</div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -437,70 +419,6 @@
 
     // Comment Delete //
 
-    let voteContainer = document.querySelector('.voteComponent')
-
-    voteContainer.addEventListener('click', (e) => {
-        let pk = voteContainer.dataset.id
-        let voteOption = e.target.dataset.vote
-        console.log(voteOption)
-        console.log(voteContainer.dataset.votestatus)
-        if (Number(voteOption) != Number(voteContainer.dataset.votestatus)) {
-
-            fetch(`/post/${pk}/vote`, {
-                method: "POST",
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken,
-                },
-
-                //make sure to serialize your JSON body
-                body: JSON.stringify({
-                    "vote": voteOption
-                })
-            })
-                .then((response) => {
-                    return response.clone().json()
-                }).then(function (data) {
-                    console.log(data.count)
-                    voteContainer.children[2].innerHTML = data.count
-                    if (voteOption == 1) {
-                        voteContainer.dataset.votestatus = 1
-                        voteContainer.children[0].classList.add('color1')
-                        voteContainer.children[4].classList.remove('color-1')
-                    } else {
-                        voteContainer.dataset.votestatus = -1
-                        voteContainer.children[0].classList.remove('color1')
-                        voteContainer.children[4].classList.add('color-1')
-
-                    }
-
-                })
-        }
-
-        else {
-            fetch(`/post/${pk}/vote`, {
-                method: "DELETE",
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken,
-                }
-            })
-                .then((response) => {
-                    return response.clone().json()
-
-                }).then(function (data) {
-
-                    voteContainer.children[2].innerHTML = data.count
-
-                    voteContainer.dataset.votestatus = "";
-                    voteContainer.children[0].classList.remove('color1')
-                    voteContainer.children[4].classList.remove('color-1')
-                })
-        }
-    })
-
     const lng = JSON.parse(document.getElementById('postLng').textContent);
     const lat = JSON.parse(document.getElementById('postLat').textContent);
 
@@ -608,17 +526,6 @@
         width: 100%;
         display: flex;
         align-items: center;
-    }
-
-    .oldPrice {
-        color: #9D9D9C;
-        text-decoration: line-through;
-        text-decoration-thickness: 2px;
-    }
-
-    .newPrice {
-        margin-right: .5em;
-        color: #EF7B72;
     }
 
     .postBody {
