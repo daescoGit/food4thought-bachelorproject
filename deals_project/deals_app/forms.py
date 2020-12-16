@@ -1,18 +1,13 @@
 from django import forms
 from .models import Category
 
-categories = Category.objects.filter()
-categoriesExists = categories.exists()
+categoriesExists = Category.objects.filter().exists()
 categoryChoices = []
 
-<<<<<<< HEAD
 if categoriesExists:
+    categories = Category.objects.filter()
     for category in categories:
         categoryChoices.append((category.pk, category.name))
-=======
-# for category in categories:
-#     categoryChoices.append((category.pk, category.name))
->>>>>>> main
 
 
 class DateInput(forms.DateInput):
@@ -21,8 +16,6 @@ class DateInput(forms.DateInput):
 class PostForm(forms.Form):
     title = forms.CharField(max_length=200)
     description = forms.CharField(widget=forms.Textarea, max_length=200)
-    new_price = forms.IntegerField()
-    old_price = forms.IntegerField()
     category = forms.ChoiceField(choices=categoryChoices)
     address_line_1 = forms.CharField(max_length=200)
     address_line_2 = forms.CharField(max_length=200)
