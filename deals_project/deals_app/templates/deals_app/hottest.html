@@ -12,13 +12,21 @@
         </div>
         <div class="quickButtons">
             <div>
-                <span><a href="{% url 'deals_app:base' base 'hot' %}">Hot</a></span>
+                <span><a href="{% url 'deals_app:base' base 'hot' currentPage currentLocation %}">Hot</a></span>
             </div>
             <div>
-                <span><a href="{% url 'deals_app:base' base 'newest' %}">New</a></span>
+                <span><a href="{% url 'deals_app:base' base 'newest' currentPage currentLocation %}">New</a></span>
             </div>
-            <div>
-                <span><a href="{% url 'deals_app:base' base order '1000' %}">Location</a></span>
+            <div class="genericDropdown">
+                <a href="">
+                    <span>Postcode</span>
+                    <i class="fa fa-angle-down" aria-hidden="true"></i>
+                </a>
+                <div class="genericDropdownContent">
+                    {% for postcode in postcodes %}
+                        <a class="genericDropdownItem" href="{% url 'deals_app:base' base order currentPage postcode.code %}">{{postcode.code}} - {{postcode.text}}</a>
+                    {% endfor %}
+                </div>
             </div>
             {% if user.is_authenticated %}
             <div>
@@ -74,16 +82,16 @@
                 {% endfor %}
             </div>
         </div>
-        <div class="pageButtonsContainer">
-            <div class="pageButton"><a href="{% url 'deals_app:base' base order '0' %}">0</a></div>
-            <div class="pageButton">
-                {% if currentPage != 0 %}
-                <div><a href="{% url 'deals_app:base' base order previousPage %}"><i class="fas fa-caret-left"></i></a>
+            <div class="pageButtonsContainer">
+                <div class="pageButton"><a href="{% url 'deals_app:base' base order '0' currentLocation %}">0</a></div>
+                <div class="pageButton" >
+                    {% if currentPage != 0 %}
+                    <div><a href="{% url 'deals_app:base' base order previousPage currentLocation %}"><i class="fas fa-caret-left"></i></a></div>
+                    {% endif %}
+                    <div class="currentPage">Page {{currentPage}}</div>
+                    <div><a href="{% url 'deals_app:base' base order nextPage currentLocation %}"><i class="fas fa-caret-right"></i></a></div>
                 </div>
-                {% endif %}
-                <div class="currentPage">Page {{currentPage}}</div>
-                <div><a href="{% url 'deals_app:base' base order nextPage %}"><i class="fas fa-caret-right"></i></a>
-                </div>
+                <div class="pageButton"><a href="{% url 'deals_app:base' base order '5' currentLocation %} ">5</a></div>
             </div>
             <div class="pageButton"><a href="{% url 'deals_app:base' base order '5' %} ">5</a></div>
         </div>

@@ -21,10 +21,10 @@ class Category(models.Model):
 
 class Postcode(models.Model):
     code = models.IntegerField()
-    region = models.CharField(max_length=200)
+    text = models.CharField(max_length=200)
 
     def __str__(self):
-        return self.code
+        return '{} - {}'.format(self.code, self.text)
 
 class Post(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -33,7 +33,7 @@ class Post(models.Model):
     description = models.CharField(max_length=200)
     address_line_1 = models.CharField(max_length=200)
     address_line_2 = models.CharField(max_length=200)
-    postcode = models.ForeignKey(Postcode, on_delete=models.CASCADE)
+    postcode = models.ForeignKey(Postcode, on_delete=models.PROTECT)
     description = models.CharField(max_length=200)
     new_price = models.IntegerField()
     old_price = models.IntegerField()

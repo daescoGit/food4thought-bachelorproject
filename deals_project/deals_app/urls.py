@@ -17,6 +17,7 @@ urlpatterns = [
     path('post/<int:post_id>/vote', votePost, name='votePost'),
     path('post/<int:post_id>/comment', newComment, name='newComment'),
     path('get_address/', getAddress, name='getAddress'),
+    path('post/<slug:slug>/get_address/', getAddress, name='getAddress'),
     path('post/<int:post_id>/comment/delete', deleteComment, name='deleteComment'),
     path('post/<slug:slug>/delete', views.delete, name='delete'),
     path('post/<slug:slug>/edit', views.edit, name='edit')

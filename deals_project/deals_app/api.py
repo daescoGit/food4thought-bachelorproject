@@ -85,7 +85,7 @@ def votePost(request, post_id):
         return JsonResponse({'message': 'vote does not exist'}, status=400)
 
 
-def getAddress(request):
+def getAddress(request, slug=""):
     data = JSONParser().parse(request)
     lng = data["lng"]
     lat = data["lat"]

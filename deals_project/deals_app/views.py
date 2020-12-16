@@ -23,14 +23,20 @@ def addPost(request):
     if request.method == "POST":
         form = PostForm(request.POST)
         if form.is_valid():
-            post = Post()
-            postcode = Postcode()
 
-            postcode.code = form.cleaned_data['postcode_code']
-            postcode.text = form.cleaned_data['postcode_text']
-            postcode.save()
-            
-            post.postcode = postcode
+            post = Post()
+
+            postcodeExists = Postcode.objects.filter(code=form.cleaned_data['postcode_code'])
+            if(postcodeExists.exists()):
+                post.postcode = postcodeExists[0]
+
+            else:            
+                postcode = Postcode()
+                postcode.code = form.cleaned_data['postcode_code']
+                postcode.text = form.cleaned_data['postcode_text']
+                postcode.save()
+                post.postcode = postcode
+
             post.title = form.cleaned_data['title']
             post.description = form.cleaned_data['description']
             post.old_price = form.cleaned_data['old_price']
@@ -98,7 +104,7 @@ def addPost(request):
 #     return render(request, 'deals_app/hottest.html', {'posts':posts})
 
 class Base(View):
-    def get(self, request, base='all', order='newest', page=0, location=2000, *args, **kwargs):
+    def get(self, request, base='all', order='newest', page=0, location=0, *args, **kwargs):
 
         filters = models.Q()
 
@@ -121,7 +127,13 @@ class Base(View):
                 vote_score__gte=1,
             )
         
+        if location != 0:
+            postcode = Postcode.objects.get(code=location)
 
+            filters &= models.Q(
+                postcode=postcode,
+            )
+            
         def order_by_popularity(order):
             return print(order)
 
@@ -131,6 +143,7 @@ class Base(View):
 
         if order == 'newest':
             print('hh')
+
 
         for post in posts:
             if request.user.is_authenticated:
@@ -145,7 +158,9 @@ class Base(View):
         print(previousPage)
         jsonPosts = serialize('json', posts)  # the fields needed for products
         category = base.replace("-", " ")
-        return render(request, 'deals_app/hottest.html', {'posts':posts, 'jsonPosts':jsonPosts, 'base':base, 'category':category, 'currentPage':page, 'order': order, 'nextPage': nextPage, 'previousPage': previousPage})
+
+        postcodes = Postcode.objects.all()
+        return render(request, 'deals_app/hottest.html', {'posts':posts, 'postcodes':postcodes, 'jsonPosts':jsonPosts, 'base':base, 'category':category, 'currentPage':page, 'currentLocation': location, 'order': order, 'nextPage': nextPage, 'previousPage': previousPage})
     
 
 def post(request, slug):
@@ -179,13 +194,27 @@ def delete(request, slug):
 def edit(request, slug):
 
     formpost = get_object_or_404(Post, slug=slug)
-    dictpost = model_to_dict(formpost)
-    form = PostForm(dictpost)
+    formpostcode = get_object_or_404(Postcode, id=formpost.postcode.id)
 
+    dictpost = model_to_dict(formpost)
+    dictpostcode = {"postcode_text": formpostcode.text, "postcode_code":formpostcode.code}
+    dictpost.update(dictpostcode)
+    
+    form = PostForm(dictpost)
     if request.method == "POST":
         form = PostForm(request.POST)
         if form.is_valid():
             post = get_object_or_404(Post, slug=slug)
+            postcodeExists = Postcode.objects.filter(code=form.cleaned_data['postcode_code'])
+
+            if(postcodeExists.exists()):
+                post.postcode = postcodeExists[0]
+            else:            
+                postcode = Postcode()
+                postcode.code = form.cleaned_data['postcode_code']
+                postcode.text = form.cleaned_data['postcode_text']
+                postcode.save()
+                post.postcode = postcode
 
             post.title = form.cleaned_data['title']
             post.description = form.cleaned_data['description']
