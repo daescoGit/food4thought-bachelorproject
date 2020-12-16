@@ -30,6 +30,7 @@ ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 # Application definition
 
 INSTALLED_APPS = [
+    'channels',
     'django_rq',  # <--- This is new
     'django.contrib.admin',
     'django.contrib.auth',
@@ -95,15 +96,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'deals_project.wsgi.application'
 # Channels
-# ASGI_APPLICATION = 'deals_project.asgi.application'
-# CHANNEL_LAYERS = {
-#     "default": {
-#         "BACKEND": "channels_redis.core.RedisChannelLayer",
-#         "CONFIG": {
-#             "hosts": [('localhost', 6379)],
-#         },
-#     },
-# }
+ASGI_APPLICATION = 'deals_project.asgi.application'
+CHANNEL_LAYERS = {
+     "default": {
+         "BACKEND": "channels_redis.core.RedisChannelLayer",
+         "CONFIG": {
+             "hosts": [('localhost', 6379)],
+         },
+     },
+}
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
