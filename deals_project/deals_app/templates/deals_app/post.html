@@ -93,7 +93,7 @@
         {% endif %}
         <div class="subHeaderComments">Comments(<span id="commentCount">{{commentCount}}</span>)
             {% if privateCommentCount %}
-            <span id="privateCount"> | {{privateCommentCount}} private</span>
+            <span id="privateCountContainer"> | <span id="privateCount">{{privateCommentCount}}</span> private</span>
             {% endif %}
         </div>
         <div class="commentsContainer">
@@ -243,6 +243,8 @@
 
     let commentCounter = document.querySelector('#commentCount').innerHTML
     commentCounter = parseInt(commentCounter)
+    let privateCounter = document.querySelector('#privateCount').innerHTML
+    privateCounter = parseInt(privateCounter)
 
     commentsContainer.addEventListener('click', (e) => {
         // if quoting add template to input field
@@ -331,37 +333,39 @@
 
                     commentsContainer.insertAdjacentHTML("afterbegin",
                         `<div class="comment" id="${data.pk}">
-                    <div class="commentHeader">
-                        <div class="commentProfileImage"><img src="{{user.profile.image.url}}"></div>
-                        <div class="commentAuthor">{{user}}</div>
-                        <div class="commentTimestamp">{% now "SHORT_DATETIME_FORMAT" %}</div>
-                    </div>
-                    <div class="commentBody">
-                        <div class="quoteContainer">
-                            <i class="fas fa-quote-left"></i>
-                            <div class="quote">
-                                <div class="quoteHeader">
-                                    <div class="quoteAuthor">${quoteAuthor}</div>
-                                    <div class="quoteTimestamp">${quoteTimestamp}</div>
+                            <div class="commentHeader">
+                                <div class="commentProfileImage"><img src="{{user.profile.image.url}}"></div>
+                                <div class="commentAuthor">{{user}}</div>
+                                <div class="commentTimestamp">{% now "SHORT_DATETIME_FORMAT" %}</div>
+                                ${privateCheck.checked ? `<span class="commentPrivate">(Private)</span>` : ''}  
+                            </div>
+                            <div class="commentBody">
+                                <div class="quoteContainer">
+                                    <i class="fas fa-quote-left"></i>
+                                    <div class="quote">
+                                        <div class="quoteHeader">
+                                            <div class="quoteAuthor">${quoteAuthor}</div>
+                                            <div class="quoteTimestamp">${quoteTimestamp}</div>
+                                        </div>
+                                        <div class="quoteBody">
+                                            ${quoteBody}
+                                            <i class="fas fa-quote-right"></i>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="quoteBody">
-                                    ${quoteBody}
-                                    <i class="fas fa-quote-right"></i>
+                                ${commentField.value}
+                                <div class="commentFooter">
+                                    <div class="commentFooterL">
+                                    </div>
+                                    <div class="commentFooterR">
+                                        <div><i class="fas fa-reply"></i></div>
+                                        <div><i class="fas fa-trash-alt" data-id=${data.pk}></i></div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        ${commentField.value}
-                        <div class="commentFooter">
-                            <div class="commentFooterL">
-                            </div>
-                            <div class="commentFooterR">
-                                <div><i class="fas fa-reply"></i></div>
-                                <div><i class="fas fa-trash-alt" data-id=${data.pk}></i></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>`)
+                        </div>`)
                     document.querySelector('#commentCount').innerHTML = commentCounter += 1;
+                    privateCheck.checked ? document.querySelector('#privateCount').innerHTML = privateCounter += 1 : null;
                     commentField.value = '';
                 })
             // if regular comment
@@ -392,6 +396,7 @@
                                 <div class="commentProfileImage"><img src="{{user.profile.image.url}}"></div>
                                 <div class="commentAuthor"><a href="{% url 'profile_app:profile' user.id %}">{{user}}</a></div>
                                 <div class="commentTimestamp">{% now "SHORT_DATETIME_FORMAT" %}</div>
+                                ${privateCheck.checked ? `<span class="commentPrivate">(Private)</span>` : ''}                               
                             </div>
                             <div class="commentBody">
                                 ${commentField.value}
@@ -405,6 +410,7 @@
                             </div>
                         </div>`)
                     document.querySelector('#commentCount').innerHTML = commentCounter += 1;
+                    privateCheck.checked ? document.querySelector('#privateCount').innerHTML = privateCounter += 1 : null;
                     commentField.value = '';
                 })
         }
@@ -879,7 +885,7 @@
         color: #9D9D9C;
     }
 
-    #privateCount {
+    #privateCountContainer {
         opacity: 0.5;
         margin-left: 0.5em;
         font-size: 0.9em;
