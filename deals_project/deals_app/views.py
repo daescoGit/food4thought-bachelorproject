@@ -16,6 +16,7 @@ from django.db.models import Sum
 from django.core.files.base import ContentFile
 from django.db import models
 from .utils.images import get_image_from_data_url
+import string
 
 # Create your views here.
 def addPost(request):
@@ -122,9 +123,9 @@ class Base(View):
                 category=category,
             )
 
-        if order == 'hot':
+        if order == 'expired':
             filters &= models.Q(
-                vote_score__gte=1,
+                expired=True,
             )
         
         if location != 0:
@@ -158,9 +159,10 @@ class Base(View):
         print(previousPage)
         jsonPosts = serialize('json', posts)  # the fields needed for products
         category = base.replace("-", " ")
+        category = string.capwords(category)
 
         postcodes = Postcode.objects.all()
-        return render(request, 'deals_app/hottest.html', {'posts':posts, 'postcodes':postcodes, 'jsonPosts':jsonPosts, 'base':base, 'category':category, 'currentPage':page, 'currentLocation': location, 'order': order, 'nextPage': nextPage, 'previousPage': previousPage})
+        return render(request, 'deals_app/hottest.html', {'posts':posts, 'postcodes':postcodes, 'jsonPosts':jsonPosts, 'base':base, 'currentCategory':category, 'currentPage':page, 'currentLocation': location, 'order': order, 'nextPage': nextPage, 'previousPage': previousPage})
     
 
 def post(request, slug):

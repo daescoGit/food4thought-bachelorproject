@@ -8,23 +8,42 @@
     </div>
     <div class="main">
         <div class="categoryTitle">
-            {{category}}
+            {{currentCategory}}
         </div>
         <div class="quickButtons">
             <div>
-                <span><a href="{% url 'deals_app:base' base 'hot' currentPage currentLocation %}">Hot</a></span>
+                <span class="active-{{order}} expired">
+                    <a href="{% url 'deals_app:base' base 'expired' currentPage currentLocation %}">Expired</a>
+                    <a class="cancelButton" href="{% url 'deals_app:base' base 'newest' currentPage currentLocation %}">
+                        <i class="fas fa-times-circle"></i>
+                    </a>
+                </span>
             </div>
             <div>
-                <span><a href="{% url 'deals_app:base' base 'newest' currentPage currentLocation %}">New</a></span>
+                <span class="active-{{order}} today">
+                    <a href="{% url 'deals_app:base' base 'today' currentPage currentLocation %}">Today</a>
+                    <a class="cancelButton" href="{% url 'deals_app:base' base 'nofilter' currentPage currentLocation %}">
+                        <i class="fas fa-times-circle"></i>
+                    </a>
+                </span>
             </div>
             <div class="genericDropdown">
-                <a href="">
+                <a class="{% if currentLocation != 0 %} activePostcodeDropdown {% endif %}" href="">
                     <span>Postcode</span>
                     <i class="fa fa-angle-down" aria-hidden="true"></i>
                 </a>
                 <div class="genericDropdownContent">
                     {% for postcode in postcodes %}
+                        {% ifequal postcode.code currentLocation %}
+                        <span class="activePostcode genericDropdownItem">
+                            <a href="{% url 'deals_app:base' base order currentPage postcode.code %}">{{postcode.code}} - {{postcode.text}}</a>
+                            <a class="cancelButton" href="{% url 'deals_app:base' base order currentPage '0' %}">
+                                <i class="fas fa-times-circle"></i>
+                            </a>
+                        </span>
+                        {% else %} 
                         <a class="genericDropdownItem" href="{% url 'deals_app:base' base order currentPage postcode.code %}">{{postcode.code}} - {{postcode.text}}</a>
+                        {% endifequal  %}
                     {% endfor %}
                 </div>
             </div>
@@ -40,8 +59,8 @@
 
         <div class="content">
             <div id="posts">
-                {% for post in posts %}
-                <div class="postAnchor" id="mapId-{{post.id}}">
+            {% for post in posts %}
+                <div class="postAnchor postExpired-{{post.expired}}" id="mapId-{{post.id}}">
                     <div class="post postId-{{post.id}}">
                         <div class="postImage">
                             <a href="{% url 'deals_app:post' post.slug %}">
@@ -101,228 +120,240 @@
 {{ jsonPosts|json_script:'jsonPosts' }}
 
 <style>
-    a {
-        color: inherit;
-        text-decoration: inherit;
-    }
+a {
+  color: inherit;
+  text-decoration: inherit; 
+}
 
-    a:hover {
-        text-decoration: underline;
-    }
+a:hover {
+    text-decoration: underline; 
+}
 
-    .active {
-        box-shadow: 0 0 10px 0 rgba(239, 123, 114, 1) !important;
-    }
+.active {
+    box-shadow: 0 0 10px 0 rgba(239,123,114, 1)!important;
+}
 
-    .main .quickButtons {
-        color: #EF7B72;
-        padding: 1em 0;
-        align-items: center;
-        display: flex;
-        font-weight: 500;
-        margin: 0 2em;
+.main .quickButtons {
+    color:#EF7B72;
+    padding:1em 0;
+    align-items: center;
+    display: flex;
+    font-weight:500;
+    margin: 0 2em;
 
-    }
+}
 
-    .main .quickButtons span,
-    .main .quickButtons i {
-        margin-right: .25em;
-        cursor: pointer;
-    }
+.main .quickButtons span, .main .quickButtons i {
+    cursor:pointer;
+}
 
-    .main .quickButtons div {
-        margin-right: 2em;
-    }
+.main .quickButtons div {
+    margin-right:2em;
+}
 
-    .main .categoryTitle {
-        margin-top: 1em;
-        display: flex;
-        color: #EF7B72;
-        width: 100%;
-        font-size: 2em;
-        justify-content: center;
-    }
+.main .categoryTitle {
+    margin-top:1em;
+    display:flex;
+    color:#EF7B72;
+    width:100%;
+    font-size:2em;
+    justify-content:center;
+}
 
-    .categoryTitle {
-        text-transform: capitalize;
-    }
+.categoryTitle {
+  text-transform: capitalize;
+}
 
-    .quickButtons a {
-        text-decoration: none;
-    }
+.quickButtons a {
+    text-decoration: none;
+}
 
-    .content {
-        height: 90%;
-        overflow-y: scroll;
-        scroll-behavior: smooth;
-        flex-grow: 1;
-        background: white;
-        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-        margin: 0 2em;
-    }
+.content {
+    height:90%;
+    overflow-y: scroll;
+    scroll-behavior: smooth;
+    flex-grow: 1;
+    background:white;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    margin: 0 2em;
+}
 
-    .postAnchor {
-        padding: 1em;
-    }
+.postExpired-True {
+    filter:grayscale(0.7);
+    opacity:.8;
+}
 
-    .post {
-        padding: 0 1em;
-        display: flex;
-        align-items: center;
-        cursor: pointer;
-        color: #545454;
-        text-decoration: none;
-        box-shadow: 0px 8px 16px 0px rgba(239, 123, 114, 0);
-        transition: box-shadow 1s;
-    }
+.postAnchor {
+    padding:1em;
+}
 
-    .postLeft {
-        width: 50%;
-        padding: 2em;
-    }
+.post {
+    padding: 0 1em;
+    display:flex;
+    align-items:center;
+    cursor:pointer;
+    color:#545454;
+    text-decoration:none;
+    box-shadow: 0px 8px 16px 0px rgba(239,123,114,0);
+    transition: box-shadow 1s;
+}
 
-    .postImage img {
-        height: 8em;
-        width: auto;
-    }
+.postLeft {
+    width:50%;
+    padding:2em;
+}
 
-    .postTitle {
-        font-size: 1.1em;
-        width: 100%;
-        margin-bottom: .5em;
-    }
+.postImage img{
+    height:8em;
+    width:auto;
+}
 
-    .postSecondaryDetails {
-        font-size: .7em;
-        display: flex;
-    }
+.postTitle {
+    font-size:1.1em;
+    width:100%;
+    margin-bottom:.5em;
+}
 
-    .postTimestamp {
-        margin-left: 2em;
-        color: #9D9D9C;
-    }
+.postSecondaryDetails {
+    font-size:.7em;
+    display:flex;
+}
 
-    .postAuthor {
-        font-weight: 500;
-        color: #EF7B72;
-    }
+.postTimestamp {
+    margin-left:2em;
+    color:#9D9D9C;
+}
 
-    .postRight {
-        display: flex;
-        justify-content: space-around;
-        width: 50%;
-    }
+.postAuthor {
+    font-weight:500;
+    color: #EF7B72;
+}
 
-    .postPrice {
-        display: flex;
-        align-items: center;
-    }
+.postRight {
+    display:flex;
+    justify-content:space-around;
+    width:50%;
+}
 
-    .oldPrice {
-        color: #9D9D9C;
-        text-decoration: line-through;
-        text-decoration-thickness: 2px;
-    }
+.postPrice {
+    display:flex;
+    align-items:center;
+}
 
-    .newPrice {
-        margin-right: .5em;
-        color: #EF7B72;
-    }
+.oldPrice {
+    color: #9D9D9C;
+    text-decoration:line-through;
+    text-decoration-thickness: 2px;
+}
 
-    .voteComponent {
-        display: flex;
-        align-items: center;
-    }
+.newPrice {
+    margin-right:.5em;
+    color:#EF7B72;
+}
 
-    .upVote,
-    .downVote {
-        margin: 0 .5em;
-        align-items: center;
-        display: flex;
-        flex-direction: column;
-    }
+.voteComponent {
+    display:flex;
+    align-items:center;
+}
 
-    .upVote.color1,
-    .upVote:hover {
-        color: #9DC86C;
-    }
+.upVote, .downVote {
+    margin:0 .5em;
+    align-items:center;
+    display:flex;
+    flex-direction:column;
+}
 
-    .downVote.color-1,
-    .downVote:hover {
-        color: #EF7C43;
-    }
+.upVote.color1, .upVote:hover{
+    color:#9DC86C;
+}
 
-    .upVote div,
-    .downVote div {
-        font-size: .6em;
-        padding: .2em;
-    }
+.downVote.color-1, .downVote:hover{ 
+    color:#EF7C43;
+}
 
-    .postScore {
-        padding: 0 .25em;
-    }
+.upVote div, .downVote div{
+    font-size:.6em;
+    padding:.2em;
+}
 
-    .pageButtonsContainer {
-        display: flex;
-        justify-content: space-between;
-        width: 25%;
-        margin: 2em auto;
-    }
+.postScore {
+    padding: 0 .25em;
+}
 
-    .pageButtonsContainer .pageButton {
-        background: white;
-        display: flex;
-        padding: 1em;
-        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-        color: #EF7B72;
-    }
+.pageButtonsContainer {
+    display:flex;
+    justify-content:space-between;
+    width:25%;
+    margin:2em auto;
+}
 
-    .pageButtonsContainer .currentPage {
-        color: #545454;
-        padding: 0 1em;
-    }
+.pageButtonsContainer .pageButton {
+    background:white;
+    display:flex;
+    padding:1em;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    color: #EF7B72;
+}
 
-    .pageButton .fas {
-        color: #545454;
-    }
+.pageButtonsContainer .currentPage {
+    color:#545454;
+    padding:0 1em;
+}
+
+.pageButton .fas {
+    color: #545454;
+}
 
 
-    /* MAPBOX */
+/* MAPBOX */
 
-    .marker {
-        width: 2em;
-        height: 2em;
-        border-radius: 50%;
-        background-position: center;
-        background-color: red;
-        opacity: 0.6;
-    }
+.marker {
+    width:2em;
+    height:2em;
+    border-radius:50%;
+    background-position:center;
+    background-color:red;
+    opacity:0.6;
+}
 
-    #map {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        width: 100%;
-    }
+#map { position: absolute; top: 0; bottom: 0; width: 100%; }
 
-    .mapContentContainer {
-        display: flex;
-        height: calc(100vh - 5em);
+.mapContentContainer {
+    display: flex;
+    height:calc(100vh - 5em);
 
-    }
+}
 
-    .mapContainer {
-        position: relative;
-        width: 100% !important;
-        flex: 1;
-        display: flex;
-    }
+.mapContainer {
+    position: relative;
+    width: 100% !important;
+    flex: 1;
+    display: flex;
+}
 
-    .mapContentContainer .main {
-        width: 50%;
-        flex-grow: unset;
-    }
-</style>
+.mapContentContainer .main {
+    width:50%;
+    flex-grow:unset;
+}
+
+/* FILTERS CSS */
+
+.cancelButton {
+    display:none;
+}
+
+.active-expired.expired, .active-today.today, .activePostcode, .activePostcodeDropdown, .activeCategory {
+    background: #EF7B72;
+    border-radius:3em;
+    padding:.2em .4em;
+    color:white!important;
+    align-items:center;
+}
+
+.active-expired.expired .cancelButton, .active-today.today .cancelButton, .activePostcode .cancelButton {
+    display:inline;
+}
+</style> 
 
 
 <script>

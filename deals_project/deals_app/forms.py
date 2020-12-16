@@ -1,11 +1,18 @@
 from django import forms
 from .models import Category
 
-categories = Category.objects.all()
+categories = Category.objects.filter()
+categoriesExists = categories.exists()
 categoryChoices = []
 
-for category in categories:
-    categoryChoices.append((category.pk, category.name))
+<<<<<<< HEAD
+if categoriesExists:
+    for category in categories:
+        categoryChoices.append((category.pk, category.name))
+=======
+# for category in categories:
+#     categoryChoices.append((category.pk, category.name))
+>>>>>>> main
 
 
 class DateInput(forms.DateInput):
