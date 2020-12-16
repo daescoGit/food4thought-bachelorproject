@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.db.models import signals
 from django.dispatch import receiver
 from django.shortcuts import get_object_or_404
+from django.core import serializers
 
 
 # todo: 
@@ -63,8 +64,9 @@ class NotificationConsumer(JsonWebsocketConsumer):
         self.accept()
 
     def disconnect(self, close_code):
+        personal_group = 'personal_group_'+str(self.scope["user"].id)
         async_to_sync(self.channel_layer.group_discard)(
-            'personal_group',
+            personal_group,
             self.channel_name
         )
         self.close()
@@ -110,6 +112,34 @@ class NotificationConsumer(JsonWebsocketConsumer):
             typeHandler(instance.quoter, instance.quotee.user.id)
         if sender == Comment and instance.is_quote == False and instance.read_by_author == False and instance.user != instance.post.user:
             typeHandler(instance, instance.post.user.id)
+
+class LivePostConsumer(JsonWebsocketConsumer):
+    def connect(self):
+        async_to_sync(self.channel_layer.group_add)('post_list_group', self.channel_name)
+        self.accept()
+
+    def disconnect(self, close_code):
+        async_to_sync(self.channel_layer.group_discard)(
+            'post_list_group',
+            self.channel_name
+        )
+        self.close()
+
+    def events_alarm(self, event):
+        self.send_json(event['data'])
+
+    @staticmethod
+    @receiver(signals.post_save, sender=Post)
+    #@receiver(signals.post_delete, sender=Comment)
+    def comment_signal(sender, instance, **kwargs):
+        layer = channels.layers.get_channel_layer()
+        async_to_sync(layer.group_send)('post_list_group', {
+            'type': 'events.alarm',
+            'data': {
+                "data": serializers.serialize("json", [instance]),
+                'username': instance.user.username
+            }
+        })
 
 # (NOT WORKING ATM)
 # todo:
