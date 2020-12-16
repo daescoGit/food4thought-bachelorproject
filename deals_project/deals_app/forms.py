@@ -4,8 +4,8 @@ from .models import Category
 categories = Category.objects.all()
 categoryChoices = []
 
-for category in categories:
-    categoryChoices.append((category.pk, category.name))
+# for category in categories:
+#     categoryChoices.append((category.pk, category.name))
 
 
 class DateInput(forms.DateInput):
