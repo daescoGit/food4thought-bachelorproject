@@ -109,7 +109,7 @@
                         {{commentquote.comment.date_created}}
                     </div>
                     {% if commentquote.comment.private %}
-                    <span class="commentPrivate">(Private)</span>
+                    <span class="commentPrivate" id="private-{{commentquote.comment.id}}">(Private)</span>
                     {% endif %}
                 </div>
                 <div class="commentBody">
@@ -254,7 +254,13 @@
             quoteAuthor = document.getElementById(`author-${commentId}`).innerText
             quoteTimestamp = document.getElementById(`timestamp-${commentId}`).innerText
             quoteBody = document.getElementById(`body-${commentId}`).innerText
-            console.log(quoteBody)
+            quotePrivate = document.getElementById(`private-${commentId}`)
+            let privateCheck = document.querySelector('#privateCheck')
+
+            if (quotePrivate != null) {
+                privateCheck.checked = true;
+                privateCheck.disabled = true;
+            }
 
             quoteTemplate =
                 `<div id="${commentId}" class="quoting quoteContainer">
@@ -263,6 +269,7 @@
                         <div class="quoteHeader">
                             <div class="quoteAuthor"><a href="{% url 'profile_app:profile' user.id %}">${quoteAuthor}</a></div>
                             <div class="quoteTimestamp">${quoteTimestamp}</div>
+                            ${ quotePrivate == null ? '' : '<span class="commentPrivate" id="private-{{commentquote.comment.id}}">(Private)</span> '}
                             <i class="cancelQuote fas fa-times"></i>
                         </div>
                         <div class="quoteBody">
@@ -308,7 +315,6 @@
     submitComment.addEventListener('click', () => {
         let commentField = document.querySelector('.commentField')
         let quoteElem = document.querySelector('.quoting')
-        let privateCheck = document.querySelector('#privateCheck')
 
         // if quote
         if (quoteElem) {
@@ -321,7 +327,8 @@
                 },
                 body: JSON.stringify({
                     "body": commentField.value,
-                    "quotee": commentId
+                    "quotee": commentId,
+                    "private": (quotePrivate != null || privateCheck.checked) ? true : false
                 })
             })
                 .then((response) => {
@@ -337,7 +344,7 @@
                                 <div class="commentProfileImage"><img src="{{user.profile.image.url}}"></div>
                                 <div class="commentAuthor">{{user}}</div>
                                 <div class="commentTimestamp">{% now "SHORT_DATETIME_FORMAT" %}</div>
-                                ${privateCheck.checked ? `<span class="commentPrivate">(Private)</span>` : ''}  
+                                ${(quotePrivate != null || privateCheck.checked) ? `<span class="commentPrivate">(Private)</span>` : ''}  
                             </div>
                             <div class="commentBody">
                                 <div class="quoteContainer">
