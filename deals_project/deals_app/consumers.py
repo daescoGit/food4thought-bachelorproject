@@ -20,7 +20,6 @@ from django.core import serializers
 # delete signal for if a post get deleted
 
 class NotificationConsumer(JsonWebsocketConsumer):
-
     def connect(self):
         personal_group = 'personal_group_'+str(self.scope["user"].id)
         async_to_sync(self.channel_layer.group_add)(personal_group, self.channel_name)
@@ -137,9 +136,38 @@ class LivePostConsumer(JsonWebsocketConsumer):
             'type': 'events.alarm',
             'data': {
                 "data": serializers.serialize("json", [instance]),
-                'username': instance.user.username
+                "username": instance.user.username,
+                "commentCount": instance.comments.count(),
+                "areaCode": instance.postcode.code,
+                "category": instance.category.name
             }
         })
+
+class SearchConsumer(JsonWebsocketConsumer):
+    # echo consumer
+    def connect(self):
+        self.accept()
+
+    def disconnect(self, close_code):
+        self.close()
+
+    def receive_json(self, content, **kwargs):
+        print(f"Received event: {content}")
+        # can maybe be done more efficient
+        payload = []
+        all_posts = Post.objects.all()
+        for post in all_posts:
+            if content["search"].lower() in post.title.lower():
+                payload.append({
+                    "data":serializers.serialize("json", [post]), 
+                    "username":post.user.username, 
+                    "commentCount": post.comments.count(),
+                    "areaCode": post.postcode.code,
+                    "category": post.category.name
+                })
+        print(payload)
+        self.send_json(payload)
+
 
 # (NOT WORKING ATM)
 # todo:
