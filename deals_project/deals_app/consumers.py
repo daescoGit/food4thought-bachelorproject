@@ -37,20 +37,22 @@ class NotificationConsumer(JsonWebsocketConsumer):
                     "slug": obj.post.slug
                 }
                 # comment may already be in payload from quotes
-                if payload != []:
-                    for item in payload:
-                        if data["id"] == item["id"]:
-                            continue
-                        payload.append(data)
-                else:
+                if payload == []:
                     payload.append(data)
+                else:
+                    # if obj id is already in payload
+                    if any(item['id'] == obj.id for item in payload):
+                        print('in already')
+                    else:
+                        payload.append(data)
+
 
         # all unread replies from own comments
-        unread_from_replies = Quote.objects.exclude(quoter__user=self.scope["user"]).filter(quotee__user=self.scope["user"]).filter(quoter__read_by_author=False).order_by('-quotee__date_created')
+        unread_from_replies = Quote.objects.exclude(quoter__user=self.scope["user"]).filter(quotee__user=self.scope["user"]).filter(quoter__read_by_author=False).order_by('quotee__date_created')
         loop_handler(unread_from_replies, True)
 
         # all unread comments from own post
-        unread_from_OP = Comment.objects.exclude(user=self.scope["user"]).filter(post__user=self.scope["user"]).filter(read_by_author=False).order_by('-date_created')
+        unread_from_OP = Comment.objects.exclude(user=self.scope["user"]).filter(post__user=self.scope["user"]).filter(read_by_author=False).order_by('date_created')
         loop_handler(unread_from_OP, False)
         
         # no need to use group for initial on-load payload
