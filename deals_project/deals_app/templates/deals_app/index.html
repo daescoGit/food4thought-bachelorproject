@@ -22,7 +22,8 @@
             <div>
                 <span class="active-{{order}} today">
                     <a href="{% url 'deals_app:base' base 'today' currentPage currentLocation %}">Today</a>
-                    <a class="cancelButton" href="{% url 'deals_app:base' base 'nofilter' currentPage currentLocation %}">
+                    <a class="cancelButton"
+                        href="{% url 'deals_app:base' base 'nofilter' currentPage currentLocation %}">
                         <i class="fas fa-times-circle"></i>
                     </a>
                 </span>
@@ -34,16 +35,19 @@
                 </a>
                 <div class="genericDropdownContent">
                     {% for postcode in postcodes %}
-                        {% ifequal postcode.code currentLocation %}
-                        <span class="activePostcode genericDropdownItem">
-                            <a href="{% url 'deals_app:base' base order currentPage postcode.code %}">{{postcode.code}} - {{postcode.text}}</a>
-                            <a class="cancelButton" href="{% url 'deals_app:base' base order currentPage '0' %}">
-                                <i class="fas fa-times-circle"></i>
-                            </a>
-                        </span>
-                        {% else %} 
-                        <a class="genericDropdownItem" href="{% url 'deals_app:base' base order currentPage postcode.code %}">{{postcode.code}} - {{postcode.text}}</a>
-                        {% endifequal  %}
+                    {% ifequal postcode.code currentLocation %}
+                    <span class="activePostcode genericDropdownItem">
+                        <a href="{% url 'deals_app:base' base order currentPage postcode.code %}">{{postcode.code}} -
+                            {{postcode.text}}</a>
+                        <a class="cancelButton" href="{% url 'deals_app:base' base order currentPage '0' %}">
+                            <i class="fas fa-times-circle"></i>
+                        </a>
+                    </span>
+                    {% else %}
+                    <a class="genericDropdownItem"
+                        href="{% url 'deals_app:base' base order currentPage postcode.code %}">{{postcode.code}} -
+                        {{postcode.text}}</a>
+                    {% endifequal  %}
                     {% endfor %}
                 </div>
             </div>
@@ -57,9 +61,9 @@
             {% endif %}
         </div>
 
-        <div class="content">
+        <div class="content" id="posts-container">
             <div id="posts">
-            {% for post in posts %}
+                {% for post in posts %}
                 <div class="postAnchor postExpired-{{post.expired}}" id="mapId-{{post.id}}">
                     <div class="post postId-{{post.id}}">
                         <div class="postImage">
@@ -89,258 +93,25 @@
                 {% endfor %}
             </div>
         </div>
-            <div class="pageButtonsContainer">
-                <div class="pageButton"><a href="{% url 'deals_app:base' base order '0' currentLocation %}">0</a></div>
-                <div class="pageButton" >
-                    {% if currentPage != 0 %}
-                    <div><a href="{% url 'deals_app:base' base order previousPage currentLocation %}"><i class="fas fa-caret-left"></i></a></div>
-                    {% endif %}
-                    <div class="currentPage">Page {{currentPage}}</div>
-                    <div><a href="{% url 'deals_app:base' base order nextPage currentLocation %}"><i class="fas fa-caret-right"></i></a></div>
-                </div>
-                <div class="pageButton"><a href="{% url 'deals_app:base' base order '5' currentLocation %} ">5</a></div>
+        <div class="pageButtonsContainer">
+            <div class="pageButton"><a href="{% url 'deals_app:base' base order '0' currentLocation %}">0</a></div>
+            <div class="pageButton">
+                {% if currentPage != 0 %}
+                <div><a href="{% url 'deals_app:base' base order previousPage currentLocation %}"><i
+                            class="fas fa-caret-left"></i></a></div>
+                {% endif %}
+                <div class="currentPage">Page {{currentPage}}</div>
+                <div><a href="{% url 'deals_app:base' base order nextPage currentLocation %}"><i
+                            class="fas fa-caret-right"></i></a></div>
             </div>
-            <div class="pageButton"><a href="{% url 'deals_app:base' base order '5' %} ">5</a></div>
+            <div class="pageButton"><a href="{% url 'deals_app:base' base order '5' currentLocation %} ">5</a></div>
         </div>
+        <div class="pageButton"><a href="{% url 'deals_app:base' base order '5' %} ">5</a></div>
     </div>
+</div>
 </div>
 
 {{ jsonPosts|json_script:'jsonPosts' }}
-
-<style>
-a {
-  color: inherit;
-  text-decoration: inherit; 
-}
-
-a:hover {
-    text-decoration: underline; 
-}
-
-.active {
-    box-shadow: 0 0 10px 0 rgba(239,123,114, 1)!important;
-}
-
-.main .quickButtons {
-    color:#EF7B72;
-    padding:1em 0;
-    align-items: center;
-    display: flex;
-    font-weight:500;
-    margin: 0 2em;
-
-}
-
-.main .quickButtons span, .main .quickButtons i {
-    cursor:pointer;
-}
-
-.main .quickButtons div {
-    margin-right:2em;
-}
-
-.main .categoryTitle {
-    margin-top:1em;
-    display:flex;
-    color:#EF7B72;
-    width:100%;
-    font-size:2em;
-    justify-content:center;
-}
-
-.categoryTitle {
-  text-transform: capitalize;
-}
-
-.quickButtons a {
-    text-decoration: none;
-}
-
-.content {
-    height:90%;
-    overflow-y: scroll;
-    scroll-behavior: smooth;
-    flex-grow: 1;
-    background:white;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    margin: 0 2em;
-}
-
-.postExpired-True {
-    filter:grayscale(0.7);
-    opacity:.8;
-}
-
-.postAnchor {
-    padding:1em;
-}
-
-.post {
-    padding: 0 1em;
-    display:flex;
-    align-items:center;
-    cursor:pointer;
-    color:#545454;
-    text-decoration:none;
-    box-shadow: 0px 8px 16px 0px rgba(239,123,114,0);
-    transition: box-shadow 1s;
-}
-
-.postLeft {
-    width:50%;
-    padding:2em;
-}
-
-.postImage img{
-    height:8em;
-    width:auto;
-}
-
-.postTitle {
-    font-size:1.1em;
-    width:100%;
-    margin-bottom:.5em;
-}
-
-.postSecondaryDetails {
-    font-size:.7em;
-    display:flex;
-}
-
-.postTimestamp {
-    margin-left:2em;
-    color:#9D9D9C;
-}
-
-.postAuthor {
-    font-weight:500;
-    color: #EF7B72;
-}
-
-.postRight {
-    display:flex;
-    justify-content:space-around;
-    width:50%;
-}
-
-.postRightContainer {
-    display:flex;
-    align-items:center;
-}
-
-.postExpiredDate {
-    color: #9D9D9C;
-}
-
-.postCommentCount {
-    margin-right:.5em;
-    color:#EF7B72;
-}
-
-.voteComponent {
-    display:flex;
-    align-items:center;
-}
-
-.upVote, .downVote {
-    margin:0 .5em;
-    align-items:center;
-    display:flex;
-    flex-direction:column;
-}
-
-.upVote.color1, .upVote:hover{
-    color:#9DC86C;
-}
-
-.downVote.color-1, .downVote:hover{ 
-    color:#EF7C43;
-}
-
-.upVote div, .downVote div{
-    font-size:.6em;
-    padding:.2em;
-}
-
-.postScore {
-    padding: 0 .25em;
-}
-
-.pageButtonsContainer {
-    display:flex;
-    justify-content:space-between;
-    width:25%;
-    margin:2em auto;
-}
-
-.pageButtonsContainer .pageButton {
-    background:white;
-    display:flex;
-    padding:1em;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    color: #EF7B72;
-}
-
-.pageButtonsContainer .currentPage {
-    color:#545454;
-    padding:0 1em;
-}
-
-.pageButton .fas {
-    color: #545454;
-}
-
-
-/* MAPBOX */
-
-.marker {
-    width:2em;
-    height:2em;
-    border-radius:50%;
-    background-position:center;
-    background-color:red;
-    opacity:0.6;
-}
-
-#map { position: absolute; top: 0; bottom: 0; width: 100%; }
-
-.mapContentContainer {
-    display: flex;
-    height:calc(100vh - 5em);
-
-}
-
-.mapContainer {
-    position: relative;
-    width: 100% !important;
-    flex: 1;
-    display: flex;
-}
-
-.mapContentContainer .main {
-    width:50%;
-    flex-grow:unset;
-}
-
-/* FILTERS CSS */
-
-.cancelButton {
-    display:none;
-}
-
-.active-expired.expired, .active-today.today, .activePostcode, .activePostcodeDropdown, .activeCategory {
-    background: #EF7B72;
-    border-radius:3em;
-    padding:.2em .4em;
-    color:white!important;
-    align-items:center;
-}
-
-.active-expired.expired .cancelButton, .active-today.today .cancelButton, .activePostcode .cancelButton {
-    display:inline;
-}
-</style> 
-
 <script>
 
     function getCookie(name) {
@@ -496,6 +267,9 @@ a:hover {
         let jFull = JSON.parse(jData.data)
         jPost = jFull[0].fields
         const jUsername = jData.username
+        const jCommentCount = elem.commentCount
+        const jPostCode = elem.areaCode
+        const jCategory = elem.category
 
         currentPosts = document.querySelector('#posts')
         currentPosts.insertAdjacentHTML("afterbegin",
@@ -516,7 +290,10 @@ a:hover {
                         </div>
                     </div>
                     <div class="postRight">
-                        <div>Other info</div>
+                        <div class="postCommentCount"><i class="fas fa-comment"></i> ${jCommentCount}</div>
+                                <div class="postExpiredDate">Pickup time: ${jPost.expiration_date}</div>
+                                <div class="postCategory">${jCategory}</div>
+                                <div class="postPostcode">${jPostCode}</div>
                     </div>
                 </div>
             </div>`);
@@ -551,5 +328,363 @@ a:hover {
     postListSocket.onclose = function (message) {
         console.log("post list close", message);
     }
+
+    // Search socket
+    let searchEndpoint = (location.protocol == 'https:' ? 'wss://' : 'ws://') + location.host + "/ws/search/"
+    searchSocket = new WebSocket(searchEndpoint);
+
+    document.querySelector('#search-input').focus();
+    document.querySelector('#search-input').onkeyup = function (e) {
+        if (e.keyCode === 13) {  // enter, return
+            document.querySelector('#search-submit').click();
+        }
+    };
+
+    const searchInputDom = document.querySelector('#search-input');
+    let search = searchInputDom.value;
+
+    document.querySelector('#search-submit').onclick = function (e) {
+        search = searchInputDom.value;
+        ////// SANITIZE INPUT !!!!
+        if (search != '') {
+            searchSocket.send(JSON.stringify({
+                'search': search
+            }));
+        }
+        searchInputDom.value = '';
+    };
+
+    searchSocket.onopen = function (message) {
+        console.log("search open", message);
+    }
+
+    searchSocket.onmessage = function (e) {
+        //console.log(e)
+        const jData = JSON.parse(e.data);
+        let resultCount = 0
+
+        let oldSearch = document.querySelector('#search-results-container')
+        if (oldSearch != undefined) {
+            oldSearch.innerHTML = ''
+        }
+        let posts = document.querySelector('#posts');
+        posts.classList.add("hidden");
+        const postsContainer = document.querySelector('#posts-container');
+        postsContainer.insertAdjacentHTML("afterbegin",
+            `<div id="search-results-container">
+                <div id="search-result-menu">
+                    <div id="search-result-info"><span id="resultCount">No </span> results found for ${search}</div>
+                    <button onclick="clearResults()">Clear search results</botton>
+                </div>
+            </div>`
+        );
+        jData.forEach(elem => {
+            document.querySelector('#resultCount').innerHTML = resultCount += 1;
+            const jUsername = elem.username;
+            const jCommentCount = elem.commentCount
+            const jPostCode = elem.areaCode
+            const jCategory = elem.category
+            const jPost = JSON.parse(elem.data)[0].fields
+            //console.log(data)
+            const resultsContainer = document.querySelector('#search-results-container');
+            resultsContainer.insertAdjacentHTML("afterend",
+                `<div class="postAnchor" id="mapId-${jPost.id}">
+                    <div class="post postId-${jPost.id}">
+                        <div class="postImage">
+                            <a href="/post/${jPost.slug}">
+                                <img src="/media/${jPost.thumbnail}">
+                            </a>
+                        </div>
+                        <div class="postLeft">
+                            <div class="postTitle"><a href="/post/${jPost.slug}">${jPost.title}</a>
+                            </div>
+                            <div class="postSecondaryDetails">
+                                <div class="postAuthor"><a
+                                    href="/post/${jPost.user}">${jUsername}</a></div>
+                            <div class="postTimestamp">${jPost.date_created}</div>
+                            </div>
+                        </div>
+                        <div class="postRight">
+                            <div class="postRightContainer">
+                                <div class="postCommentCount"><i class="fas fa-comment"></i> ${jCommentCount}</div>
+                                <div class="postExpiredDate">Pickup time: ${jPost.expiration_date}</div>
+                                <div class="postCategory">${jCategory}</div>
+                                <div class="postPostcode">${jPostCode}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`
+            );
+        });
+
+    }
+
+    searchSocket.onerror = function (message) {
+        console.log("search error", message);
+    }
+
+    searchSocket.onclose = function (message) {
+        console.log("search close", message);
+    }
+
+    function clearResults() {
+        document.querySelector('#search-results-container').classList.add("hidden");
+        document.querySelector('#posts').classList.remove("hidden");
+    }
 </script>
+
+<style>
+    a {
+        color: inherit;
+        text-decoration: inherit;
+    }
+
+    a:hover {
+        text-decoration: underline;
+    }
+
+    .active {
+        box-shadow: 0 0 10px 0 rgba(239, 123, 114, 1) !important;
+    }
+
+    .main .quickButtons {
+        color: #EF7B72;
+        padding: 1em 0;
+        align-items: center;
+        display: flex;
+        font-weight: 500;
+        margin: 0 2em;
+
+    }
+
+    .main .quickButtons span,
+    .main .quickButtons i {
+        cursor: pointer;
+    }
+
+    .main .quickButtons div {
+        margin-right: 2em;
+    }
+
+    .main .categoryTitle {
+        margin-top: 1em;
+        display: flex;
+        color: #EF7B72;
+        width: 100%;
+        font-size: 2em;
+        justify-content: center;
+    }
+
+    .categoryTitle {
+        text-transform: capitalize;
+    }
+
+    .quickButtons a {
+        text-decoration: none;
+    }
+
+    .content {
+        height: 90%;
+        overflow-y: scroll;
+        scroll-behavior: smooth;
+        flex-grow: 1;
+        background: white;
+        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+        margin: 0 2em;
+    }
+
+    .postExpired-True {
+        filter: grayscale(0.7);
+        opacity: .8;
+    }
+
+    .postAnchor {
+        padding: 1em;
+    }
+
+    .post {
+        padding: 0 1em;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        color: #545454;
+        text-decoration: none;
+        box-shadow: 0px 8px 16px 0px rgba(239, 123, 114, 0);
+        transition: box-shadow 1s;
+    }
+
+    .postLeft {
+        width: 50%;
+        padding: 2em;
+    }
+
+    .postImage img {
+        height: 8em;
+        width: 8em;
+        object-fit: contain;
+    }
+
+    .postTitle {
+        font-size: 1.1em;
+        width: 100%;
+        margin-bottom: .5em;
+    }
+
+    .postSecondaryDetails {
+        font-size: .7em;
+        display: flex;
+    }
+
+    .postTimestamp {
+        margin-left: 2em;
+        color: #9D9D9C;
+    }
+
+    .postAuthor {
+        font-weight: 500;
+        color: #EF7B72;
+    }
+
+    .postRight {
+        display: flex;
+        justify-content: space-around;
+        width: 50%;
+    }
+
+    .postRightContainer {
+        display: flex;
+        align-items: center;
+    }
+
+    .postExpiredDate {
+        color: #9D9D9C;
+    }
+
+    .postCommentCount {
+        margin-right: .5em;
+        color: #EF7B72;
+    }
+
+    .voteComponent {
+        display: flex;
+        align-items: center;
+    }
+
+    .upVote,
+    .downVote {
+        margin: 0 .5em;
+        align-items: center;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .upVote.color1,
+    .upVote:hover {
+        color: #9DC86C;
+    }
+
+    .downVote.color-1,
+    .downVote:hover {
+        color: #EF7C43;
+    }
+
+    .upVote div,
+    .downVote div {
+        font-size: .6em;
+        padding: .2em;
+    }
+
+    .postScore {
+        padding: 0 .25em;
+    }
+
+    .pageButtonsContainer {
+        display: flex;
+        justify-content: space-between;
+        width: 25%;
+        margin: 2em auto;
+    }
+
+    .pageButtonsContainer .pageButton {
+        background: white;
+        display: flex;
+        padding: 1em;
+        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+        color: #EF7B72;
+    }
+
+    .pageButtonsContainer .currentPage {
+        color: #545454;
+        padding: 0 1em;
+    }
+
+    .pageButton .fas {
+        color: #545454;
+    }
+
+
+    /* MAPBOX */
+
+    .marker {
+        width: 2em;
+        height: 2em;
+        border-radius: 50%;
+        background-position: center;
+        background-color: red;
+        opacity: 0.6;
+    }
+
+    #map {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+    }
+
+    .mapContentContainer {
+        display: flex;
+        height: calc(100vh - 5em);
+
+    }
+
+    .mapContainer {
+        position: relative;
+        width: 100% !important;
+        flex: 1;
+        display: flex;
+    }
+
+    .mapContentContainer .main {
+        width: 50%;
+        flex-grow: unset;
+    }
+
+    /* FILTERS CSS */
+
+    .cancelButton {
+        display: none;
+    }
+
+    .active-expired.expired,
+    .active-today.today,
+    .activePostcode,
+    .activePostcodeDropdown,
+    .activeCategory {
+        background: #EF7B72;
+        border-radius: 3em;
+        padding: .2em .4em;
+        color: white !important;
+        align-items: center;
+    }
+
+    .active-expired.expired .cancelButton,
+    .active-today.today .cancelButton,
+    .activePostcode .cancelButton {
+        display: inline;
+    }
+
+    .hidden {
+        display: none;
+    }
+</style>
 {% endblock content %}

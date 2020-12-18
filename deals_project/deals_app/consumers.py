@@ -20,7 +20,6 @@ from django.core import serializers
 # delete signal for if a post get deleted
 
 class NotificationConsumer(JsonWebsocketConsumer):
-
     def connect(self):
         personal_group = 'personal_group_'+str(self.scope["user"].id)
         async_to_sync(self.channel_layer.group_add)(personal_group, self.channel_name)
@@ -38,20 +37,22 @@ class NotificationConsumer(JsonWebsocketConsumer):
                     "slug": obj.post.slug
                 }
                 # comment may already be in payload from quotes
-                if payload != []:
-                    for item in payload:
-                        if data["id"] == item["id"]:
-                            continue
-                        payload.append(data)
-                else:
+                if payload == []:
                     payload.append(data)
+                else:
+                    # if obj id is already in payload
+                    if any(item['id'] == obj.id for item in payload):
+                        print('in already')
+                    else:
+                        payload.append(data)
+
 
         # all unread replies from own comments
-        unread_from_replies = Quote.objects.exclude(quoter__user=self.scope["user"]).filter(quotee__user=self.scope["user"]).filter(quoter__read_by_author=False).order_by('-quotee__date_created')
+        unread_from_replies = Quote.objects.exclude(quoter__user=self.scope["user"]).filter(quotee__user=self.scope["user"]).filter(quoter__read_by_author=False).order_by('quotee__date_created')
         loop_handler(unread_from_replies, True)
 
         # all unread comments from own post
-        unread_from_OP = Comment.objects.exclude(user=self.scope["user"]).filter(post__user=self.scope["user"]).filter(read_by_author=False).order_by('-date_created')
+        unread_from_OP = Comment.objects.exclude(user=self.scope["user"]).filter(post__user=self.scope["user"]).filter(read_by_author=False).order_by('date_created')
         loop_handler(unread_from_OP, False)
         
         # no need to use group for initial on-load payload
@@ -137,9 +138,38 @@ class LivePostConsumer(JsonWebsocketConsumer):
             'type': 'events.alarm',
             'data': {
                 "data": serializers.serialize("json", [instance]),
-                'username': instance.user.username
+                "username": instance.user.username,
+                "commentCount": instance.comments.count(),
+                "areaCode": instance.postcode.code,
+                "category": instance.category.name
             }
         })
+
+class SearchConsumer(JsonWebsocketConsumer):
+    # echo consumer
+    def connect(self):
+        self.accept()
+
+    def disconnect(self, close_code):
+        self.close()
+
+    def receive_json(self, content, **kwargs):
+        print(f"Received event: {content}")
+        # can maybe be done more efficient
+        payload = []
+        all_posts = Post.objects.all()
+        for post in all_posts:
+            if content["search"].lower() in post.title.lower():
+                payload.append({
+                    "data":serializers.serialize("json", [post]), 
+                    "username":post.user.username, 
+                    "commentCount": post.comments.count(),
+                    "areaCode": post.postcode.code,
+                    "category": post.category.name
+                })
+        print(payload)
+        self.send_json(payload)
+
 
 # (NOT WORKING ATM)
 # todo:
