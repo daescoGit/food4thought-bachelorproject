@@ -136,8 +136,10 @@
         }
 
         let counter = 0;
-        const counterDiv = document.querySelector('#notification-counter');
-        counterDiv.innerHTML = counter;
+        const counterDiv = document.querySelector('#notification-counter') || null;
+        if (counterDiv != null) {
+            counterDiv.innerHTML = counter;
+        }
     </script>
 
     <!-- Status socket -->
