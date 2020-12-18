@@ -64,7 +64,7 @@
         <div class="content" id="posts-container">
             <div id="posts">
                 {% for post in posts %}
-                <div class="postAnchor postExpired-{{post.expired}}" id="mapId-{{post.id}}">
+                <div class="postAnchor postExpired-{{post.frozen}}" id="mapId-{{post.id}}">
                     <div class="post postId-{{post.id}}">
                         <div class="postImage">
                             <a href="{% url 'deals_app:post' post.slug %}">
