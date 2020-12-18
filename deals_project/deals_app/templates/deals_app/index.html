@@ -100,7 +100,6 @@
                 </div>
                 <div class="pageButton"><a href="{% url 'deals_app:base' base order '5' currentLocation %} ">5</a></div>
             </div>
-            <div class="pageButton"><a href="{% url 'deals_app:base' base order '5' %} ">5</a></div>
         </div>
     </div>
 </div>
@@ -435,7 +434,7 @@ a:hover {
 
 
     let postsArray = JSON.parse(JSON.parse(document.querySelector('#jsonPosts').textContent));
-
+    
     console.log(postsArray)
     // TO MAKE THE MAP APPEAR YOU MUST
     // ADD YOUR ACCESS TOKEN FROM

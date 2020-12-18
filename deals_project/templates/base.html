@@ -91,10 +91,13 @@
     {% block content %}
     {% endblock %}
     <!-- FilePond Stuff -->
-    <script src="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.js"></script>
     <script src="{% static 'filepond.js' %}"></script>
+    <script src="{% static 'filepond-plugin-image-preview.js' %}"></script>
+    <script src="{% static 'filepond-plugin-image-crop.min.js' %}"></script>
+    <script src="{% static 'filepond-plugin-image-resize.min.js' %}"></script>
     <script src="{% static 'filepond-plugin-file-validate-size.js' %}"></script>
     <script src="{% static 'filepond-plugin-file-validate-type.js' %}"></script>
+    <script src="{% static 'filepond-plugin-image-transform.min.js' %}"></script>
     <script src="{% static 'filepond-plugin-file-encode.js' %}"></script>
     <script>
         window.addEventListener('DOMContentLoaded', (event) => {

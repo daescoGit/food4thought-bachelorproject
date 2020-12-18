@@ -15,25 +15,14 @@ from django.core import serializers
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from . messaging import email_message
+from .utils.images import get_image_from_data_url
+
 import django_rq
+import json
 
 
 # Create your views here.
 def profile(request, user_id):
-    if request.method == "POST":
-        print(request.FILES)
-        user = request.user
-        profile = UserProfile.objects.get(user=user)
-        if "summary" in request.POST:
-            summary = request.POST["summary"]
-            profile.summary = summary
-        if "image" in request.FILES:
-            myfile = request.FILES["image"]
-            fs = FileSystemStorage()
-            filename = fs.save(myfile.name, myfile)
-            uploaded_file_url = fs.url(filename)
-            profile.image = filename
-        profile.save()
 
     user = get_object_or_404(User, pk=user_id)
     posts = Post.objects.filter(user=user_id)
@@ -49,6 +38,21 @@ def profile(request, user_id):
 @login_required
 def edit_profile(request):
     user = request.user
+    if request.method == "POST":
+        profile = UserProfile.objects.get(user=user)
+        if "summary" in request.POST:
+            summary = request.POST["summary"]
+            profile.summary = summary
+        if "file" in request.POST:
+            fileJson = json.loads(request.POST["file"])
+            profile.image = get_image_from_data_url(fileJson["data"])[0]
+            # myfile = request.POST["filepond"]
+            # fs = FileSystemStorage()
+            # filename = fs.save(myfile.name, myfile)
+            # uploaded_file_url = fs.url(filename)
+            # profile.image = filename
+        profile.save()
+
     return render(request, 'profile_app/edit.html', {'profileUser':user})
 
 def subscription_list(request):

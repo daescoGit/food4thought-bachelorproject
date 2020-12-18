@@ -2,27 +2,29 @@
 {% load static %}
 {% block content %}
 <div class="main">
-    <div class="quickButtons">
-    </div>
     <div class="content">
-        <div class="profileDetails">
-            <div class="leftContainer">
-                <div class="profileImgContainer">
-			<input type="file" class="filepond" name="filepond" accept="image/png, image/jpeg, image/gif"/>
-			<img class="profileImg" src="{% if profileUser.profile.image %}{{profileUser.profile.image.url}}{% else %}{% static 'profilePic.jpg' %}{% endif %}">
+        <form id="editProfileForm" action="{% url 'profile_app:edit_profile' %}" method="POST">
+            {% csrf_token %}
+            <div class="profileDetails">
+                <div class="leftContainer">
+                    <div class="profileImgContainer">
+                        <input type="file" class="filepond" name="filepond"/>
+                        <input type="hidden" name="file"/>
+                    </div>
                 </div>
-            </div>
-
-            <div class="middleContainer">
-                <div class="profileHeader">
-                    <div class="profileAuthor"><a href="{% url 'profile_app:profile' profileUser.profile.user.id %}">{{profileUser}}</a></div>
-                    <div class="profileTimestamp">24th February 2020</div>
+                <div class="middleContainer">
+                    <div class="profileHeader">
+                        <div class="profileAuthor"><a href="{% url 'profile_app:profile' profileUser.profile.user.id %}">{{profileUser}}</a></div>
+                        <div class="profileTimestamp">24th February 2020</div>
+                    </div>
+                    <div class="profileBody">
+                        <textarea name="summary">
+                            {{profileUser.profile.summary}}
+                        </textarea>
+                    </div>
                 </div>
-                <div class="profileBody">
-                    {{profileUser.profile.summary}}
-                </div>
-            </div>
-    </div>
+            </form>
+        </div>
             <!-- {{profileUser}}
             {{profileUser.userprofile.summary}}
                 <div class="profileTotalSubscribers" data-id="totalSubscribers">{{subscribers}}</div>
@@ -64,24 +66,41 @@
                         </div>
                         {% endfor %} -->
                     </div>
+                    <div id="submitForm">
+                        button
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+{{ profileUser.profile.image.url|json_script:'profileImageUrl' }}
+
     <style>
-.main .quickButtons, .subHeader {
-    color:#EF7B72;
-    height:4.5em;
-    align-items: center;
-    display: flex;
-    font-weight:500;
-}
 
 .main .quickButtons span, .main .quickButtons i {
     margin-right:.5em;
     cursor:pointer;
     color:#EF7B72;
+}
+
+.main {
+    margin: 0 auto;
+    flex-direction: row!important;
+    margin-top:4.5em!important;
+    width: 60em;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+}
+
+#submitForm {
+    margin-left: 1em;
+    padding: 1em;
+    background: #EF7B72;
+    color: white;
+    font-weight: 500;
 }
 
 a {
@@ -220,8 +239,32 @@ a {
     justify-content:space-between;
 }
 
+textarea {
+    border: none;
+    font-weight: 500;
+    color: #555454;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #dadada;
+    box-shadow: 0px 1px 5px 0px #DCDDDC;
+    padding: 1em;
+    border-radius: 1em;
+}
+
+/* FILEPOND */
+
+.filepond--root {
+    width:10em;
+    height:10em;
+    margin: 0 auto;
+
+}
+
     </style>
     <script>
+    document.addEventListener('DOMContentLoaded', function () {
+
 
         function getCookie(name) {
             var cookieValue = null;
@@ -238,89 +281,117 @@ a {
             }
             return cookieValue;
         }
+
         var csrftoken = getCookie('csrftoken');
 
 
-        function Subscribe() {
-            let elem = event.target
-            let user_id = elem.dataset.id
+        // function Subscribe() {
+        //     let elem = event.target
+        //     let user_id = elem.dataset.id
 
-            if(elem.className == 'subscriptionStatus-1') {
-                console.log('deleting...')
-            fetch(`http://127.0.0.1:8000/users/${user_id}/profile/subscribe`, {
-                    method: "DELETE",
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrftoken,
-                    },
+        //     if(elem.className == 'subscriptionStatus-1') {
+        //         console.log('deleting...')
+        //     fetch(`http://127.0.0.1:8000/users/${user_id}/profile/subscribe`, {
+        //             method: "DELETE",
+        //             headers: {
+        //                 'Accept': 'application/json',
+        //                 'Content-Type': 'application/json',
+        //                 'X-CSRFToken': csrftoken,
+        //             },
 
-                    //make sure to serialize your JSON body
-                    body: JSON.stringify({})
-                })
-                .then((response) => {
-                    elem.className = 'subscriptionStatus-0'
-                    totalSubscriptions = document.querySelector(`[data-id=totalSubscribers]`)
-                    let number = totalSubscriptions.innerHTML 
-                    number = parseInt(number) - 1
-                    totalSubscriptions.innerHTML = number
-                })
-            }
+        //             //make sure to serialize your JSON body
+        //             body: JSON.stringify({})
+        //         })
+        //         .then((response) => {
+        //             elem.className = 'subscriptionStatus-0'
+        //             totalSubscriptions = document.querySelector(`[data-id=totalSubscribers]`)
+        //             let number = totalSubscriptions.innerHTML 
+        //             number = parseInt(number) - 1
+        //             totalSubscriptions.innerHTML = number
+        //         })
+        //     }
 
-        else if(elem.className == 'subscriptionStatus-0') {
-            console.log('adding...')
+        // else if(elem.className == 'subscriptionStatus-0') {
+        //     console.log('adding...')
 
-            fetch(`http://127.0.0.1:8000/users/subscriptions`, {
-                    method: "POST",
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrftoken,
-                    },
+        //     fetch(`http://127.0.0.1:8000/users/subscriptions`, {
+        //             method: "POST",
+        //             headers: {
+        //                 'Accept': 'application/json',
+        //                 'Content-Type': 'application/json',
+        //                 'X-CSRFToken': csrftoken,
+        //             },
 
-                    //make sure to serialize your JSON body
-                    body: JSON.stringify({
-                        "subscriber": "{{user.id}}",
-                        "subscribee": user_id
-                    })
-                })
-                .then((response) => {
-                    elem.className = 'subscriptionStatus-1'
-                    totalSubscriptions = document.querySelector(`[data-id=totalSubscribers]`)
-                    let number = totalSubscriptions.innerHTML 
-                    number = parseInt(number) + 1
-                    totalSubscriptions.innerHTML = number
-                })
-            }
-        }
+        //             //make sure to serialize your JSON body
+        //             body: JSON.stringify({
+        //                 "subscriber": "{{user.id}}",
+        //                 "subscribee": user_id
+        //             })
+        //         })
+        //         .then((response) => {
+        //             elem.className = 'subscriptionStatus-1'
+        //             totalSubscriptions = document.querySelector(`[data-id=totalSubscribers]`)
+        //             let number = totalSubscriptions.innerHTML 
+        //             number = parseInt(number) + 1
+        //             totalSubscriptions.innerHTML = number
+        //         })
+        //     }
+        // }
 
-        FilePond.registerPlugin(FilePondPluginFileValidateSize);
-        FilePond.registerPlugin(FilePondPluginFileValidateType);
-        FilePond.registerPlugin(FilePondPluginImagePreview);
-        FilePond.registerPlugin(FilePondPluginFileEncode);
+        let profileImageUrl = JSON.parse(document.querySelector('#profileImageUrl').textContent);
+            
+        FilePond.registerPlugin(
+            FilePondPluginImagePreview,
+            FilePondPluginImageCrop,
+            FilePondPluginImageResize,
+            FilePondPluginFileEncode,
+            FilePondPluginImageTransform
+        );
+        
 
         FilePond.setOptions({
-            allowMultiple:true,
-            maxFiles:10,
-            maxFileSize: '3MB'
-        })
-        
-	const inputElement = document.querySelector('input[type="file"]');
-        const pond = FilePond.create( inputElement, {
+            maxFileSize: '3MB',
             labelIdle: `Drag & Drop your picture or <span class="filepond--label-action">Browse</span>`,
-	    imagePreviewHeight: 170,
-	    imageCropAspectRatio: '1:1',
-	    imageResizeTargetWidth: 200,
-	    imageResizeTargetHeight: 200,
-	    stylePanelLayout: 'compact circle',
-	    styleLoadIndicatorPosition: 'center bottom',
-	    styleProgressIndicatorPosition: 'right bottom',
-	    styleButtonRemoveItemPosition: 'left bottom',
-	    styleButtonProcessItemPosition: 'right bottom',
-		acceptedFileTypes:['image/png', 'image/jpeg'],
-        });
-	  }
-	);
-    </script>
-{% endblock %}
+            imagePreviewHeight: 170,
+            imageCropAspectRatio: '1:1',
+            imageResizeTargetWidth: 200,
+            imageResizeTargetHeight: 200,
+            stylePanelLayout: 'compact circle',
+            styleLoadIndicatorPosition: 'center bottom',
+            styleButtonRemoveItemPosition: 'center bottom'
+        })
 
+        let file, form;
+        let fileChanged = false;
+        
+	    const inputElement = document.querySelector('input[type="file"]');
+        const pond = FilePond.create( inputElement, {
+        labelIdle: `Drag & Drop your picture or <span class="filepond--label-action">Browse</span>`,
+        onaddfile: (err, fileItem) => {
+                    if (!err) {
+                        file = fileItem.getFileEncodeDataURL()
+                        fileChanged = true;
+                    }
+                }
+            });
+            
+        pond.addFile(profileImageUrl)
+
+        document.getElementById("submitForm").addEventListener("click", () => {
+
+            let filePondInput = document.getElementsByName('filepond')[0];
+            let fileInput = document.getElementsByName('file')[0];
+            let form = document.forms["editProfileForm"]
+
+            if(fileChanged){
+                // form.append('csrfmiddlewaretoken', '{{ csrf_token }}')
+                jData = JSON.parse(filePondInput.value)
+                jData.data = file
+                
+                fileInput.value = JSON.stringify(jData)
+            }
+            form.submit();
+        })
+    })
+        </script>
+{% endblock %}
