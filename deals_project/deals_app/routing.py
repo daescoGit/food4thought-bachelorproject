@@ -9,4 +9,5 @@ websocket_urlpatterns = [
     re_path(r'ws/status/', consumers.UserStatusConsumer.as_asgi()),
     re_path(r'ws/notifier/', consumers.NotificationConsumer.as_asgi()),
     re_path(r'ws/postList/', consumers.LivePostConsumer.as_asgi()),
+    re_path(r'ws/search/', consumers.SearchConsumer.as_asgi()),
 ]
