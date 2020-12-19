@@ -201,8 +201,8 @@ def edit(request, slug):
     form = PostForm(dictpost)
     if request.method == "POST":
         form = PostForm(request.POST)
+        post = get_object_or_404(Post, slug=slug)
         if form.is_valid():
-            post = get_object_or_404(Post, slug=slug)
             postcodeExists = Postcode.objects.filter(code=form.cleaned_data['postcode_code'])
 
             if(postcodeExists.exists()):
@@ -261,10 +261,15 @@ def edit(request, slug):
                 if int(existingImagesLength) == 0:
                     post.thumbnail = get_image_from_data_url(request.POST.get('newImages0'))[0]
 
-            post.save()
+            messages.success(request,'Post updated')
 
-            messages.success(request,'Post updated' )
-            return redirect('deals_app:post', slug = post.slug)
+        if request.POST['confirmCollection']:
+            post.frozen = True
+
+        post.save()
+
+
+        return redirect('deals_app:post', slug = post.slug)
 
 
 

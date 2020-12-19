@@ -39,6 +39,13 @@
                         <div id="thumbnailRight"><i class="fas fa-chevron-right"></i></div>
                     </div>
                 </div>
+            <div class="confirmCollection">
+                <form name="myform" action="{% url 'deals_app:edit' post.slug %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="confirmCollection" />
+                    <button>Confirm Collection</button>
+                  </form>
+            </div>
             </div>
             <div class="middleContainer">
                 <div class="authorHeader">
@@ -905,6 +912,17 @@
         color: #b5b5b5;
         font-weight: 500;
         text-decoration: none;
+    }
+
+    .confirmCollection {
+        margin:1em auto;
+        text-align:center;
+        padding: 1em;
+        background: #EF7B72;
+        color: white;
+        font-weight: 500;
+        cursor: pointer;
+        width:60%;
     }
 </style>
 
