@@ -107,6 +107,7 @@ def register(request):
 
     return render(request, 'login_app/register.html', context)
 
+@login_required
 def edit_account(request):
     print('account view!')
     context = {}

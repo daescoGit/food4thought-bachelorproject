@@ -44,30 +44,31 @@
                 <div class="searchContainer">
                     <i class="fas fa-search"></i>
                     <input id="search-input" placeholder="Search all posts">
-                    <!--                     <button id="search-submit">Find</button> -->
                 </div>
                 <div id="search-result-container" class="genericDropdownContent"></div>
             </div>
             {% if user.is_authenticated %}
-            <div id="notification-group">
-                <label for="notification-icon" id="notification-label"></label>
-                <i class="far fa-bell" id="notification-icon"></i>
-                <div id="notification-counter"></div>
-                <div id="notification-list"></div>
-            </div>
-            <div class="userDropdown">
-                <a class="dropbtn" href="">
-                    <div class="profileImage">
-                        <img src="{{loggedProfileImage.url}}">
+            <div id="right-nav-group">
+                <div id="notification-group">
+                    <label for="notification-icon" id="notification-label"></label>
+                    <i class="far fa-bell" id="notification-icon"></i>
+                    <div id="notification-counter"></div>
+                    <div id="notification-list"></div>
+                </div>
+                <div class="userDropdown">
+                    <a class="dropbtn" href="">
+                        <div class="profileImage">
+                            <img src="{{loggedProfileImage.url}}">
+                        </div>
+                        <span>{{user}}</span>
+                        <i class="fa fa-angle-down" aria-hidden="true"></i>
+                    </a>
+                    <div class="userDropdownContent">
+                        <a class="userDropdownItem" href="{% url 'profile_app:profile' user.id %}">Profile</a>
+                        <!-- <a class="userDropdownItem" href="">Chats</a> -->
+                        <a class="userDropdownItem" href="{% url 'login_app:edit_account' %}">Account settings</a>
+                        <a class="userDropdownItem" href="{% url 'login_app:logout' %}">Logout</a>
                     </div>
-                    <span>{{user}}</span>
-                    <i class="fa fa-angle-down" aria-hidden="true"></i>
-                </a>
-                <div class="userDropdownContent">
-                    <a class="userDropdownItem" href="{% url 'profile_app:profile' user.id %}">Profile</a>
-                    <!-- <a class="userDropdownItem" href="">Chats</a> -->
-                    <a class="userDropdownItem" href="{% url 'login_app:edit_account' %}">Account settings</a>
-                    <a class="userDropdownItem" href="{% url 'login_app:logout' %}">Logout</a>
                 </div>
             </div>
         </div>
@@ -377,6 +378,13 @@
         justify-content: space-around;
     }
 
+    #right-nav-group {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        column-gap: 2em;
+    }
+
     .success,
     .error {
         display: flex;
@@ -666,7 +674,18 @@
     }
 
     .submitForm {
+        margin-left: 1em;
+        padding: 1em;
+        background: #EF7B72;
+        color: white;
+        font-weight: 500;
         cursor: pointer;
+        width: max-content;
+    }
+
+    .submitForm.small {
+        padding: 0.5em;
+        margin-left: 0;
     }
 
     .hidden {
@@ -675,6 +694,10 @@
 
     .visable {
         display: initial;
+    }
+
+    .visable-flex {
+        display: flex;
     }
 
     .postTag {
@@ -713,5 +736,18 @@
 
     .postAuthor {
         color: #EF7B72;
+    }
+
+    .sub-header-container {
+        margin-top: 2em;
+    }
+
+    .form-input-1 {
+        width: 20em;
+    }
+
+    .line-2 {
+        border-bottom: 1px solid #bdbdbd;
+        margin: 2em 0 1em;
     }
 </style>

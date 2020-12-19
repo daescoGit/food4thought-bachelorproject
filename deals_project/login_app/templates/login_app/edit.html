@@ -2,340 +2,125 @@
 {% load static %}
 {% block content %}
 <div class="main">
-    <div class="quickButtons">
-        {% if user == profileUser %}
-        <div>
-            <a href=" {% url 'profile_app:edit_profile' %}">
-                <span>Edit profile</span>
-                <i class="fas fa-edit"></i>
-            </a>
-        </div>
-        {% endif %}
-    </div>
+    <div class="quickButtons"></div>
     <div class="content">
-        <div class="profileDetails">
-            <div class="leftContainer">
+        <div class="heading">Account settings</div>
 
-                <div class="profileImgContainer">
-                    <img class="profileImg" src="{% if profileUser.profile.image %}{{profileUser.profile.image.url}}{% else %}{% static 'profilePic.jpg' %}{% endif %}">
+        <div class="sub-header-container">
+            <!-- fix urls -->
+            <form class="registerForm" id="frmChangeEmail" action="{% url 'login_app:password_reset' %}" method="POST">
+                {% csrf_token %}
+                <div>Change Email</div>
+                <input type="email" name="email" class="form-input-1" value="{{request.user.email}}">
+                <button id="submit-email" form="frmResetPw" class="submitForm small">Submit</button>
+                {% if error %}
+                {{ error }}
+                {% endif %}
+            </form>
+            <div class="line-2"></div>
+            <form class="registerForm" id="frmResetPwReq" action="{% url 'login_app:request_password_reset' %}"
+                method="POST">
+                {% csrf_token %}
+                <div>Request password reset</div>
+                <input type="hidden" name="email" class="form-input-1" value="{{request.user.email}}">
+                <button id="submit-pw-req" form="frmResetPwReq" class="submitForm small">Send Email</button>
+                {% if error %}
+                {{ error }}
+                {% endif %}
+            </form>
+            <form class="registerForm" action="{% url 'login_app:password_reset' %}" method="POST">
+                {% csrf_token %}
+                <div id="pw-reset-dropdown">Reset password <i class="fa fa-angle-down" aria-hidden="true"></i></div>
+                <div class="dropdown-content-1">
+                    <input type="password" name="password" placeholder="New Password" class="form-input-1">
+                    <input type="password" name="confirm_password" placeholder="Repeat New Password"
+                        class="form-input-1">
+                    <input type="text" name="token" placeholder="Token" class="form-input-1">
+                    <button id="submit-new-pw" form="frmResetPw" class="submitForm small">Submit</button>
                 </div>
-            </div>
-
-            <div class="middleContainer">
-                <div class="profileHeader">
-                    <div class="profileAuthor"><a href="{% url 'profile_app:profile' profileUser.profile.user.id %}">{{profileUser}}</a></div>
-                    <div class="profileTimestamp">24th February 2020</div>
-                </div>
-                <div class="profileBody">
-                    {{profileUser.profile.summary}}
-                </div>
-            </div>
-
-        </div>
-        <div class="line"></div>
-        <div class="subHeader">Deals by {{profileUser}}</div>
-
-        <div class="createdPostsContainer">
-            {% for post in posts.all %}
-            <a href="{% url 'deals_app:post' post.slug %}">
-                <div class="post">
-                    <div class="postImageContainer">
-                        <img class="postImage" src="{{post.thumbnail.url}}">
-                    </div>
-                    <div class="postRight">
-                        <div class="postBody">
-                            <div class="postTitle">{{post.title}}</div>
-                            <div class="priceContainer">
-                                <div class="newPrice">3000dkk</div>
-                                <div class="oldPrice">4000dkk</div>
-                            </div>
-                        </div>
-                        <div class="postFooter"><div class="postTimestamp">Made 20th March</div></div>
-                    </div>
-                </div>
-            </a>
-            {% endfor %}
-        </div>
-    </div>
-            <!-- {{profileUser}}
-            {{profileUser.userprofile.summary}}
-                <div class="profileTotalSubscribers" data-id="totalSubscribers">{{subscribers}}</div>
-            
-            {% if user.is_authenticated and user != profileUser %}
-            <a href="">start chat</a>
-            <div class="subscriptionsContainer">
-                <div onclick="Subscribe()" data-id="{{profileUser.id}}" class="subscriptionStatus-{{subscriptionStatus}}">
-                    Subscribe
-                </div>
-            </div>
-            {% endif %} -->
-<!-- 
-
-            <div class="cardsContainer">
-                        {% for post in posts.all %}
-                        <div class="card">
-                            <a href="{% url 'deals_app:post' post.id %}">
-                                <div class="cardImgTop">
-                                    <img src="{{ post.thumbnail.url }}">
-                                </div>
-                            </a>
-                            <div >
-                                <div>
-                                    <a href="{% url 'deals_app:post' post.id %}">{{post.name}} | {{ post.weapon }}</a>
-                                    <a href="{% url 'profile_app:profile' post.user.id %}">{{ post.user }}</a>
-                                    <div>{{ post.summary }}</div>
-                                    <div>
-                                        {% if user == profileUser %}
-                                        <div>
-                                            <a href="{% url 'deals_app:delete' post.id %}">delete post</a>
-                                            <a href="{% url 'deals_app:edit' post.id %}">edit post</a>
-                                        </div>
-                                        {% endif %}
-                                        <div>{{post.timestamp}}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %} -->
-                    </div>
-                </div>
-            </div>
+            </form>
+            <div class="line-2"></div>
+            <form class="registerForm" id="frmDelete" action="{% url 'login_app:delete_account'%}" method="POST">
+                {% csrf_token %}
+                <div>Remove account</div>
+                <input type="password" name="password" placeholder="Password" class="form-input-1">
+                <input type="text" name="confirm_deletion" placeholder="TYPE DELETE" class="form-input-1">
+                <button id="submit-pw-req" form="frmResetPw" class="submitForm small">Remove</button>
+                {% if error %}
+                {{ error }}
+                {% endif %}
+            </form>
         </div>
     </div>
 </div>
-    <style>
-.main .quickButtons, .subHeader {
-    color:#EF7B72;
-    height:4.5em;
-    align-items: center;
-    display: flex;
-    font-weight:500;
-}
+<script>
+    document.querySelector(".dropdown-content-1").classList.remove("visable-flex");
 
-.main .quickButtons span, .main .quickButtons i {
-    margin-right:.5em;
-    cursor:pointer;
-    color:#EF7B72;
-}
-
-a {
-    text-decoration:none;
-    color:unset;
-}
-
-.profileAuthor:hover {
-    text-decoration: underline;
-}
-
-.content {
-    padding:2em;
-    flex-grow: 1;
-    background:white;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-}
-
-.profileDetails {
-    display:flex;
-    flex-direction: row;
-}
-
-.middleContainer {
-    padding: 0 2em;
-    flex:1;
-}
-
-.profileHeader {
-    display:flex;
-    flex-direction:row;
-    align-items:center;
-    margin: 1em 0;
-    color: #545454
-}
-
-.profileAuthor {
-    font-weight: 500;
-    color: #EF7B72;
-}
-
-.profileTimestamp {
-    margin-left:.5em;
-    font-size: .7em;
-    color: #9D9D9C;
-}
-
-.profileHeader > div {
-    display:inline-flex;
-    margin-bottom:.2em;
-}
-
-.profileTag {
-    background-color:#545454;
-    padding:.3em;
-    margin: 0 .5em;
-    color:white;
-    align-items: center;
-    display: flex;
-}
-
-.profileBody {
-    display:flex;
-    margin-top:1em;
-    width:100%;
-    font-weight: 300;
-}
-
-.profileImgContainer {
-    display:flex;
-    justify-content:center;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    border-radius:50%;
-}
-
-.profileImg {
-    height:10em;
-    width:10em;
-    border-radius:50%;
-    object-fit: cover;
-}
-
-.line {
-    border-bottom:1px solid #bdbdbd;
-    margin-top:2em;
-}
-
-.createdPostsContainer {
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    width:100%;
-}
-
-.post {
-    display:flex;
-    margin: 1em 3em;
-    justify-items:space-between;
-}
-
-.postBody {
-    margin: auto 0;
-}
-
-.postFooter {
-    width:100%;
-    font-size: .7em;
-    color: #9D9D9C;
-}
-
-.postImageContainer {
-    display: flex;
-    justify-content: center;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-}
-
-.postImage {
-    height: 7em;
-    width: 10em;
-    object-fit: cover;
-}
-
-.postRight {
-    padding-left: .5em;
-    flex-grow:1;
-    display:flex;
-    flex-direction: column;
-}
-
-.postTitle {
-    color: #545454;
-    font-size:1.1em;
-}
-
-.priceContainer {
-    display:flex;
-    justify-content:space-between;
-}
-
-.newPrice {
-    color:#EF7B72;
-    }
-
-.oldPrice {
-    color: #9D9D9C;
-    text-decoration:line-through;
-    text-decoration-thickness: 2px;
-}
-    </style>
-    <script>
-
-        function getCookie(name) {
-            var cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                var cookies = document.cookie.split(';');
-                for (var i = 0; i < cookies.length; i++) {
-                    var cookie = cookies[i].trim();
-                    // Does this cookie string begin with the name we want?
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
                 }
             }
-            return cookieValue;
         }
-        var csrftoken = getCookie('csrftoken');
+        return cookieValue;
+    }
+    var csrftoken = getCookie('csrftoken');
 
+    document.querySelector("#pw-reset-dropdown").onclick = (e) => {
+        document.querySelector(".dropdown-content-1").classList.toggle("visable-flex");
+    }
+</script>
+<style>
+    .content {
+        padding: 2em;
+        flex-grow: 1;
+        background: white;
+        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    }
 
-        function Subscribe() {
-            let elem = event.target
-            let user_id = elem.dataset.id
+    .main .quickButtons,
+    .subHeader {
+        color: #EF7B72;
+        height: 4.5em;
+        align-items: center;
+        display: flex;
+        font-weight: 500;
+    }
 
-            if(elem.className == 'subscriptionStatus-1') {
-                console.log('deleting...')
-            fetch(`http://127.0.0.1:8000/users/${user_id}/profile/subscribe`, {
-                    method: "DELETE",
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrftoken,
-                    },
+    .main .quickButtons span,
+    .main .quickButtons i {
+        margin-right: .5em;
+        cursor: pointer;
+        color: #EF7B72;
+    }
 
-                    //make sure to serialize your JSON body
-                    body: JSON.stringify({})
-                })
-                .then((response) => {
-                    elem.className = 'subscriptionStatus-0'
-                    totalSubscriptions = document.querySelector(`[data-id=totalSubscribers]`)
-                    let number = totalSubscriptions.innerHTML 
-                    number = parseInt(number) - 1
-                    totalSubscriptions.innerHTML = number
-                })
-            }
+    .registerForm {
+        display: flex;
+        flex-direction: column;
+        row-gap: 0.5em;
+    }
 
-        else if(elem.className == 'subscriptionStatus-0') {
-            console.log('adding...')
+    .heading {
+        font-size: 1.5em;
+        color: #EF7B72;
+    }
 
-            fetch(`http://127.0.0.1:8000/users/subscriptions`, {
-                    method: "POST",
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrftoken,
-                    },
+    #pw-reset-dropdown {
+        margin-top: 2em;
+        cursor: pointer;
+    }
 
-                    //make sure to serialize your JSON body
-                    body: JSON.stringify({
-                        "subscriber": "{{user.id}}",
-                        "subscribee": user_id
-                    })
-                })
-                .then((response) => {
-                    elem.className = 'subscriptionStatus-1'
-                    totalSubscriptions = document.querySelector(`[data-id=totalSubscribers]`)
-                    let number = totalSubscriptions.innerHTML 
-                    number = parseInt(number) + 1
-                    totalSubscriptions.innerHTML = number
-                })
-            }
-        }
-    </script>
+    .dropdown-content-1 {
+        display: none;
+        flex-direction: column;
+        row-gap: 0.5em;
+    }
+</style>
 {% endblock %}
-
