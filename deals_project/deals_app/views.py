@@ -124,7 +124,7 @@ class Base(View):
 
         if order == 'expired':
             filters &= models.Q(
-                expired=True,
+                frozen=True,
             )
         
         if location != 0:
