@@ -40,10 +40,13 @@
             </div>
         </div>
         <div class="rightNav">
-            <div class="searchContainer">
-                <i class="fas fa-search"></i>
-                <input id="search-input" placeholder="Search">
-                <button id="search-submit">Find</button>
+            <div>
+                <div class="searchContainer">
+                    <i class="fas fa-search"></i>
+                    <input id="search-input" placeholder="Search all posts">
+                    <!--                     <button id="search-submit">Find</button> -->
+                </div>
+                <div id="search-result-container" class="genericDropdownContent"></div>
             </div>
             {% if user.is_authenticated %}
             <div id="notification-group">
@@ -104,42 +107,8 @@
     <script>
         window.addEventListener('DOMContentLoaded', (event) => {
             document.body.style.visibility = 'visible';
+            document.querySelector('#search-input').value = '';
         });
-
-        handleQuery = (e) => {
-            // creating new div for incomming comment
-            const element = document.createElement("div");
-            element.setAttribute("id", 'comment-' + e.id);
-
-            const rType = e.is_quote == true ? ' replied ' : ' commented ';
-            const stylable = document.createElement("span");
-            //stylable.setAttribute("class", 'notification-instance');
-            const text = document.createTextNode(e.user + rType + e.body);
-            stylable.appendChild(text)
-
-            element.appendChild(stylable);
-            document.querySelector('#notification-list').prepend(element);
-
-            // attaching event listener dynamically
-            element.onclick = () => {
-                counter -= 1
-                counterDiv.innerHTML = counter;
-                element.setAttribute("class", 'hidden')
-                // send back comment id to be updated in db
-                NotifierSocket.send(JSON.stringify({
-                    'id': e.id
-                }));
-                const postURL = "/post/" + e.slug
-                location.href = postURL + "#body-" + e.id;
-            }
-            counter += 1
-        }
-
-        let counter = 0;
-        const counterDiv = document.querySelector('#notification-counter') || null;
-        if (counterDiv != null) {
-            counterDiv.innerHTML = counter;
-        }
     </script>
 
     <!-- Status socket -->
@@ -198,6 +167,11 @@
                 handleQuery(jComments[0])
             }
             counterDiv.innerHTML = counter;
+            if (counter != 0) {
+                const notifLabel = document.querySelector('#notification-group');
+                notifLabel.onmouseover = () => document.querySelector('#notification-list').style.cssText = "display: block";
+                notifLabel.onmouseout = () => document.querySelector('#notification-list').style.cssText = "display: none";
+            }
         }
 
         NotifierSocket.onerror = function (message) {
@@ -207,8 +181,131 @@
         NotifierSocket.onclose = function (message) {
             console.log("notif close", message);
         }
+
+        handleQuery = (e) => {
+            // creating new div for incomming comment
+            const element = document.createElement("div");
+            element.setAttribute("id", 'comment-' + e.id);
+
+            const rType = e.is_quote == true ? ' replied ' : ' commented ';
+            const stylable = document.createElement("span");
+            //stylable.setAttribute("class", 'notification-instance');
+            const text = document.createTextNode(e.user + rType + e.body);
+            stylable.appendChild(text)
+
+            element.appendChild(stylable);
+            document.querySelector('#notification-list').prepend(element);
+
+            // attaching event listener dynamically
+            element.onclick = () => {
+                counter -= 1
+                counterDiv.innerHTML = counter;
+                element.setAttribute("class", 'hidden')
+                // send back comment id to be updated in db
+                NotifierSocket.send(JSON.stringify({
+                    'id': e.id
+                }));
+                const postURL = "/post/" + e.slug
+                location.href = postURL + "#body-" + e.id;
+            }
+            counter += 1
+        }
+
+        let counter = 0;
+        const counterDiv = document.querySelector('#notification-counter') || null;
+        if (counterDiv != null) {
+            counterDiv.innerHTML = counter;
+        }
     </script>
     {% endif %}
+
+    <script>
+        // Search socket
+        let searchEndpoint = (location.protocol == 'https:' ? 'wss://' : 'ws://') + location.host + "/ws/search/"
+        searchSocket = new WebSocket(searchEndpoint);
+
+        document.querySelector('#search-input').focus();
+
+        const searchInputDom = document.querySelector('#search-input');
+        const resultsContainer = document.querySelector('#search-result-container');
+        let search = searchInputDom.value;
+
+        document.querySelector('#search-input').onkeyup = function (e) { // alt: #search-submit .onclick
+            search = searchInputDom.value;
+            ////// SANITIZE INPUT !!!!
+            if (search != '') {
+                resultsContainer.style.cssText = "display: flex";
+                searchSocket.send(JSON.stringify({
+                    'search': search
+                }));
+            } else {
+                resultsContainer.style.cssText = "display: none";
+            }
+            //searchInputDom.value = '';
+        };
+
+        searchSocket.onopen = function (message) {
+            console.log("search open", message);
+        }
+
+        searchSocket.onmessage = function (e) {
+            console.log(e)
+            const jData = JSON.parse(e.data);
+            let resultCount = 0
+
+            resultsContainer.innerHTML = ''
+            resultsContainer.insertAdjacentHTML("afterbegin",
+                `<div id="search-result-menu">
+                    <div id="search-result-info"><span id="resultCount">No </span> results found for ${search}</div>
+                    <button onclick="clearResults()">Clear <i class="fas fa-times-circle"></i></botton>
+                </div>`
+            );
+            jData.forEach(elem => {
+                document.querySelector('#resultCount').innerHTML = resultCount += 1;
+                const jUsername = elem.username;
+                const jCommentCount = elem.commentCount
+                const jPostCode = elem.areaCode
+                const jCategory = elem.category
+                const jPost = JSON.parse(elem.data)[0].fields
+                //console.log(data)
+                resultsContainer.insertAdjacentHTML("beforeend",
+                    `<a href="/post/${jPost.slug}">
+                        <div class="search-item">
+                            <div class="search-image postImage">
+                                <img src="/media/${jPost.thumbnail}">
+                            </div>
+                            <div class="search-left">
+                                <div class="postTitle searchTitle">${jPost.title}</div>
+                                <div class="postSecondaryDetails">
+                                    <div class="postAuthor">${jUsername}</div>
+                                    <div class="postTimestamp">Posted: ${jPost.date_created}</div>
+                                    <div class="postExpiredDate">Pickup date: ${jPost.expiration_date}</div>
+                                </div>
+                            </div>
+                            <div class="search-right">
+                                <div class="postCategory postTag">${jCategory}</div>
+                                <div class="postPostcode postTag areacode">${jPostCode}</div>
+                            </div>
+                        </div>
+                    </a>`
+                );
+            });
+
+        }
+
+        searchSocket.onerror = function (message) {
+            console.log("search error", message);
+        }
+
+        searchSocket.onclose = function (message) {
+            console.log("search close", message);
+        }
+
+        function clearResults() {
+            resultsContainer.style.cssText = "display: none";
+            searchInputDom.value = '';
+        }
+    </script>
 </body>
 
 </html>
@@ -232,7 +329,6 @@
         cursor: pointer;
         outline: inherit;
     }
-
 
     .main {
         width: 60em;
@@ -341,7 +437,8 @@
         box-shadow: 0px 1px 5px 0px #DCDDDC;
         padding: .5em;
         border-radius: 1em;
-        width: 40%;
+        width: 100%;
+        align-items: center;
     }
 
     .searchContainer i {
@@ -463,7 +560,7 @@
         background: #F8F9FA;
         padding: 1em;
         max-height: 15em;
-        overflow-y: scroll;
+        overflow-y: auto;
         width: 15em;
         overflow-x: hidden;
         display: none;
@@ -471,9 +568,9 @@
     }
 
 
-    #notification-group:hover #notification-list {
+    /*     #notification-group:hover #notification-list {
         display: block;
-    }
+    } */
 
     #notification-group {
         text-align: center;
@@ -503,7 +600,7 @@
     }
 
     #notification-counter {
-        color: #bf7474;
+        color: #EF7B72;
     }
 
     #notification-label {
@@ -514,233 +611,107 @@
         cursor: pointer;
     }
 
-    .main {
-        width: 60em;
-        margin: 0 auto;
-        flex-grow: 1;
+    #search-result-menu {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    #search-result-menu>button {
+        color: #EF7B72;
+    }
+
+    #search-result-container {
+        display: none;
+        row-gap: 0.5em;
+        flex-direction: column;
+        max-height: 20em;
+        overflow-y: auto;
+    }
+
+    .postImage.search-image img {
+        height: 4em;
+        width: 4em;
+    }
+
+    .search-item {
+        display: flex;
+        column-gap: 1em;
+        box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.1);
+        padding: 0.2em;
+        cursor: pointer;
+    }
+
+    .postTitle.searchTitle {
+        margin-bottom: .1em;
+        overflow: hidden;
+        width: 10em;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .postSecondaryDetails {
         display: flex;
         flex-direction: column;
     }
 
-    .navContainer {
-        font-weight: 500;
-        color: #555454;
+    .search-right {
         display: flex;
-        justify-content: space-around;
-        width: 100%;
-        background-color: white;
-        box-shadow: 2px 5px 15px 0px #DCDDDC;
-        padding: .5em 0;
-        align-items: center;
-        height: 4em;
-    }
-
-    .navContainer a {
-        text-decoration: none;
-    }
-
-    .navContainer a:visited {
-        color: #646464;
-    }
-
-    .leftNav {
-        display: flex;
-        align-items: center;
-        width: 40%;
-        justify-content: space-around;
-    }
-
-    .categoriesBtn {
-        justify-content: space-between;
-    }
-
-    .rightNav {
-        display: flex;
-        align-items: center;
-        width: 60%;
-        justify-content: space-around;
-    }
-
-    .success,
-    .error {
-        display: flex;
-        width: 100%;
-        background: #93EF72;
-        color: white;
-        position: absolute;
+        flex-direction: column;
+        row-gap: 0.3em;
         justify-content: center;
-        animation: fadein 2s forwards;
     }
 
-    .error {
-        background: #ef7272;
+    .search-right>div {
+        width: max-content;
     }
 
-    @keyframes fadein {
-        from {
-            opacity: 0;
-            padding: 0;
-        }
-
-        to {
-            opacity: 1;
-            padding: .25em 0;
-        }
-    }
-
-    .messagesContainer {
-        animation: fadeout 2s forwards;
-        animation-delay: 5s;
-    }
-
-    @keyframes fadeout {
-        from {
-            opacity: 1
-        }
-
-        to {
-            opacity: 0;
-        }
-    }
-
-    body {
-        background: #F8F7F7;
-        width: 100%;
-        height: 100%;
-        padding: 0;
-        margin: 0;
-    }
-
-    .logo img {
-        height: 3em;
-    }
-
-    .searchContainer {
-        display: flex;
-        border: 1px solid #dadada;
-        box-shadow: 0px 1px 5px 0px #DCDDDC;
-        padding: .5em;
-        border-radius: 1em;
-        width: 40%;
-    }
-
-    .searchContainer i {
-        color: #dadada;
-        margin-right: .5em;
-        display: flex;
-    }
-
-    .searchContainer input {
-        border: none;
-        font-weight: 500;
-        color: #555454;
-        flex: 1;
-    }
-
-    .navLinks a {
-        margin: 0 .5em;
-    }
-
-    .categoryDropdown {
-        position: relative;
-        display: inline-block;
-    }
-
-    .categoryDropdown:hover .categoryDropdownContent {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .categoryDropdownContent {
-        display: none;
-        position: absolute;
-        background: #F8F9FA;
-        min-width: 20em;
-        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-        z-index: 1;
-        padding: 1em;
-    }
-
-    .categoryDropdownItem {
-        display: inline-block;
-        margin: .5em;
-    }
-
-    .userDropdown {
-        position: relative;
-        display: inline-block;
-    }
-
-    .userDropdownContent {
-        display: none;
-        position: absolute;
-        background: #F8F9FA;
-        min-width: 160px;
-        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-        z-index: 1;
-    }
-
-    .userDropdownContent a {
-        padding: 12px 16px;
-        display: block;
-    }
-
-    .userDropdownContent a:hover {
-        background-color: #f1f1f1
-    }
-
-    .userDropdown:hover .userDropdownContent {
-        display: block;
-    }
-
-    .userDropdown:hover .dropbtn {
-        background-color: white;
-    }
-
-    .dropbtn {
-        display: flex;
-        align-items: center;
-        justify-content: space-around;
-    }
-
-    .dropbtn span {
-        margin: 0 .2em 0 1em;
-    }
-
-    .dropbtn img {
-        height: 100%;
-        overflow: hidden;
-        border-radius: 50%;
-    }
-
-    .profileImage:before {
-        content: "";
-        display: block;
-        padding-top: 100%;
-    }
-
-    .profileImage {
-        position: relative;
-        width: 3em;
-        overflow: hidden;
-        border-radius: 50%;
-    }
-
-    .profileImage img {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        object-fit: cover;
-        width: 100%;
+    .submitForm {
+        cursor: pointer;
     }
 
     .hidden {
         display: none;
     }
 
-    .submitForm {
-        cursor: pointer;
+    .visable {
+        display: initial;
+    }
+
+    .postTag {
+        background-color: #447727;
+        padding: .5em;
+        color: white;
+        text-align: center;
+        font-weight: 500;
+        font-size: 0.8em;
+        white-space: nowrap;
+    }
+
+    .areacode {
+        background: #65659d;
+    }
+
+    .postImage img {
+        height: 8em;
+        width: 8em;
+        object-fit: contain;
+    }
+
+    .postTitle {
+        font-size: 1.1em;
+        width: 100%;
+        margin-bottom: .5em;
+    }
+
+    .postTimestamp,
+    .postExpiredDate,
+    .postAuthor {
+        color: #9D9D9C;
+        font-size: 0.7em;
+        font-weight: 500;
+    }
+
+    .postAuthor {
+        color: #EF7B72;
     }
 </style>
