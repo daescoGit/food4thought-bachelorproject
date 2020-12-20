@@ -38,7 +38,7 @@ def request_password_reset(request):
         except: 
             messages.success(request, f"An email will be sent to {request.POST['email']} if an account exists. ") 
             print(f"Invalid password request: {post_user}")
-            return HttpResponseRedirect(reverse('deals_app:base'))
+            return HttpResponseRedirect(reverse('login_app:password_reset'))
 
         if user:
             prr = PasswordResetRequest()
@@ -51,8 +51,8 @@ def request_password_reset(request):
             })
             #Print(prr)
             messages.success(request, f"An email will be sent to {prr.user.email} if an account exists. ") 
-            print(f"Invalid password request: {post_user}")
-            return HttpResponseRedirect(reverse('deals_app:base'))
+            print(f"Valid password request: {post_user}")
+            return HttpResponseRedirect(reverse('login_app:password_reset'))
 
     return render(request, 'login_app/request_password_reset.html')
 
@@ -70,14 +70,49 @@ def password_reset(request):
                 prr.save()
             except:
                 print("Invalid password reset attempt.")
+                messages.error(request, f"Invalid password reset attempt.") 
                 return render(request, 'login_app/password_reset.html')
                 
             user = prr.user
             user.set_password(password)
             user.save()
+            messages.success(request, f"Password successfully reset.") 
             return HttpResponseRedirect(reverse('login_app:login'))
+        else:
+            print("Passwords not matching.")
+            messages.error(request, f"Passwords did not match.") 
+            return render(request, 'login_app/password_reset.html')
 
     return render(request, 'login_app/password_reset.html')
+
+
+@login_required
+def password_change(request):
+    if request.method == "POST":
+        old_password = request.POST['old_password']
+        new_password = request.POST['new_password']
+
+        if old_password != new_password:
+            try:
+                user = Users.objects.get(user=request.user)
+            except:
+                print("Invalid password reset attempt.")
+                messages.error(request, f"Invalid password reset attempt.") 
+                return HttpResponseRedirect(reverse('login_app:edit_account'))
+                
+            user.set_password(new_password)
+            user.save()
+            messages.success(request, "Password successfully changed.") 
+            return HttpResponseRedirect(reverse('login_app:edit_account'))
+        else:
+            print("Same passwords.")
+            messages.error(request, "Password cannot be the same as the current.") 
+            return HttpResponseRedirect(reverse('login_app:edit_account'))
+
+
+@login_required
+def email_change(request):
+    return HttpResponseRedirect(reverse('login_app:edit_account'))
 
 
 def register(request):
@@ -107,11 +142,12 @@ def register(request):
 
     return render(request, 'login_app/register.html', context)
 
+
+@login_required
 def edit_account(request):
     print('account view!')
     context = {}
     return render(request, 'login_app/edit.html', context)
-
 
 
 @login_required
@@ -122,9 +158,14 @@ def delete_account(request):
             if user:
                 print(f"Deleting user {user}")
                 user.delete()
+                messages.success(request, "User successfully deleted.") 
                 return HttpResponseRedirect(reverse('login_app:login'))
             else:
                 print("fail delete")
+                messages.error(request, "Could not delete user, please try again.") 
+        else:
+            print("fail delete")
+            messages.error(request, "Please type DELETE to confirm as prompted.") 
 
-    return render(request, 'login_app/delete_account.html')
+    return HttpResponseRedirect(reverse('login_app:edit_account'))
 

@@ -84,7 +84,7 @@
                             <div class="postRightContainer">
                                 <div class="postCommentCount"><i class="fas fa-comment"></i> {{post.num_comments}}</div>
                                 <div class="postExpiredDate">Pickup time: {{post.expiration_date}}</div>
-                                <div class="postCategory">{{post.category}}</div>
+                                <div class="postCategory postTag">{{post.category}}</div>
                                 <div class="postPostcode">{{post.postcode.code}}</div>
                             </div>
                         </div>
@@ -283,16 +283,15 @@
                         <div class="postTitle"><a href="/post/${jPost.slug}">${jPost.title}</a>
                         </div>
                         <div class="postSecondaryDetails">
-                            <div class="postAuthor"><a
-                                    href="/post/${jPost.user}">${jUsername}</a></div>
+                            <div class="postAuthor"><a href="/post/${jPost.user}">${jUsername}</a></div>
                             <div class="postTimestamp">${jPost.date_created}</div>
                         </div>
                     </div>
                     <div class="postRight">
                         <div class="postCommentCount"><i class="fas fa-comment"></i> ${jCommentCount}</div>
-                                <div class="postExpiredDate">Pickup time: ${jPost.expiration_date}</div>
-                                <div class="postCategory">${jCategory}</div>
-                                <div class="postPostcode">${jPostCode}</div>
+                        <div class="postExpiredDate">Pickup time: ${jPost.expiration_date}</div>
+                        <div class="postCategory postTag">${jCategory}</div>
+                        <div class="postPostcode">${jPostCode}</div>
                     </div>
                 </div>
             </div>`);
@@ -328,108 +327,6 @@
         console.log("post list close", message);
     }
 
-    // Search socket
-    let searchEndpoint = (location.protocol == 'https:' ? 'wss://' : 'ws://') + location.host + "/ws/search/"
-    searchSocket = new WebSocket(searchEndpoint);
-
-    document.querySelector('#search-input').focus();
-    document.querySelector('#search-input').onkeyup = function (e) {
-        if (e.keyCode === 13) {  // enter, return
-            document.querySelector('#search-submit').click();
-        }
-    };
-
-    const searchInputDom = document.querySelector('#search-input');
-    let search = searchInputDom.value;
-
-    document.querySelector('#search-submit').onclick = function (e) {
-        search = searchInputDom.value;
-        ////// SANITIZE INPUT !!!!
-        if (search != '') {
-            searchSocket.send(JSON.stringify({
-                'search': search
-            }));
-        }
-        searchInputDom.value = '';
-    };
-
-    searchSocket.onopen = function (message) {
-        console.log("search open", message);
-    }
-
-    searchSocket.onmessage = function (e) {
-        //console.log(e)
-        const jData = JSON.parse(e.data);
-        let resultCount = 0
-
-        let oldSearch = document.querySelector('#search-results-container')
-        if (oldSearch != undefined) {
-            oldSearch.innerHTML = ''
-        }
-        let posts = document.querySelector('#posts');
-        posts.classList.add("hidden");
-        const postsContainer = document.querySelector('#posts-container');
-        postsContainer.insertAdjacentHTML("afterbegin",
-            `<div id="search-results-container">
-                <div id="search-result-menu">
-                    <div id="search-result-info"><span id="resultCount">No </span> results found for ${search}</div>
-                    <button onclick="clearResults()">Clear search results</botton>
-                </div>
-            </div>`
-        );
-        jData.forEach(elem => {
-            document.querySelector('#resultCount').innerHTML = resultCount += 1;
-            const jUsername = elem.username;
-            const jCommentCount = elem.commentCount
-            const jPostCode = elem.areaCode
-            const jCategory = elem.category
-            const jPost = JSON.parse(elem.data)[0].fields
-            //console.log(data)
-            const resultsContainer = document.querySelector('#search-results-container');
-            resultsContainer.insertAdjacentHTML("afterend",
-                `<div class="postAnchor" id="mapId-${jPost.id}">
-                    <div class="post postId-${jPost.id}">
-                        <div class="postImage">
-                            <a href="/post/${jPost.slug}">
-                                <img src="/media/${jPost.thumbnail}">
-                            </a>
-                        </div>
-                        <div class="postLeft">
-                            <div class="postTitle"><a href="/post/${jPost.slug}">${jPost.title}</a>
-                            </div>
-                            <div class="postSecondaryDetails">
-                                <div class="postAuthor"><a
-                                    href="/post/${jPost.user}">${jUsername}</a></div>
-                            <div class="postTimestamp">${jPost.date_created}</div>
-                            </div>
-                        </div>
-                        <div class="postRight">
-                            <div class="postRightContainer">
-                                <div class="postCommentCount"><i class="fas fa-comment"></i> ${jCommentCount}</div>
-                                <div class="postExpiredDate">Pickup time: ${jPost.expiration_date}</div>
-                                <div class="postCategory">${jCategory}</div>
-                                <div class="postPostcode">${jPostCode}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>`
-            );
-        });
-
-    }
-
-    searchSocket.onerror = function (message) {
-        console.log("search error", message);
-    }
-
-    searchSocket.onclose = function (message) {
-        console.log("search close", message);
-    }
-
-    function clearResults() {
-        document.querySelector('#search-results-container').classList.add("hidden");
-        document.querySelector('#posts').classList.remove("hidden");
-    }
 </script>
 
 <style>
@@ -517,46 +414,9 @@
         padding: 2em;
     }
 
-    .postImage img {
-        height: 8em;
-        width: 8em;
-        object-fit: contain;
-    }
-
-    .postTitle {
-        font-size: 1.1em;
-        width: 100%;
-        margin-bottom: .5em;
-    }
-
-    .postSecondaryDetails {
-        font-size: .7em;
-        display: flex;
-    }
-
-    .postTimestamp {
-        margin-left: 2em;
-        color: #9D9D9C;
-    }
-
-    .postAuthor {
-        font-weight: 500;
-        color: #EF7B72;
-    }
-
-    .postRight {
-        display: flex;
-        justify-content: space-around;
-        width: 50%;
-    }
-
     .postRightContainer {
         display: flex;
         align-items: center;
-    }
-
-    .postExpiredDate {
-        color: #9D9D9C;
     }
 
     .postCommentCount {
