@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% block title %}Account settings{% endblock title %}
 {% block content %}
 <div class="main">
     <div class="quickButtons"></div>
@@ -8,54 +9,34 @@
 
         <div class="sub-header-container">
             <!-- fix urls -->
-            <form class="registerForm" id="frmChangeEmail" action="{% url 'login_app:password_reset' %}" method="POST">
+            <form class="registerForm" id="frmChangeEmail" action="{% url 'login_app:email_change' %}" method="POST">
                 {% csrf_token %}
                 <div>Change Email</div>
                 <input type="email" name="email" class="form-input-1" value="{{request.user.email}}">
-                <button id="submit-email" form="frmResetPw" class="submitForm small">Submit</button>
-                {% if error %}
-                {{ error }}
-                {% endif %}
+                <button id="submit-email" form="frmChangeEmail" class="submitForm small">Submit</button>
             </form>
             <div class="line-2"></div>
-            <form class="registerForm" id="frmResetPwReq" action="{% url 'login_app:request_password_reset' %}"
-                method="POST">
+
+            <form class="registerForm" id="frmChangePw" action="{% url 'login_app:password_change' %}" method="POST">
                 {% csrf_token %}
-                <div>Request password reset</div>
-                <input type="hidden" name="email" class="form-input-1" value="{{request.user.email}}">
-                <button id="submit-pw-req" form="frmResetPwReq" class="submitForm small">Send Email</button>
-                {% if error %}
-                {{ error }}
-                {% endif %}
+                <div>Change password</div>
+                <input type="password" name="old_password" placeholder="New Password" class="form-input-1">
+                <input type="password" name="new_password" placeholder="Repeat New Password" class="form-input-1">
+                <button id="submit-new-pw" form="frmChangePw" class="submitForm small">Submit</button>
             </form>
-            <form class="registerForm" action="{% url 'login_app:password_reset' %}" method="POST">
-                {% csrf_token %}
-                <div id="pw-reset-dropdown">Reset password <i class="fa fa-angle-down" aria-hidden="true"></i></div>
-                <div class="dropdown-content-1">
-                    <input type="password" name="password" placeholder="New Password" class="form-input-1">
-                    <input type="password" name="confirm_password" placeholder="Repeat New Password"
-                        class="form-input-1">
-                    <input type="text" name="token" placeholder="Token" class="form-input-1">
-                    <button id="submit-new-pw" form="frmResetPw" class="submitForm small">Submit</button>
-                </div>
-            </form>
+
             <div class="line-2"></div>
             <form class="registerForm" id="frmDelete" action="{% url 'login_app:delete_account'%}" method="POST">
                 {% csrf_token %}
                 <div>Remove account</div>
                 <input type="password" name="password" placeholder="Password" class="form-input-1">
                 <input type="text" name="confirm_deletion" placeholder="TYPE DELETE" class="form-input-1">
-                <button id="submit-pw-req" form="frmResetPw" class="submitForm small">Remove</button>
-                {% if error %}
-                {{ error }}
-                {% endif %}
+                <button id="submit-pw-req" form="frmDelete" class="submitForm small">Remove</button>
             </form>
         </div>
     </div>
 </div>
 <script>
-    document.querySelector(".dropdown-content-1").classList.remove("visable-flex");
-
     function getCookie(name) {
         var cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -72,10 +53,6 @@
         return cookieValue;
     }
     var csrftoken = getCookie('csrftoken');
-
-    document.querySelector("#pw-reset-dropdown").onclick = (e) => {
-        document.querySelector(".dropdown-content-1").classList.toggle("visable-flex");
-    }
 </script>
 <style>
     .content {
