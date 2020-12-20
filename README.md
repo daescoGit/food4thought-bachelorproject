@@ -1,5 +1,5 @@
 # Food4Thought
-## A web dev bachelor project by Lewis Burtt-Smith and Dan Eskildsen
+### Web development bachelor project by Lewis Burtt-Smith and Dan Eskildsen
 
 Required installations:
 - Python
