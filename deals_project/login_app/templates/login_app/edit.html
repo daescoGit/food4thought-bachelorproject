@@ -12,7 +12,7 @@
             <form class="registerForm" id="frmChangeEmail" action="{% url 'login_app:email_change' %}" method="POST">
                 {% csrf_token %}
                 <div>Change Email</div>
-                <input type="email" name="email" class="form-input-1" value="{{request.user.email}}">
+                <input type="email" name="new_email" class="form-input-1" value="{{request.user.email}}">
                 <button id="submit-email" form="frmChangeEmail" class="submitForm small">Submit</button>
             </form>
             <div class="line-2"></div>
@@ -20,8 +20,8 @@
             <form class="registerForm" id="frmChangePw" action="{% url 'login_app:password_change' %}" method="POST">
                 {% csrf_token %}
                 <div>Change password</div>
-                <input type="password" name="old_password" placeholder="New Password" class="form-input-1">
-                <input type="password" name="new_password" placeholder="Repeat New Password" class="form-input-1">
+                <input type="password" name="new_password" placeholder="New Password" class="form-input-1">
+                <input type="password" name="confirm_password" placeholder="Confirm new password" class="form-input-1">
                 <button id="submit-new-pw" form="frmChangePw" class="submitForm small">Submit</button>
             </form>
 
