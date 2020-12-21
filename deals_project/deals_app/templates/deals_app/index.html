@@ -85,6 +85,9 @@
                                 <div class="postCommentCount"><i class="fas fa-comment"></i> {{post.num_comments}}</div>
                                 <div class="postExpiredDate">Pickup time: {{post.expiration_date}}</div>
                                 <div class="postCategory postTag">{{post.category}}</div>
+                                {% if post.frozen_to != null %}
+                                    <div class="postCategory postTag">Awaiting Collection</div>
+                                {% endif %}
                                 <div class="postPostcode">{{post.postcode.code}}</div>
                             </div>
                         </div>

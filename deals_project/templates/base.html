@@ -329,7 +329,6 @@
 
     a,
     a:hover {
-        color: #646464;
         text-decoration: none;
     }
 
@@ -721,12 +720,16 @@
         font-weight: 500;
         font-size: 0.8em;
         white-space: nowrap;
+        margin:0 .5em;
     }
 
     .areacode {
         background: #65659d;
     }
 
+    .post:hover .postTitle {
+        text-decoration: underline;
+    }
     .postImage img {
         height: 8em;
         width: 8em;
@@ -749,6 +752,10 @@
 
     .postAuthor {
         color: #EF7B72;
+    }
+
+    .postAuthor:hover {
+        text-decoration: underline;
     }
 
     .sub-header-container {
