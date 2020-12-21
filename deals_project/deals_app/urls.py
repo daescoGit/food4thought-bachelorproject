@@ -7,7 +7,7 @@ from .api import newComment, deleteComment, votePost, getAddress
 app_name = 'deals_app'
 
 urlpatterns = [
-    path('browse', Base.as_view(), name='base'),
+    path('', Base.as_view(), name='base'),
     path('browse/<slug:base>/', Base.as_view(), name='base'),
     path('browse/<slug:base>/<slug:order>/', Base.as_view(), name='base'),
     path('browse/<slug:base>/<slug:order>/<int:page>/', Base.as_view(), name='base'),

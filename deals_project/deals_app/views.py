@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, reverse, redirect
 from profile_app.models import UserProfile
+from django.contrib.auth.models import User
 from .models import Post, Comment, PostImage, Category, Quote, Postcode
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
@@ -124,7 +125,7 @@ class Base(View):
 
         if order == 'expired':
             filters &= models.Q(
-                frozen=True,
+                frozen_to__gte=0,
             )
         
         if location != 0:
@@ -263,9 +264,17 @@ def edit(request, slug):
 
             messages.success(request,'Post updated')
 
-        if request.POST['confirmCollection']:
-            post.frozen = True
+        print(request.POST)
+        if request.POST["toggleFrozen"]:
+            if request.POST["toggleFrozen"] != "False": 
+                userId = request.POST.get('toggleFrozen')
+                user = User.objects.get(pk=userId)
+                post.frozen_to = user
+                
+            else:
+                post.frozen_to = None
 
+            
         post.save()
 
 

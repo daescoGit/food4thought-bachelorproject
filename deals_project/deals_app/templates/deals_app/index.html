@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Dk Dealer - {{category}}{% endblock title %}
+{% block title %}FoodForThought - {{currentCategory}}{% endblock title %}
 {% block content %}
 <div class="mapContentContainer">
     <div class="mapContainer">
@@ -13,7 +13,7 @@
         <div class="quickButtons">
             <div>
                 <span class="active-{{order}} expired">
-                    <a href="{% url 'deals_app:base' base 'expired' currentPage currentLocation %}">Expired</a>
+                    <a href="{% url 'deals_app:base' base 'expired' currentPage currentLocation %}">Awaiting Collection</a>
                     <a class="cancelButton" href="{% url 'deals_app:base' base 'newest' currentPage currentLocation %}">
                         <i class="fas fa-times-circle"></i>
                     </a>
@@ -64,7 +64,7 @@
         <div class="content" id="posts-container">
             <div id="posts">
                 {% for post in posts %}
-                <div class="postAnchor postExpired-{{post.frozen}}" id="mapId-{{post.id}}">
+                <div class="postAnchor postExpired-{% if post.frozen_to != null %}True{% endif %}" id="mapId-{{post.id}}">
                     <div class="post postId-{{post.id}}">
                         <div class="postImage">
                             <a href="{% url 'deals_app:post' post.slug %}">
