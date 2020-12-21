@@ -8,6 +8,7 @@ from django.db.models import signals
 from django.dispatch import receiver
 from django.shortcuts import get_object_or_404
 from django.core import serializers
+from django.core.cache import cache
 
 
 # todo: 
@@ -155,14 +156,21 @@ class SearchConsumer(JsonWebsocketConsumer):
 
     def receive_json(self, content, **kwargs):
         print(f"Received event: {content}")
-        # can maybe be done more efficient
+        
+        # low-level cache(query only) with redis to enable keystroke search
+        if cache.get("all_posts"):
+            print('all posts query loaded from cache')
+        else:
+            all_posts = Post.objects.all()
+            cache.set("all_posts", all_posts, 30)
+            print('query cache expired')
+
         payload = []
-        all_posts = Post.objects.all()
-        for post in all_posts:
+        for post in cache.get("all_posts"):
             if content["search"].lower() in post.title.lower():
                 payload.append({
-                    "data":serializers.serialize("json", [post]), 
-                    "username":post.user.username, 
+                   "data":serializers.serialize("json", [post]), 
+                   "username":post.user.username, 
                     "commentCount": post.comments.count(),
                     "areaCode": post.postcode.code,
                     "category": post.category.name
