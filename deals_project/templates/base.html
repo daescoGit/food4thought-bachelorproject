@@ -4,7 +4,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>{% block title %}DkDeals{% endblock %}</title>
+    <title>{% block title %}FoodForThought{% endblock %}</title>
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
         integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
     <link
@@ -20,7 +20,10 @@
 <body style="visibility: hidden;">
     <nav class="navContainer">
         <div class="leftNav">
-            <a href="" class="logo"><img src="{% static 'dk logo.svg' %}" /></a>
+            <a href="" class="logo">
+                FoodForThought
+                <!-- <img src="{% static 'dk logo.svg' %}" /> -->
+            </a>
             <a class="{% if currentCategory == 'All' %} activeCategory {% endif %}"
                 href="{% url 'deals_app:base' 'all' %}">All</a>
             <a class="{% if currentCategory == 'Our Picks' %} activeCategory {% endif %}"
@@ -326,7 +329,6 @@
 
     a,
     a:hover {
-        color: #646464;
         text-decoration: none;
     }
 
@@ -718,12 +720,16 @@
         font-weight: 500;
         font-size: 0.8em;
         white-space: nowrap;
+        margin:0 .5em;
     }
 
     .areacode {
         background: #65659d;
     }
 
+    .post:hover .postTitle {
+        text-decoration: underline;
+    }
     .postImage img {
         height: 8em;
         width: 8em;
@@ -746,6 +752,10 @@
 
     .postAuthor {
         color: #EF7B72;
+    }
+
+    .postAuthor:hover {
+        text-decoration: underline;
     }
 
     .sub-header-container {

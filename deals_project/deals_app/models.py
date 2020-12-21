@@ -36,7 +36,7 @@ class Post(models.Model):
     address_line_2 = models.CharField(max_length=200)
     postcode = models.ForeignKey(Postcode, on_delete=models.PROTECT)
     description = models.CharField(max_length=200)
-    frozen = models.BooleanField(default=False)
+    frozen_to = models.ForeignKey(User, related_name="frozen_to", on_delete=models.PROTECT, null=True)
     thumbnail = models.ImageField(upload_to='images/')
     date_created = models.DateTimeField(auto_now_add=True)
     category = models.ForeignKey(Category, on_delete=models.PROTECT, null=True)

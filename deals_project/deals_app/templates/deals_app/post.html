@@ -39,13 +39,20 @@
                         <div id="thumbnailRight"><i class="fas fa-chevron-right"></i></div>
                     </div>
                 </div>
-            <div class="confirmCollection">
-                <form name="myform" action="{% url 'deals_app:edit' post.slug %}" method="post">
+            <!-- {% if user == post.user %}
+            <div class="confirmCollection {{post.frozen_to}}">
+                <form action="{% url 'deals_app:edit' post.slug %}" method="post">
                     {% csrf_token %}
-                    <input type="hidden" name="confirmCollection" />
-                    <button>Confirm Collection</button>
-                  </form>
+                    {% if post.frozen == True %}
+                        <input type="hidden" name="toggleFrozen" value="False"/>
+                        <button>Unfreeze Post</button>
+                    {% else %}
+                        <input type="hidden" class="toggleFrozen"  name="toggleFrozen" value="True"/>
+                        <button>Freeze Post</button>
+                    {% endif %}
+                </form>
             </div>
+            {% endif %} -->
             </div>
             <div class="middleContainer">
                 <div class="authorHeader">
@@ -60,6 +67,9 @@
                             {{post.title}}
                         </div>
                         <div class="postTag">{{post.category}}</div>
+                        {% if post.frozen_to != null %}
+                        <div class="postTag">Awaiting collection</div>
+                        {% endif %}
                     </div>
                     <div>
                         <div class="postExpiredDate">Pickup date: {{post.expiration_date}}</div>
@@ -76,88 +86,106 @@
             </div>
         </div>
         <div class="line"></div>
-        {% if user.is_authenticated %}
-        <div class="createComment">
-            <div class="commentHeader">
-                <div class="commentProfileImage"><img src="{{user.profile.image.url}}"></div>
-                <div class="commentAuthor"><a href="{% url 'profile_app:profile' user.id %}">{{user}}</a></div>
-            </div>
-            <div class="commentBody">
-                <div class="inputContainer">
-                    <textarea class="commentField"></textarea>
-                </div>
-                <div id="inputOptions">
-                    <div id="privateCheckContainer">
-                        <input type="checkbox" id="privateCheck" name="privateCheck">
-                        <label for="privateCheck" id="privateCheckLabel">Private comment</label>
-                    </div>
-                    <div class="submitComment">Submit</div>
-                </div>
-            </div>
-            <div class="commentFooter">
-            </div>
-        </div>
-        {% else %}
-        <div class="commentHeader">
-            <a id="loginLink" href="{% url 'login_app:login' %}">Log in to comment</a>
-        </div>
+        {% if post.frozen_to != null %}
+        <div class="frozenInfo"><i class="fas fa-info-circle"></i><span>Post owner has chosen a user for collection.<span></span></div>
         {% endif %}
-        <div class="subHeaderComments">Comments(<span id="commentCount">{{commentCount}}</span>)
-            <span id="privateCountContainer"> | <span id="privateCount">{{privateCommentCount}}</span> private</span>
-        </div>
-        <div class="commentsContainer">
-            {% for commentquote in commentquotes reversed %}
-            {% if commentquote.comment.private is False or commentquote.comment.user == user or post.user == user %}
-            <div class="comment" id="{{commentquote.comment.id}}">
+        <div class="commentsSection">
+            {% if user.is_authenticated %}
+            <div class="createComment">
                 <div class="commentHeader">
-                    <div class="commentProfileImage"><img src="{{commentquote.comment.user.profile.image.url}}"></div>
-                    <div class="commentAuthor" id="author-{{commentquote.comment.id}}"><a
-                            href="{% url 'profile_app:profile' commentquote.comment.user.id %}">{{commentquote.comment.user}}</a>
-                    </div>
-                    <div class="commentTimestamp" id="timestamp-{{commentquote.comment.id}}">
-                        {{commentquote.comment.date_created}}
-                    </div>
-                    {% if commentquote.comment.private %}
-                    <span class="commentPrivate" id="private-{{commentquote.comment.id}}">(Private)</span>
-                    {% endif %}
+                    <div class="commentProfileImage"><img src="{{user.profile.image.url}}"></div>
+                    <div class="commentAuthor"><a href="{% url 'profile_app:profile' user.id %}">{{user}}</a></div>
                 </div>
                 <div class="commentBody">
-                    {% if commentquote.quote %}
-                    <div class="quoteContainer">
-                        <i class="fas fa-quote-left"></i>
-                        <div class="quote">
-                            <div class="quoteHeader">
-                                <div class="quoteAuthor">{{commentquote.quote.quotee.user}}</div>
-                                <div class="quoteTimestamp">{{commentquote.quote.quotee.date_created}}</div>
-                            </div>
-                            <div class="quoteBody">
-                                {{commentquote.quote.quotee.body}}
-                                <i class="fas fa-quote-right"></i>
+                    <div class="inputContainer">
+                        <textarea class="commentField"></textarea>
+                    </div>
+                    <div id="inputOptions">
+                        <div id="privateCheckContainer">
+                            <input type="checkbox" id="privateCheck" name="privateCheck">
+                            <label for="privateCheck" id="privateCheckLabel">Private comment</label>
+                        </div>
+                        <div class="submitComment">Submit</div>
+                    </div>
+                </div>
+                <div class="commentFooter">
+                </div>
+            </div>
+            {% else %}
+            <div class="commentHeader">
+                <a id="loginLink" href="{% url 'login_app:login' %}">Log in to comment</a>
+            </div>
+            {% endif %}
+            <div class="subHeaderComments">Comments(<span id="commentCount">{{commentCount}}</span>)
+                <span id="privateCountContainer"> | <span id="privateCount">{{privateCommentCount}}</span> private</span>
+            </div>
+            <div class="commentsContainer">
+                {% for commentquote in commentquotes reversed %}
+                {% if commentquote.comment.private is False or commentquote.comment.user == user or post.user == user %}
+                <div class="comment" id="{{commentquote.comment.id}}">
+                    <div class="commentHeader">
+                        <div class="commentProfileImage"><img src="{{commentquote.comment.user.profile.image.url}}"></div>
+                        <div class="commentAuthor" id="author-{{commentquote.comment.id}}"><a
+                                href="{% url 'profile_app:profile' commentquote.comment.user.id %}">{{commentquote.comment.user}}</a>
+                        </div>
+                        <div class="commentTimestamp" id="timestamp-{{commentquote.comment.id}}">
+                            {{commentquote.comment.date_created}}
+                        </div>
+                        {% if commentquote.comment.private %}
+                        <span class="commentPrivate" id="private-{{commentquote.comment.id}}">(Private)</span>
+                        {% endif %}
+                    </div>
+                    <div class="commentBody">
+                        {% if commentquote.quote %}
+                        <div class="quoteContainer">
+                            <i class="fas fa-quote-left"></i>
+                            <div class="quote">
+                                <div class="quoteHeader">
+                                    <div class="quoteAuthor">{{commentquote.quote.quotee.user}}</div>
+                                    <div class="quoteTimestamp">{{commentquote.quote.quotee.date_created}}</div>
+                                </div>
+                                <div class="quoteBody">
+                                    {{commentquote.quote.quotee.body}}
+                                    <i class="fas fa-quote-right"></i>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    {% endif %}
-                    <div id="body-{{commentquote.comment.id}}">
-                        {{commentquote.comment.body}}
-                    </div>
-                    <div class="commentFooter">
-                        <div class="commentFooterL">
+                        {% endif %}
+                        <div id="body-{{commentquote.comment.id}}">
+                            {{commentquote.comment.body}}
                         </div>
-                        <div class="commentFooterR">
-                            <div><i class="fas fa-reply" data-id="{{commentquote.comment.id}}"></i></div>
-                            {% if user == commentquote.comment.user %}
-                            <div><i class="fas fa-trash-alt" data-id="{{commentquote.comment.id}}"></i></div>
-                            {% endif %}
+                        <div class="commentFooter">
+                            <div class="commentFooterL">
+                                {% if user == post.user and user != commentquote.comment.user %}
+                                <div>
+                                    <form action="{% url 'deals_app:edit' post.slug %}" method="post">
+                                        {% csrf_token %}
+                                        {% if post.frozen_to == commentquote.comment.user %}
+                                        <input type="hidden" name="toggleFrozen" value="False"/>
+                                        <button class="toggleFrozen grey">Cancel user as collection</button>
+                                        {% else %}
+                                        <input type="hidden" name="toggleFrozen" value="{{commentquote.comment.user.id}}"/>
+                                        <button class="toggleFrozen">Select user for collection</button>
+                                        {% endif %}
+                                    </form>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="commentFooterR">
+                                <div><i class="fas fa-reply" data-id="{{commentquote.comment.id}}"></i></div>
+                                {% if user == commentquote.comment.user %}
+                                <div><i class="fas fa-trash-alt" data-id="{{commentquote.comment.id}}"></i></div>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                 </div>
+                {% endif %}
+                {% endfor %}
             </div>
-            {% endif %}
-            {% endfor %}
         </div>
     </div>
 </div>
-
 
 {{ post.id|json_script:"postId" }}
 {{ post.lng|json_script:"postLng" }}
@@ -237,10 +265,38 @@
 
     });
 
+
+
+    const lng = JSON.parse(document.getElementById('postLng').textContent);
+    const lat = JSON.parse(document.getElementById('postLat').textContent);
+
+    mapboxgl.accessToken = 'pk.eyJ1IjoiaXAzbHk1IiwiYSI6ImNrMGM1ZXg2bjB5cXgzYm53bHAyem5ldmkifQ.LM4FfJrdUcagfWYHuDUjww';
+    var map = new mapboxgl.Map({
+        container: 'map', // container id
+        style: 'mapbox://styles/mapbox/streets-v11', // style URL
+        center: [lng, lat], // starting position [lng, lat]
+        zoom: 12 // starting zoom
+    });
+
+    map.on('load', function () {
+        map.resize();
+    });
+
+    let coordinates = {
+        "lng": lng,
+        "lat": lat
+    }
+    let el = document.createElement('a');
+    el.className = `marker`
+    el.style.height = "20px";
+    el.style.width = "20px";
+
+    new mapboxgl.Marker(el).setLngLat(coordinates).addTo(map);
+
 </script>
 
 
-{% if user.is_authenticated %}
+{% if user.is_authenticated and post.frozen == False %}
 <script>
     // COMMENT
     const postId = JSON.parse(document.getElementById('postId').textContent);
@@ -440,32 +496,6 @@
     })
 
     // Comment Delete //
-
-    const lng = JSON.parse(document.getElementById('postLng').textContent);
-    const lat = JSON.parse(document.getElementById('postLat').textContent);
-
-    mapboxgl.accessToken = 'pk.eyJ1IjoiaXAzbHk1IiwiYSI6ImNrMGM1ZXg2bjB5cXgzYm53bHAyem5ldmkifQ.LM4FfJrdUcagfWYHuDUjww';
-    var map = new mapboxgl.Map({
-        container: 'map', // container id
-        style: 'mapbox://styles/mapbox/streets-v11', // style URL
-        center: [lng, lat], // starting position [lng, lat]
-        zoom: 12 // starting zoom
-    });
-
-    map.on('load', function () {
-        map.resize();
-    });
-
-    let coordinates = {
-        "lng": lng,
-        "lat": lat
-    }
-    let el = document.createElement('a');
-    el.className = `marker`
-    el.style.height = "20px";
-    el.style.width = "20px";
-
-    new mapboxgl.Marker(el).setLngLat(coordinates).addTo(map);
 
 </script>
 
@@ -902,7 +932,7 @@
         text-decoration: none;
     }
 
-    .confirmCollection {
+    .toggleFrozen {
         margin:1em auto;
         text-align:center;
         padding: 1em;
@@ -910,8 +940,30 @@
         color: white;
         font-weight: 500;
         cursor: pointer;
-        width:60%;
+        width: 100%;
+        font-size: 0.7em;
+
     }
+ 
+    .toggleFrozen.grey {
+        background:grey!important;                            
+    }
+
+    .frozenInfo {
+        display:flex;
+        text-align:center;
+        background:#A8D5E2;
+        border:1px #1D70A2 solid;
+        color:#1D70A2;
+        border-radius:1em;
+        padding:1em;
+        margin-bottom:1.5em;
+    }
+
+    .frozenInfo span {
+        margin-left:1em;
+    }
+    
 </style>
 
 {% endblock content %}
