@@ -72,18 +72,20 @@
                             </a>
                         </div>
                         <div class="postLeft">
-                            <div class="postTitle"><a href="{% url 'deals_app:post' post.slug %}">{{post.title}}</a>
+                            <div class="postTitle">
+                                <a href="{% url 'deals_app:post' post.slug %}">{{post.title}}</a>
+                                <div class="postTimestamp">- {{post.when_published}}</div>
                             </div>
                             <div class="postSecondaryDetails">
-                                <div class="postAuthor"><a
-                                        href="{% url 'profile_app:profile' post.user.id %}">{{post.user}}</a></div>
-                                <div class="postTimestamp">Created: {{post.date_created}}</div>
+                                <div class="postAuthor">
+                                    <a href="{% url 'profile_app:profile' post.user.id %}">{{post.user}}</a></div>
+                                <div class="postExpiredDate">Pickup time: {{post.expiration_date}}</div>
+
                             </div>
                         </div>
                         <div class="postRight">
                             <div class="postRightContainer">
                                 <div class="postCommentCount"><i class="fas fa-comment"></i> {{post.num_comments}}</div>
-                                <div class="postExpiredDate">Pickup time: {{post.expiration_date}}</div>
                                 <div class="postCategory postTag">{{post.category}}</div>
                                 {% if post.frozen_to != null %}
                                     <div class="postCategory postTag">Awaiting Collection</div>
@@ -346,6 +348,21 @@
         box-shadow: 0 0 10px 0 rgba(239, 123, 114, 1) !important;
     }
 
+    .post:hover .postTitle a {
+        text-decoration: underline;
+    }
+
+    .postTitle {
+        display:flex;
+        align-items:center;
+        font-size: 1.1em;
+        margin-bottom: .5em;
+    }
+    
+    .postTitle a {
+        margin-right:.2em;
+    }
+    
     .main .quickButtons {
         color: #EF7B72;
         padding: 1em 0;
@@ -414,6 +431,7 @@
 
     .postLeft {
         width: 50%;
+        max-width:33%;
         padding: 2em;
     }
 

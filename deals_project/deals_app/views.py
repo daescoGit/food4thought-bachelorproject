@@ -174,6 +174,7 @@ def post(request, slug):
     commentCount = comments.count()
     privateCommentCount = comments.filter(private=True).count()
     commentquotes = []
+    
     # user = request.user
     # if user.is_authenticated:
     for comment in comments:
@@ -265,7 +266,7 @@ def edit(request, slug):
             messages.success(request,'Post updated')
 
         print(request.POST)
-        if request.POST["toggleFrozen"]:
+        if request.POST.get("toggleFrozen"):
             if request.POST["toggleFrozen"] != "False": 
                 userId = request.POST.get('toggleFrozen')
                 user = User.objects.get(pk=userId)
