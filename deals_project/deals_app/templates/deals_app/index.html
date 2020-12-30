@@ -72,23 +72,25 @@
                             </a>
                         </div>
                         <div class="postLeft">
-                            <div class="postTitle"><a href="{% url 'deals_app:post' post.slug %}">{{post.title}}</a>
+                            <div class="postTitle">
+                                <a href="{% url 'deals_app:post' post.slug %}">{{post.title}}</a>
+                                <div class="postTimestamp">- {{post.when_published}}</div>
                             </div>
                             <div class="postSecondaryDetails">
-                                <div class="postAuthor"><a
-                                        href="{% url 'profile_app:profile' post.user.id %}">{{post.user}}</a></div>
-                                <div class="postTimestamp">Created: {{post.date_created}}</div>
+                                <div class="postAuthor">
+                                    <a href="{% url 'profile_app:profile' post.user.id %}">{{post.user}}</a></div>
+                                <div class="postExpiredDate">Pickup time: {{post.expiration_date}}</div>
+
                             </div>
                         </div>
                         <div class="postRight">
                             <div class="postRightContainer">
                                 <div class="postCommentCount"><i class="fas fa-comment"></i> {{post.num_comments}}</div>
-                                <div class="postExpiredDate">Pickup time: {{post.expiration_date}}</div>
                                 <div class="postCategory postTag">{{post.category}}</div>
                                 {% if post.frozen_to != null %}
                                     <div class="postCategory postTag">Awaiting Collection</div>
                                 {% endif %}
-                                <div class="postPostcode">{{post.postcode.code}}</div>
+                                <div class="postPostcode">{{post.postcode.text}} - {{post.postcode.code}} <i class="flyToMap fas fa-map-marked" data-lng="{{post.lng}}" data-lat="{{post.lat}}" data-id="{{post.id}}"></i></div>
                             </div>
                         </div>
                     </div>
@@ -224,7 +226,14 @@
     map.on('load', function () {
         map.resize();
     });
-
+    
+    function removeActiveClassFromProperty() {
+        let activePosts = document.querySelectorAll('.active')
+        activePosts.forEach(function (postDiv) {
+            postDiv.classList.remove('active')
+        })
+    }
+    
     postsArray.forEach(post => {
         post.coordinates = {
             "lng": post.fields.lng,
@@ -232,12 +241,12 @@
         }
         let el = document.createElement('a');
         el.className = `marker postId-${post.pk}`
-        el.style.height = "20px";
-        el.style.width = "20px";
+        el.innerHTML = `<i class="fas fa-map-marker"></i>`
         el.href = `#mapId-${post.pk}`
 
         new mapboxgl.Marker(el).setLngLat(post.coordinates).addTo(map);
 
+        
         el.addEventListener('click', function () {
             removeActiveClassFromProperty()
             let activeElements = document.querySelectorAll(`.postId-${post.pk}`)
@@ -248,12 +257,31 @@
         })
     })
 
-    function removeActiveClassFromProperty() {
-        let properties = document.querySelectorAll('.active')
-        properties.forEach(function (postDiv) {
-            postDiv.classList.remove('active')
-        })
-    }
+    let postsElem = document.querySelector('#posts')
+
+    postsElem.addEventListener('click', function(e){
+        console.log(e.target)
+        if(e.target.classList.contains("flyToMap")){
+            removeActiveClassFromProperty()
+
+            let activeElements = document.querySelectorAll(`.postId-${e.target.dataset.id}`)
+            activeElements.forEach((element) => {
+                console.log(activeElements)
+                element.classList.add('active');
+            })
+
+            map.flyTo({
+                center: [e.target.dataset.lng, e.target.dataset.lat],
+                essential: true, // this animation is considered essential with respect to prefers-reduced-motion
+                zoom:14
+            });
+        }
+    })
+
+    
+
+
+
 
     // Live post socket
     let postListEndpoint = (location.protocol == 'https:' ? 'wss://' : 'ws://') + location.host + "/ws/postList/"
@@ -341,11 +369,33 @@
     a:hover {
         text-decoration: underline;
     }
-
+    
     .active {
         box-shadow: 0 0 10px 0 rgba(239, 123, 114, 1) !important;
     }
 
+    .marker.active {
+        box-shadow: none!important;
+        color:#EF7C43!important;
+        opacity:1;
+        font-size:3.5em;
+    } 
+
+    .post:hover .postTitle a {
+        text-decoration: underline;
+    }
+
+    .postTitle {
+        display:flex;
+        align-items:center;
+        font-size: 1.1em;
+        margin-bottom: .5em;
+    }
+    
+    .postTitle a {
+        margin-right:.2em;
+    }
+    
     .main .quickButtons {
         color: #EF7B72;
         padding: 1em 0;
@@ -414,12 +464,25 @@
 
     .postLeft {
         width: 50%;
+        max-width:33%;
         padding: 2em;
     }
 
     .postRightContainer {
         display: flex;
         align-items: center;
+    }
+
+    .postPostcode i {
+        font-size:2em;
+        color:#EF7C43;
+        transition: transform .5s;
+        margin-left:.5em;
+    }
+
+    .postPostcode i:hover {
+        transform:scale(1.2);
+        color:#545454;
     }
 
     .postCommentCount {
@@ -460,6 +523,7 @@
         padding: 0 .25em;
     }
 
+
     .pageButtonsContainer {
         display: flex;
         justify-content: space-between;
@@ -488,12 +552,13 @@
     /* MAPBOX */
 
     .marker {
-        width: 2em;
-        height: 2em;
+        font-size:3em;
+        text-align:center;
+        color:#545454;
         border-radius: 50%;
         background-position: center;
-        background-color: red;
-        opacity: 0.6;
+        opacity: 0.9;
+        transition:font-size 1s;
     }
 
     #map {

@@ -55,28 +55,28 @@
             {% endif %} -->
             </div>
             <div class="middleContainer">
+                <div class="postHeader">
+                    <div class="postTitle">
+                        <div>{{post.title}}</div>
+                        <span class="postTimestamp">- {{post.when_published}}</span>
+                    </div>
+                    <div class="postTag">{{post.category}}</div>
+                    {% if post.frozen_to != null %}
+                    <div class="postTag">Awaiting collection</div>
+                    {% endif %}
+                </div>
                 <div class="authorHeader">
                     <div class="postProfileImage"><img src="{{profileImage.url}}"></div>
                     <div class="postAuthor"><a href="{% url 'profile_app:profile' post.user.id %}">{{post.user}}</a>
                     </div>
-                    <div class="postTimestamp">{{post.date_created}}</div>
-                </div>
-                <div class="postHeader">
-                    <div>
-                        <div class="postTitle">
-                            {{post.title}}
-                        </div>
-                        <div class="postTag">{{post.category}}</div>
-                        {% if post.frozen_to != null %}
-                        <div class="postTag">Awaiting collection</div>
-                        {% endif %}
-                    </div>
-                    <div>
-                        <div class="postExpiredDate">Pickup date: {{post.expiration_date}}</div>
-                    </div>
                 </div>
                 <div class="postBody">
                     {{post.description}}
+
+                    <div class="postExpiration">
+                        Collect by:
+                        {{post.expiration_date}}
+                    </div>
                 </div>
             </div>
         </div>
@@ -549,33 +549,50 @@
     }
 
     .middleContainer {
+        display:flex;
+        flex-direction:column;
         padding: 0 2em;
         flex: 1;
     }
 
     .postHeader {
-        display: inline-flex;
-        flex-direction: column;
+        display: flex;
+        flex-direction: row;
+        align-items:center;
         color: #545454;
     }
 
     .postHeader>div {
         display: inline-flex;
+        margin: 0 .5em;
         margin-bottom: .2em;
     }
 
     .postTitle {
-        font-size: 1.1em;
-        width: 100%;
+        font-size: 1.1em;    
         display: flex;
         align-items: center;
     }
 
+    .postTitle div {
+        text-decoration: underline;
+        margin-right:.2em;
+    }
+
     .postBody {
         display: flex;
-        margin-top: 1em;
+        flex-grow:1;
+        flex-direction:column;
+        margin-top: .5em;
         width: 100%;
         font-weight: 300;
+    }
+
+    .postExpiration {
+        margin-top:auto;
+        text-align:right;
+        font-weight:500;
+        color: #545454;
     }
 
     .line {
@@ -632,7 +649,7 @@
         display: flex;
         flex-direction: row;
         align-items: center;
-        margin: 1em 0;
+        margin: .2em 0;
     }
 
     .authorHeader div {
