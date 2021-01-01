@@ -79,8 +79,7 @@
                             <div class="postSecondaryDetails">
                                 <div class="postAuthor">
                                     <a href="{% url 'profile_app:profile' post.user.id %}">{{post.user}}</a></div>
-                                <div class="postExpiredDate">Pickup time: {{post.expiration_date}}</div>
-
+                                <div class="postExpiredDate">Collect by: {{post.expiration_date}}</div>
                             </div>
                         </div>
                         <div class="postRight">
@@ -277,10 +276,6 @@
             });
         }
     })
-
-    
-
-
 
 
     // Live post socket
