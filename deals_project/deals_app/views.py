@@ -104,62 +104,50 @@ def addPost(request):
 
 #     return render(request, 'deals_app/hottest.html', {'posts':posts})
 
-class Base(View):
-    def get(self, request, base='all', order='newest', page=0, location=0, *args, **kwargs):
+def base(request, base='all', order='newest', page=0, location=0):
 
-        filters = models.Q()
+    filters = models.Q()
+    isCategory = Category.objects.filter(slug=base).exists()
 
-        if base == 'all':
-            print(' ')
+    if base == 'our-picks':
+        filters &= models.Q(
+            staff_picked=True,
+        )
 
-        if base == 'our-picks':
-            filters &= models.Q(
-                staff_picked=True,
-            )
+    if isCategory:
+        category = Category.objects.get(slug=base)
+        filters &= models.Q(
+            category=category,
+        )
 
-        if Category.objects.filter(slug=base).exists():
-            category = Category.objects.get(slug=base)
-            filters &= models.Q(
-                category=category,
-            )
+    if order == 'expired':
+        filters &= models.Q(
+            frozen_to__gte=0,
+        )
+    
+    if location != 0:
+        postcode = Postcode.objects.get(code=location)
 
-        if order == 'expired':
-            filters &= models.Q(
-                frozen_to__gte=0,
-            )
-        
-        if location != 0:
-            postcode = Postcode.objects.get(code=location)
+        filters &= models.Q(
+            postcode=postcode,
+        )
+    
+    posts = Post.objects.filter(filters).order_by('-date_created')[(int(page) * 10): (int(page) + 10)].annotate(num_comments=Count('comments'))
 
-            filters &= models.Q(
-                postcode=postcode,
-            )
-            
-        def order_by_popularity(order):
-            return print(order)
+    for post in posts:
+        if request.user.is_authenticated:
+            if post.voter.filter(user=request.user).exists():
+                post.voteStatus = post.voter.get(user=request.user).vote
+    # posts = reversed(sorted(posts, key=lambda a: a.voteCount))
+    nextPage = page + 1
+    previousPage = page - 1
 
-        order_by_popularity(order)
-        posts = Post.objects.filter(filters).order_by('-date_created')[(int(page) * 10): (int(page) + 10)].annotate(num_comments=Count('comments'))
+    jsonPosts = serialize('json', posts)  # the fields needed for products
+    category = base.replace("-", " ")
+    category = string.capwords(category)
 
-
-        if order == 'newest':
-            print('hh')
-
-
-        for post in posts:
-            if request.user.is_authenticated:
-                if post.voter.filter(user=request.user).exists():
-                    post.voteStatus = post.voter.get(user=request.user).vote
-        # posts = reversed(sorted(posts, key=lambda a: a.voteCount))
-        nextPage = page + 1
-        previousPage = page - 1
-
-        jsonPosts = serialize('json', posts)  # the fields needed for products
-        category = base.replace("-", " ")
-        category = string.capwords(category)
-
-        postcodes = Postcode.objects.all()
-        return render(request, 'deals_app/index.html', {'posts':posts, 'postcodes':postcodes, 'jsonPosts':jsonPosts, 'base':base, 'currentCategory':category, 'currentPage':page, 'currentLocation': location, 'order': order, 'nextPage': nextPage, 'previousPage': previousPage})
+    postcodes = Postcode.objects.all()
+    return render(request, 'deals_app/index.html', {'posts':posts, 'postcodes':postcodes, 'jsonPosts':jsonPosts, 'base':base, 'currentCategory':category, 'currentPage':page, 'currentLocation': location, 'order': order, 'nextPage': nextPage, 'previousPage': previousPage})
     
 
 def post(request, slug):
