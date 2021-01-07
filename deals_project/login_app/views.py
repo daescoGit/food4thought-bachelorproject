@@ -58,8 +58,9 @@ def request_password_reset(request):
 
 
 def password_reset(request):
+    print(request.POST.get("user"))
     if request.method == "POST":
-        post_user = request.POST['user']
+        post_user = request.POST['username']
         password = request.POST['password']
         confirm_password = request.POST['confirm_password']
         token = request.POST['token']
