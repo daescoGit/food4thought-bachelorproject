@@ -17,14 +17,16 @@
             <div class="leftContainer">
 
                 <div class="profileImgContainer">
-                    <img class="profileImg" src="{% if profileUser.profile.image %}{{profileUser.profile.image.url}}{% else %}{% static 'profilePic.jpg' %}{% endif %}">
+                    <img class="profileImg"
+                        src="{% if profileUser.profile.image %}{{profileUser.profile.image.url}}{% else %}{% static 'profilePic.jpg' %}{% endif %}">
                 </div>
             </div>
 
             <div class="middleContainer">
                 <div class="profileHeader">
-                    <div class="profileAuthor"><a href="{% url 'profile_app:profile' profileUser.profile.user.id %}">{{profileUser}}</a></div>
-                    <div class="profileTimestamp">24th February 2020</div>
+                    <div class="profileAuthor"><a
+                            href="{% url 'profile_app:profile' profileUser.profile.user.id %}">{{profileUser}}</a></div>
+                    <div class="profileTimestamp">Joined: {{profileUser.date_joined}}</div>
                 </div>
                 <div class="profileBody">
                     {{profileUser.profile.summary}}
@@ -60,7 +62,7 @@
             {% endfor %}
         </div>
     </div>
-            <!-- {{profileUser}}
+    <!-- {{profileUser}}
             {{profileUser.userprofile.summary}}
                 <div class="profileTotalSubscribers" data-id="totalSubscribers">{{subscribers}}</div>
             
@@ -72,7 +74,7 @@
                 </div>
             </div>
             {% endif %} -->
-<!-- 
+    <!-- 
 
             <div class="cardsContainer">
                         {% for post in posts.all %}
@@ -100,254 +102,253 @@
                             </div>
                         </div>
                         {% endfor %} -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
-    <style>
-.main .quickButtons, .subHeader {
-    color:#4ED530;
-    height:4.5em;
-    align-items: center;
-    display: flex;
-    font-weight:500;
-}
-
-.main .quickButtons span, .main .quickButtons i {
-    margin-right:.5em;
-    cursor:pointer;
-    color:#4ED530;
-}
-
-a {
-    text-decoration:none;
-    color:unset;
-}
-
-.profileAuthor:hover {
-    text-decoration: underline;
-}
-
-.content {
-    padding:2em;
-    flex-grow: 1;
-    background:white;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-}
-
-.profileDetails {
-    display:flex;
-    flex-direction: row;
-}
-
-.middleContainer {
-    padding: 0 2em;
-    flex:1;
-}
-
-.profileHeader {
-    display:flex;
-    flex-direction:row;
-    align-items:center;
-    margin: 1em 0;
-    color: #545454
-}
-
-.profileAuthor {
-    font-weight: 500;
-    color: #4ED530;
-}
-
-.profileTimestamp {
-    margin-left:.5em;
-    font-size: .7em;
-    color: #9D9D9C;
-}
-
-.profileHeader > div {
-    display:inline-flex;
-    margin-bottom:.2em;
-}
-
-.profileTag {
-    background-color:#545454;
-    padding:.3em;
-    margin: 0 .5em;
-    color:white;
-    align-items: center;
-    display: flex;
-}
-
-.profileBody {
-    display:flex;
-    margin-top:1em;
-    width:100%;
-    font-weight: 300;
-}
-
-.profileImgContainer {
-    display:flex;
-    justify-content:center;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    border-radius:50%;
-}
-
-.profileImg {
-    height:10em;
-    width:10em;
-    border-radius:50%;
-    object-fit: cover;
-}
-
-.line {
-    border-bottom:1px solid #bdbdbd;
-    margin-top:2em;
-}
-
-.createdPostsContainer {
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    width:100%;
-}
-
-.post {
-    display:flex;
-    margin: 1em 3em;
-    justify-items:space-between;
-}
-
-.postBody {
-}
-
-.postTag {
-    width:50%;
-}
-
-.collectionDate {
-    color: #9D9D9C;
-    font-weight: 500;
-}
-
-.postFooter {
-    width:100%;
-    font-size: .7em;
-    color: #9D9D9C;
-}
-
-.postImageContainer {
-    display: flex;
-    justify-content: center;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-}
-
-.postImage {
-    height: 7em;
-    width: 10em;
-    object-fit: cover;
-}
-
-.postRight {
-    padding-left: .5em;
-    flex-grow:1;
-    display:flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-
-.postTitle {
-    text-decoration:underline;
-    color: #545454;
-    font-size:1.1em;
-}
-
-.priceContainer {
-    display:flex;
-    justify-content:space-between;
-}
-
-.newPrice {
-    color:#4ED530;
+</div>
+</div>
+</div>
+</div>
+</div>
+<style>
+    .main .quickButtons,
+    .subHeader {
+        color: #4ED530;
+        height: 4.5em;
+        align-items: center;
+        display: flex;
+        font-weight: 500;
     }
 
-.oldPrice {
-    color: #9D9D9C;
-    text-decoration:line-through;
-    text-decoration-thickness: 2px;
-}
-    </style>
-    <script>
+    .main .quickButtons span,
+    .main .quickButtons i {
+        margin-right: .5em;
+        cursor: pointer;
+        color: #4ED530;
+    }
 
-        function getCookie(name) {
-            var cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                var cookies = document.cookie.split(';');
-                for (var i = 0; i < cookies.length; i++) {
-                    var cookie = cookies[i].trim();
-                    // Does this cookie string begin with the name we want?
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
+    a {
+        text-decoration: none;
+        color: unset;
+    }
+
+    .profileAuthor:hover {
+        text-decoration: underline;
+    }
+
+    .content {
+        padding: 2em;
+        flex-grow: 1;
+        background: white;
+        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    }
+
+    .profileDetails {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .middleContainer {
+        padding: 0 2em;
+        flex: 1;
+    }
+
+    .profileHeader {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        margin: 1em 0;
+        color: #545454
+    }
+
+    .profileAuthor {
+        font-weight: 500;
+        color: #4ED530;
+    }
+
+    .profileTimestamp {
+        margin-left: .5em;
+        font-size: .7em;
+        color: #9D9D9C;
+    }
+
+    .profileHeader>div {
+        display: inline-flex;
+        margin-bottom: .2em;
+    }
+
+    .profileTag {
+        background-color: #545454;
+        padding: .3em;
+        margin: 0 .5em;
+        color: white;
+        align-items: center;
+        display: flex;
+    }
+
+    .profileBody {
+        display: flex;
+        margin-top: 1em;
+        width: 100%;
+        font-weight: 300;
+    }
+
+    .profileImgContainer {
+        display: flex;
+        justify-content: center;
+        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+        border-radius: 50%;
+    }
+
+    .profileImg {
+        height: 10em;
+        width: 10em;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .line {
+        border-bottom: 1px solid #bdbdbd;
+        margin-top: 2em;
+    }
+
+    .createdPostsContainer {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        width: 100%;
+    }
+
+    .post {
+        display: flex;
+        margin: 1em 3em;
+        justify-items: space-between;
+    }
+
+    .postTag {
+        width: 50%;
+    }
+
+    .collectionDate {
+        color: #9D9D9C;
+        font-weight: 500;
+    }
+
+    .postFooter {
+        width: 100%;
+        font-size: .7em;
+        color: #9D9D9C;
+    }
+
+    .postImageContainer {
+        display: flex;
+        justify-content: center;
+        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    }
+
+    .postImage {
+        height: 7em;
+        width: 10em;
+        object-fit: cover;
+    }
+
+    .postRight {
+        padding-left: .5em;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .postTitle {
+        text-decoration: underline;
+        color: #545454;
+        font-size: 1.1em;
+    }
+
+    .priceContainer {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .newPrice {
+        color: #4ED530;
+    }
+
+    .oldPrice {
+        color: #9D9D9C;
+        text-decoration: line-through;
+        text-decoration-thickness: 2px;
+    }
+</style>
+<script>
+
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
                 }
             }
-            return cookieValue;
         }
-        var csrftoken = getCookie('csrftoken');
+        return cookieValue;
+    }
+    var csrftoken = getCookie('csrftoken');
 
 
-        function Subscribe() {
-            let elem = event.target
-            let user_id = elem.dataset.id
+    function Subscribe() {
+        let elem = event.target
+        let user_id = elem.dataset.id
 
-            if(elem.className == 'subscriptionStatus-1') {
-                console.log('deleting...')
+        if (elem.className == 'subscriptionStatus-1') {
+            console.log('deleting...')
             fetch(`http://127.0.0.1:8000/users/${user_id}/profile/subscribe`, {
-                    method: "DELETE",
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrftoken,
-                    },
+                method: "DELETE",
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                },
 
-                    //make sure to serialize your JSON body
-                    body: JSON.stringify({})
-                })
+                //make sure to serialize your JSON body
+                body: JSON.stringify({})
+            })
                 .then((response) => {
                     elem.className = 'subscriptionStatus-0'
                     totalSubscriptions = document.querySelector(`[data-id=totalSubscribers]`)
-                    let number = totalSubscriptions.innerHTML 
+                    let number = totalSubscriptions.innerHTML
                     number = parseInt(number) - 1
                     totalSubscriptions.innerHTML = number
                 })
-            }
+        }
 
-        else if(elem.className == 'subscriptionStatus-0') {
+        else if (elem.className == 'subscriptionStatus-0') {
             console.log('adding...')
 
             fetch(`http://127.0.0.1:8000/users/subscriptions`, {
-                    method: "POST",
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrftoken,
-                    },
+                method: "POST",
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                },
 
-                    //make sure to serialize your JSON body
-                    body: JSON.stringify({
-                        "subscriber": "{{user.id}}",
-                        "subscribee": user_id
-                    })
+                //make sure to serialize your JSON body
+                body: JSON.stringify({
+                    "subscriber": "{{user.id}}",
+                    "subscribee": user_id
                 })
+            })
                 .then((response) => {
                     elem.className = 'subscriptionStatus-1'
                     totalSubscriptions = document.querySelector(`[data-id=totalSubscribers]`)
-                    let number = totalSubscriptions.innerHTML 
+                    let number = totalSubscriptions.innerHTML
                     number = parseInt(number) + 1
                     totalSubscriptions.innerHTML = number
                 })
-            }
         }
-    </script>
+    }
+</script>
 {% endblock %}
