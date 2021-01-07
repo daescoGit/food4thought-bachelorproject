@@ -39,7 +39,7 @@
                         <div id="thumbnailRight"><i class="fas fa-chevron-right"></i></div>
                     </div>
                 </div>
-            <!-- {% if user == post.user %}
+                <!-- {% if user == post.user %}
             <div class="confirmCollection {{post.frozen_to}}">
                 <form action="{% url 'deals_app:edit' post.slug %}" method="post">
                     {% csrf_token %}
@@ -57,7 +57,8 @@
             <div class="middleContainer">
                 <div class="authorHeader">
                     <div class="postProfileImage"><img src="{{profileImage.url}}"></div>
-                    <div class="postAuthor"><a href="{% url 'profile_app:profile' post.user.id %}">{{post.user}}</a> <span>is giving away...</span>
+                    <div class="postAuthor"><a href="{% url 'profile_app:profile' post.user.id %}">{{post.user}}</a>
+                        <span>is giving away...</span>
                     </div>
                 </div>
                 <div class="postHeader">
@@ -86,7 +87,8 @@
         </div>
         <div class="line"></div>
         {% if post.frozen_to != null %}
-        <div class="frozenInfo"><i class="fas fa-info-circle"></i><span>Post owner has chosen a user for collection.<span></span></div>
+        <div class="frozenInfo"><i class="fas fa-info-circle"></i><span>Post owner has chosen a user for
+                collection.<span></span></div>
         {% endif %}
         <div class="commentsSection">
             {% if user.is_authenticated %}
@@ -97,7 +99,8 @@
                 </div>
                 <div class="commentBody">
                     <div class="inputContainer">
-                        <textarea class="commentField" placeholder="Show your interest and make the food go further!"></textarea>
+                        <textarea class="commentField"
+                            placeholder="Show your interest and make the food go further!"></textarea>
                     </div>
                     <div id="inputOptions">
                         <div id="privateCheckContainer">
@@ -116,14 +119,16 @@
             </div>
             {% endif %}
             <div class="subHeaderComments">Comments(<span id="commentCount">{{commentCount}}</span>)
-                <span id="privateCountContainer"> | <span id="privateCount">{{privateCommentCount}}</span> private</span>
+                <span id="privateCountContainer"> | <span id="privateCount">{{privateCommentCount}}</span>
+                    private</span>
             </div>
             <div class="commentsContainer">
                 {% for commentquote in commentquotes reversed %}
                 {% if commentquote.comment.private is False or commentquote.comment.user == user or post.user == user %}
                 <div class="comment" id="{{commentquote.comment.id}}">
                     <div class="commentHeader">
-                        <div class="commentProfileImage"><img src="{{commentquote.comment.user.profile.image.url}}"></div>
+                        <div class="commentProfileImage"><img src="{{commentquote.comment.user.profile.image.url}}">
+                        </div>
                         <div class="commentAuthor" id="author-{{commentquote.comment.id}}"><a
                                 href="{% url 'profile_app:profile' commentquote.comment.user.id %}">{{commentquote.comment.user}}</a>
                         </div>
@@ -160,10 +165,11 @@
                                     <form action="{% url 'deals_app:edit' post.slug %}" method="post">
                                         {% csrf_token %}
                                         {% if post.frozen_to == commentquote.comment.user %}
-                                        <input type="hidden" name="toggleFrozen" value="False"/>
+                                        <input type="hidden" name="toggleFrozen" value="False" />
                                         <button class="toggleFrozen grey">Cancel user as collection</button>
                                         {% else %}
-                                        <input type="hidden" name="toggleFrozen" value="{{commentquote.comment.user.id}}"/>
+                                        <input type="hidden" name="toggleFrozen"
+                                            value="{{commentquote.comment.user.id}}" />
                                         <button class="toggleFrozen">Select user for collection</button>
                                         {% endif %}
                                     </form>
@@ -293,7 +299,7 @@
 </script>
 
 
-{% if user.is_authenticated and post.frozen == False %}
+{% if user.is_authenticated and post.frozen_to == None %}
 <script>
     // COMMENT
     const postId = JSON.parse(document.getElementById('postId').textContent);
@@ -373,8 +379,10 @@
 
     // Comment submit
     let submitComment = document.querySelector('.submitComment')
+    console.log('382', submitComment)
 
     submitComment.addEventListener('click', () => {
+        console.log('x')
         let commentField = document.querySelector('.commentField')
         let quoteElem = document.querySelector('.quoting')
 
@@ -547,12 +555,12 @@
 
     .postAuthor span {
         color: #545454;
-        text-decoration: none!important;
+        text-decoration: none !important;
     }
 
     .middleContainer {
-        display:flex;
-        flex-direction:column;
+        display: flex;
+        flex-direction: column;
         padding: 0 2em;
         flex: 1;
     }
@@ -560,7 +568,7 @@
     .postHeader {
         display: flex;
         flex-direction: row;
-        align-items:center;
+        align-items: center;
         margin: .5em 0;
         color: #545454;
     }
@@ -571,28 +579,28 @@
     }
 
     .postTitle {
-        font-size: 1.1em;    
+        font-size: 1.1em;
         display: flex;
         align-items: center;
     }
 
     .postTitle div {
         text-decoration: underline;
-        margin-right:.2em;
+        margin-right: .2em;
     }
 
     .postBody {
         display: flex;
-        flex-grow:1;
-        flex-direction:column;
+        flex-grow: 1;
+        flex-direction: column;
         width: 100%;
         font-weight: 300;
     }
 
     .postExpiration {
-        margin-top:auto;
-        text-align:right;
-        font-weight:500;
+        margin-top: auto;
+        text-align: right;
+        font-weight: 500;
         color: #545454;
     }
 
@@ -903,8 +911,8 @@
 
     .marker {
         opacity: 0.9;
-        color:#4ED530!important;
-        font-size:3.5em;
+        color: #4ED530 !important;
+        font-size: 3.5em;
     }
 
     .commentPrivate {
@@ -947,8 +955,8 @@
     }
 
     .toggleFrozen {
-        margin:1em auto;
-        text-align:center;
+        margin: 1em auto;
+        text-align: center;
         padding: 1em;
         background: #4ED530;
         color: white;
@@ -958,26 +966,25 @@
         font-size: 0.7em;
 
     }
- 
+
     .toggleFrozen.grey {
-        background:grey!important;                            
+        background: grey !important;
     }
 
     .frozenInfo {
-        display:flex;
-        text-align:center;
-        background:#A8D5E2;
-        border:1px #1D70A2 solid;
-        color:#1D70A2;
-        border-radius:1em;
-        padding:1em;
-        margin-bottom:1.5em;
+        display: flex;
+        text-align: center;
+        background: #A8D5E2;
+        border: 1px #1D70A2 solid;
+        color: #1D70A2;
+        border-radius: 1em;
+        padding: 1em;
+        margin-bottom: 1.5em;
     }
 
     .frozenInfo span {
-        margin-left:1em;
+        margin-left: 1em;
     }
-    
 </style>
 
 {% endblock content %}
