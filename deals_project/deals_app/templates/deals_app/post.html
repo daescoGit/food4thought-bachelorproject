@@ -91,7 +91,7 @@
                 collection.<span></span></div>
         {% endif %}
         <div class="commentsSection">
-            {% if user.is_authenticated %}
+            {% if userCanComment %}
             <div class="createComment">
                 <div class="commentHeader">
                     <div class="commentProfileImage"><img src="{{user.profile.image.url}}"></div>
@@ -113,7 +113,8 @@
                 <div class="commentFooter">
                 </div>
             </div>
-            {% else %}
+            {% endif %}
+            {% if user.is_authenticated != True %}
             <div class="commentHeader">
                 <a id="loginLink" href="{% url 'login_app:login' %}">Log in to comment</a>
             </div>
@@ -299,7 +300,7 @@
 </script>
 
 
-{% if user.is_authenticated and post.frozen_to == None %}
+{% if user.is_authenticated %}
 <script>
     // COMMENT
     const postId = JSON.parse(document.getElementById('postId').textContent);
