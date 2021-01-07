@@ -102,17 +102,23 @@
             </div>
         </div>
         <div class="pageButtonsContainer">
-            <div class="pageButton"><a href="{% url 'deals_app:base' base order '0' currentLocation %}">0</a></div>
+            <div class="pageButton"><a href="{% url 'deals_app:base' base order '0' currentLocation %}">1</a></div>
             <div class="pageButton">
                 {% if currentPage != 0 %}
                 <div><a href="{% url 'deals_app:base' base order previousPage currentLocation %}"><i
                             class="fas fa-caret-left"></i></a></div>
                 {% endif %}
-                <div class="currentPage">Page {{currentPage}}</div>
-                <div><a href="{% url 'deals_app:base' base order nextPage currentLocation %}"><i
-                            class="fas fa-caret-right"></i></a></div>
+                <div class="currentPage">Page {{currentPage|add:"+1"}}</div>
+                {% if currentPage != lastPage %}
+                <div>
+                    <a href="{% url 'deals_app:base' base order nextPage currentLocation %}">
+                        <i class="fas fa-caret-right"></i>
+                    </a>
+                </div>
+                {% endif %}
             </div>
-            <div class="pageButton"><a href="{% url 'deals_app:base' base order '5' %} ">5</a></div>
+            <div class="pageButton"><a href="{% url 'deals_app:base' base order lastPage %} ">{{lastPage|add:"+1"}}</a>
+            </div>
         </div>
     </div>
 </div>
