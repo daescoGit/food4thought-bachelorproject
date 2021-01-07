@@ -8,14 +8,15 @@
             <div class="profileDetails">
                 <div class="leftContainer">
                     <div class="profileImgContainer">
-                        <input type="file" class="filepond" name="filepond"/>
-                        <input type="hidden" name="file"/>
+                        <input type="file" class="filepond" name="filepond" />
+                        <input type="hidden" name="file" />
                     </div>
                 </div>
                 <div class="middleContainer">
                     <div class="profileHeader">
-                        <div class="profileAuthor"><a href="{% url 'profile_app:profile' profileUser.profile.user.id %}">{{profileUser}}</a></div>
-                        <div class="profileTimestamp">24th February 2020</div>
+                        <div class="profileAuthor"><a
+                                href="{% url 'profile_app:profile' profileUser.profile.user.id %}">{{profileUser}}</a>
+                        </div>
                     </div>
                     <div class="profileBody">
                         <textarea name="summary">
@@ -23,9 +24,9 @@
                         </textarea>
                     </div>
                 </div>
-            </form>
-        </div>
-            <!-- {{profileUser}}
+        </form>
+    </div>
+    <!-- {{profileUser}}
             {{profileUser.userprofile.summary}}
                 <div class="profileTotalSubscribers" data-id="totalSubscribers">{{subscribers}}</div>
             
@@ -37,7 +38,7 @@
                 </div>
             </div>
             {% endif %} -->
-<!-- 
+    <!-- 
 
             <div class="cardsContainer">
                         {% for post in posts.all %}
@@ -65,204 +66,205 @@
                             </div>
                         </div>
                         {% endfor %} -->
-                    </div>
-                    <div id="submitForm">
-                        Save
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+</div>
+<div id="submitForm">
+    Save
+</div>
+</div>
+</div>
+</div>
+</div>
 </div>
 
 {{ profileUser.profile.image.url|json_script:'profileImageUrl' }}
 
-    <style>
+<style>
+    .main .quickButtons span,
+    .main .quickButtons i {
+        margin-right: .5em;
+        cursor: pointer;
+        color: #4ED530;
+    }
 
-.main .quickButtons span, .main .quickButtons i {
-    margin-right:.5em;
-    cursor:pointer;
-    color:#4ED530;
-}
+    .main {
+        margin: 0 auto;
+        flex-direction: row !important;
+        margin-top: 4.5em !important;
+        width: 60em;
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+    }
 
-.main {
-    margin: 0 auto;
-    flex-direction: row!important;
-    margin-top:4.5em!important;
-    width: 60em;
-    flex-grow: 1;
-    display: flex;
-    align-items: center;
-}
+    #submitForm {
+        margin-left: 1em;
+        padding: 1em;
+        background: #4ED530;
+        color: white;
+        font-weight: 500;
+        cursor: pointer;
+    }
 
-#submitForm {
-    margin-left: 1em;
-    padding: 1em;
-    background: #4ED530;
-    color: white;
-    font-weight: 500;
-}
+    a {
+        text-decoration: none;
+        color: unset;
+    }
 
-a {
-    text-decoration:none;
-    color:unset;
-}
+    .profileAuthor:hover {
+        text-decoration: underline;
+    }
 
-.profileAuthor:hover {
-    text-decoration: underline;
-}
+    .content {
+        padding: 2em;
+        flex-grow: 1;
+        background: white;
+        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    }
 
-.content {
-    padding:2em;
-    flex-grow: 1;
-    background:white;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-}
+    .profileDetails {
+        display: flex;
+        flex-direction: row;
+    }
 
-.profileDetails {
-    display:flex;
-    flex-direction: row;
-}
+    .middleContainer {
+        padding: 0 2em;
+        flex: 1;
+    }
 
-.middleContainer {
-    padding: 0 2em;
-    flex:1;
-}
+    .profileHeader {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        margin: 1em 0;
+        color: #545454
+    }
 
-.profileHeader {
-    display:flex;
-    flex-direction:row;
-    align-items:center;
-    margin: 1em 0;
-    color: #545454
-}
+    .profileAuthor {
+        font-weight: 500;
+        color: #4ED530;
+    }
 
-.profileAuthor {
-    font-weight: 500;
-    color: #4ED530;
-}
+    .profileTimestamp {
+        margin-left: .5em;
+        font-size: .7em;
+        color: #9D9D9C;
+    }
 
-.profileTimestamp {
-    margin-left:.5em;
-    font-size: .7em;
-    color: #9D9D9C;
-}
+    .profileHeader>div {
+        display: inline-flex;
+        margin-bottom: .2em;
+    }
 
-.profileHeader > div {
-    display:inline-flex;
-    margin-bottom:.2em;
-}
+    .profileTag {
+        background-color: #545454;
+        padding: .3em;
+        margin: 0 .5em;
+        color: white;
+        align-items: center;
+        display: flex;
+    }
 
-.profileTag {
-    background-color:#545454;
-    padding:.3em;
-    margin: 0 .5em;
-    color:white;
-    align-items: center;
-    display: flex;
-}
+    .profileBody {
+        display: flex;
+        margin-top: 1em;
+        width: 100%;
+        font-weight: 300;
+    }
 
-.profileBody {
-    display:flex;
-    margin-top:1em;
-    width:100%;
-    font-weight: 300;
-}
+    .profileImgContainer {
+        display: flex;
+        justify-content: center;
+        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+        border-radius: 50%;
+    }
 
-.profileImgContainer {
-    display:flex;
-    justify-content:center;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    border-radius:50%;
-}
+    .profileImg {
+        height: 10em;
+        width: 10em;
+        border-radius: 50%;
+        object-fit: cover;
+    }
 
-.profileImg {
-    height:10em;
-    width:10em;
-    border-radius:50%;
-    object-fit: cover;
-}
+    .line {
+        border-bottom: 1px solid #bdbdbd;
+        margin-top: 2em;
+    }
 
-.line {
-    border-bottom:1px solid #bdbdbd;
-    margin-top:2em;
-}
+    .createdPostsContainer {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        width: 100%;
+    }
 
-.createdPostsContainer {
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    width:100%;
-}
+    .post {
+        display: flex;
+        margin: 1em 3em;
+        justify-items: space-between;
+    }
 
-.post {
-    display:flex;
-    margin: 1em 3em;
-    justify-items:space-between;
-}
+    .postBody {
+        margin: auto 0;
+    }
 
-.postBody {
-    margin: auto 0;
-}
+    .postFooter {
+        width: 100%;
+        font-size: .7em;
+        color: #9D9D9C;
+    }
 
-.postFooter {
-    width:100%;
-    font-size: .7em;
-    color: #9D9D9C;
-}
+    .postImageContainer {
+        display: flex;
+        justify-content: center;
+        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    }
 
-.postImageContainer {
-    display: flex;
-    justify-content: center;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-}
+    .postImage {
+        height: 7em;
+        width: 10em;
+        object-fit: cover;
+    }
 
-.postImage {
-    height: 7em;
-    width: 10em;
-    object-fit: cover;
-}
+    .postRight {
+        padding-left: .5em;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
 
-.postRight {
-    padding-left: .5em;
-    flex-grow:1;
-    display:flex;
-    flex-direction: column;
-}
+    .postTitle {
+        color: #545454;
+        font-size: 1.1em;
+    }
 
-.postTitle {
-    color: #545454;
-    font-size:1.1em;
-}
+    .priceContainer {
+        display: flex;
+        justify-content: space-between;
+    }
 
-.priceContainer {
-    display:flex;
-    justify-content:space-between;
-}
+    textarea {
+        border: none;
+        font-weight: 500;
+        color: #555454;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid #dadada;
+        box-shadow: 0px 1px 5px 0px #DCDDDC;
+        padding: 1em;
+        border-radius: 1em;
+        resize: none;
+    }
 
-textarea {
-    border: none;
-    font-weight: 500;
-    color: #555454;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    border: 1px solid #dadada;
-    box-shadow: 0px 1px 5px 0px #DCDDDC;
-    padding: 1em;
-    border-radius: 1em;
-}
+    /* FILEPOND */
 
-/* FILEPOND */
+    .filepond--root {
+        width: 10em;
+        height: 10em;
+        margin: 0 auto;
 
-.filepond--root {
-    width:10em;
-    height:10em;
-    margin: 0 auto;
-
-}
-
-    </style>
-    <script>
+    }
+</style>
+<script>
     document.addEventListener('DOMContentLoaded', function () {
 
 
@@ -339,7 +341,7 @@ textarea {
         // }
 
         let profileImageUrl = JSON.parse(document.querySelector('#profileImageUrl').textContent);
-            
+
         FilePond.registerPlugin(
             FilePondPluginImagePreview,
             FilePondPluginImageCrop,
@@ -347,7 +349,7 @@ textarea {
             FilePondPluginFileEncode,
             FilePondPluginImageTransform
         );
-        
+
 
         FilePond.setOptions({
             maxFileSize: '3MB',
@@ -363,18 +365,18 @@ textarea {
 
         let file, form;
         let fileChanged = false;
-        
-	    const inputElement = document.querySelector('input[type="file"]');
-        const pond = FilePond.create( inputElement, {
-        labelIdle: `Drag & Drop your picture or <span class="filepond--label-action">Browse</span>`,
-        onaddfile: (err, fileItem) => {
-                    if (!err) {
-                        file = fileItem.getFileEncodeDataURL()
-                        fileChanged = true;
-                    }
+
+        const inputElement = document.querySelector('input[type="file"]');
+        const pond = FilePond.create(inputElement, {
+            labelIdle: `Drag & Drop your picture or <span class="filepond--label-action">Browse</span>`,
+            onaddfile: (err, fileItem) => {
+                if (!err) {
+                    file = fileItem.getFileEncodeDataURL()
+                    fileChanged = true;
                 }
-            });
-            
+            }
+        });
+
         pond.addFile(profileImageUrl)
 
         document.getElementById("submitForm").addEventListener("click", () => {
@@ -383,15 +385,15 @@ textarea {
             let fileInput = document.getElementsByName('file')[0];
             let form = document.forms["editProfileForm"]
 
-            if(fileChanged){
+            if (fileChanged) {
                 // form.append('csrfmiddlewaretoken', '{{ csrf_token }}')
                 jData = JSON.parse(filePondInput.value)
                 jData.data = file
-                
+
                 fileInput.value = JSON.stringify(jData)
             }
             form.submit();
         })
-    })
-        </script>
+    });
+</script>
 {% endblock %}
