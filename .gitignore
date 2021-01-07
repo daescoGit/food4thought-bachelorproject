@@ -2,7 +2,3 @@
 *.pot
 *.pyc
 __pycache__
-db.sqlite3
-media
-/images
-/deals_project/images/images/

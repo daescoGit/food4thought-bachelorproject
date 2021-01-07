@@ -143,7 +143,7 @@ def base(request, base='all', order='newest', page=0, location=0):
     nextPage = page + 1
     previousPage = page - 1
     lastPage = posts.count() // 10
-    posts = posts[(int(page) * 10): (int(page) + 10)]
+    posts = posts[(int(page) * 10): (int(page) * 10 + 10)]
 
     jsonPosts = serialize('json', posts)  # the fields needed for products
     category = base.replace("-", " ")
