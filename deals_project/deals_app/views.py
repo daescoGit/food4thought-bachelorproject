@@ -162,6 +162,10 @@ def post(request, slug):
     commentCount = comments.count()
     privateCommentCount = comments.filter(private=True).count()
     commentquotes = []
+    userCanComment = False
+    user = request.user
+    if (user.is_authenticated and post.frozen_to == None) or (user.is_authenticated and user == post.user or user == post.frozen_to):
+        userCanComment = True
     
     # user = request.user
     # if user.is_authenticated:
@@ -169,7 +173,7 @@ def post(request, slug):
         comment_ = {'comment':Comment.objects.get(id=comment.id), 'quote':Quote.objects.filter(quoter=comment).first()}
         commentquotes.append(comment_)
 
-    return render(request, 'deals_app/post.html', {'profileImage':profile.image, 'post': post, 'commentquotes':commentquotes, 'commentCount':commentCount, 'privateCommentCount':privateCommentCount ,'postImages':postImages})
+    return render(request, 'deals_app/post.html', {'profileImage':profile.image, 'post': post, 'commentquotes':commentquotes, 'commentCount':commentCount, 'privateCommentCount':privateCommentCount ,'postImages':postImages, 'userCanComment':userCanComment})
 
 @login_required
 def delete(request, slug):
