@@ -132,7 +132,8 @@ def base(request, base='all', order='newest', page=0, location=0):
             postcode=postcode,
         )
     
-    posts = Post.objects.filter(filters).order_by('-date_created')[(int(page) * 10): (int(page) + 10)].annotate(num_comments=Count('comments'))
+    posts = Post.objects.filter(filters).order_by('-date_created').annotate(num_comments=Count('comments'))
+
 
     for post in posts:
         if request.user.is_authenticated:
@@ -141,13 +142,15 @@ def base(request, base='all', order='newest', page=0, location=0):
     # posts = reversed(sorted(posts, key=lambda a: a.voteCount))
     nextPage = page + 1
     previousPage = page - 1
+    lastPage = posts.count() // 10
+    posts = posts[(int(page) * 10): (int(page) + 10)]
 
     jsonPosts = serialize('json', posts)  # the fields needed for products
     category = base.replace("-", " ")
     category = string.capwords(category)
 
     postcodes = Postcode.objects.all()
-    return render(request, 'deals_app/index.html', {'posts':posts, 'postcodes':postcodes, 'jsonPosts':jsonPosts, 'base':base, 'currentCategory':category, 'currentPage':page, 'currentLocation': location, 'order': order, 'nextPage': nextPage, 'previousPage': previousPage})
+    return render(request, 'deals_app/index.html', {'posts':posts, 'postcodes':postcodes, 'jsonPosts':jsonPosts, 'base':base, 'currentCategory':category, 'currentPage':page, 'currentLocation': location, 'order': order, 'nextPage': nextPage, 'previousPage': previousPage, 'lastPage': lastPage})
     
 
 def post(request, slug):
