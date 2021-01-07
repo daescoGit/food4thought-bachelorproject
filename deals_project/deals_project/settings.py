@@ -71,8 +71,8 @@ EMAIL_USE_TLS = True
 # EMAIL_USE_SSL = True ### <--- DON'T USE THIS - USE EMAIL_USE_TLS
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = 'kea.verify.test@gmail.com'
-EMAIL_HOST_PASSWORD = 'PassKeaMailTest'
+EMAIL_HOST_USER = 'charityfindertest@gmail.com'
+EMAIL_HOST_PASSWORD = 'Password123+'
 
 ROOT_URLCONF = 'deals_project.urls'
 

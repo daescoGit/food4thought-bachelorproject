@@ -11,7 +11,7 @@ def email_message(message_dict):
     send_mail(
         'Password Reset Token',
         contents,
-        'kea.verify.test@gmail.com',
+        'food4thought@gmail.com',
         [message_dict['email']],
         fail_silently=False
     )
