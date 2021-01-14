@@ -230,24 +230,22 @@
         let searchEndpoint = (location.protocol == 'https:' ? 'wss://' : 'ws://') + location.host + "/ws/search/"
         searchSocket = new WebSocket(searchEndpoint);
 
-        document.querySelector('#search-input').focus();
-
         const searchInputDom = document.querySelector('#search-input');
         const resultsContainer = document.querySelector('#search-result-container');
         let search = searchInputDom.value;
 
-        document.querySelector('#search-input').onkeyup = function (e) { // alt: #search-submit .onclick
+        searchInputDom.onkeyup = function (e) { // alt: #search-submit .onclick
             search = searchInputDom.value;
             ////// SANITIZE INPUT !!!!
-            if (search != '') {
+            if (search == '' || e.keyCode === 27) { // 27 = escape
+                clearResults();
+            }
+            else {
                 resultsContainer.style.cssText = "display: flex";
                 searchSocket.send(JSON.stringify({
                     'search': search
                 }));
-            } else {
-                resultsContainer.style.cssText = "display: none";
             }
-            //searchInputDom.value = '';
         };
 
         searchSocket.onopen = function (message) {
@@ -255,14 +253,14 @@
         }
 
         searchSocket.onmessage = function (e) {
-            console.log(e)
+            //console.log(e)
             const jData = JSON.parse(e.data);
             let resultCount = 0
 
             resultsContainer.innerHTML = ''
             resultsContainer.insertAdjacentHTML("afterbegin",
                 `<div id="search-result-menu">
-                    <div id="search-result-info"><span id="resultCount">No </span> results found for ${search}</div>
+                    <div id="search-result-info"><span id="resultCount">No </span> results found for: ${search}</div>
                     <button onclick="clearResults()">Clear <i class="fas fa-times-circle"></i></botton>
                 </div>`
             );
@@ -423,8 +421,8 @@
     }
 
     .messagesContainer {
-        position:relative;
-        z-index:9999;
+        position: relative;
+        z-index: 9999;
         pointer-events: none;
         animation: fadeout 2s forwards;
         animation-delay: 5s;
@@ -649,6 +647,10 @@
         overflow-y: auto;
     }
 
+    #search-result-container a:last-child {
+        padding-bottom: 1em;
+    }
+
     .postImage.search-image img {
         height: 4em;
         width: 4em;
@@ -675,15 +677,25 @@
         flex-direction: column;
     }
 
+    .search-left {
+        max-width: 20em;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
     .search-right {
         display: flex;
         flex-direction: column;
         row-gap: 0.3em;
         justify-content: center;
+        margin-left: auto;
+        align-items: end;
     }
 
     .search-right>div {
         width: max-content;
+        color: #fff;
     }
 
     .submitForm {
@@ -744,7 +756,7 @@
         font-weight: 500;
     }
 
-    .postAuthor a{
+    .postAuthor a {
         color: #4ED530;
     }
 
