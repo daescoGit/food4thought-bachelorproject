@@ -2,7 +2,7 @@ import json
 import channels.layers
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer, JsonWebsocketConsumer
-from .models import Post, Comment, Quote
+from .models import Post, Comment, Quote, new_frozen_to
 from django.contrib.auth.models import User
 from django.db.models import signals
 from django.dispatch import receiver
@@ -60,6 +60,7 @@ class NotificationConsumer(JsonWebsocketConsumer):
         async_to_sync(self.channel_layer.send)(self.channel_name, {
             'type': 'events.alarm',
             'data': {
+                'type': 'comment',
                 'multi': True,
                 'data': payload,
             }})
@@ -74,9 +75,9 @@ class NotificationConsumer(JsonWebsocketConsumer):
         self.close()
 
     def receive_json(self, content, **kwargs):
-        print(f"Received event: {content}")
+        #print(f"Received event: {content}")
         comment = get_object_or_404(Comment, id=content["id"])
-        print(comment)
+        #print(comment)
         comment.read_by_author = True
         comment.save()
 
@@ -93,18 +94,19 @@ class NotificationConsumer(JsonWebsocketConsumer):
         # if comment on user's post // send to the group of comment-post-user
         # group is useful here for sync if user is connected on multiple devices
         
-        def typeHandler(post, target):
+        def typeHandler(comment, target):
             payload = [{
-                "id": post.id,
-                "body": post.body,
-                "user": post.user.username,
-                "is_quote": post.is_quote,
-                "slug": post.post.slug
+                "id": comment.id,
+                "body": comment.body,
+                "user": comment.user.username,
+                "is_quote": comment.is_quote,
+                "slug": comment.post.slug
             }]
 
             async_to_sync(layer.group_send)('personal_group_'+str(target), {
                 'type': 'events.alarm',
                 'data': {
+                    'type': 'comment',
                     'multi': False,
                     'data': payload
                 }
@@ -114,6 +116,39 @@ class NotificationConsumer(JsonWebsocketConsumer):
             typeHandler(instance.quoter, instance.quotee.user.id)
         if sender == Comment and instance.is_quote == False and instance.read_by_author == False and instance.user != instance.post.user:
             typeHandler(instance, instance.post.user.id)
+
+    # custom signal needed for custom (old value) arg
+    @receiver(new_frozen_to)
+    def new_frozen_signal(sender, old, **kwargs):
+        layer = channels.layers.get_channel_layer()
+
+        # if frozen to u changes (also notify cancelled)
+        ######## todo: init load
+        def statusHandler(status, target):
+            payload = [{
+                "id": sender.id,
+                "body": sender.title,
+                "user": sender.user.username,
+                "slug": sender.slug,
+                "status": status,
+            }]
+
+            async_to_sync(layer.group_send)('personal_group_'+str(target), {
+                'type': 'events.alarm',
+                'data': {
+                    'type': 'frozen_status',
+                    'multi': False,
+                    'data': payload
+                }
+            })
+
+        if sender.frozen_to != None:
+            statusHandler('accepted', sender.frozen_to.id)
+
+        if old != None:
+            statusHandler('cancelled', old.id)
+
+
 
 class LivePostConsumer(JsonWebsocketConsumer):
     def connect(self):
@@ -133,7 +168,7 @@ class LivePostConsumer(JsonWebsocketConsumer):
     @staticmethod
     @receiver(signals.post_save, sender=Post)
     #@receiver(signals.post_delete, sender=Comment)
-    def comment_signal(sender, instance, **kwargs):
+    def post_signal(sender, instance, **kwargs):
         layer = channels.layers.get_channel_layer()
         async_to_sync(layer.group_send)('post_list_group', {
             'type': 'events.alarm',
@@ -145,6 +180,7 @@ class LivePostConsumer(JsonWebsocketConsumer):
                 "category": instance.category.name
             }
         })
+
 
 class SearchConsumer(JsonWebsocketConsumer):
     # echo consumer

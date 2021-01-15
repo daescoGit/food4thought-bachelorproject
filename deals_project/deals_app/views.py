@@ -260,23 +260,19 @@ def edit(request, slug):
 
             messages.success(request,'Post updated')
 
-        print(request.POST)
+        
+        # freeze post
         if request.POST.get("toggleFrozen"):
             if request.POST["toggleFrozen"] != "False": 
                 userId = request.POST.get('toggleFrozen')
                 user = User.objects.get(pk=userId)
                 post.frozen_to = user
-                
             else:
                 post.frozen_to = None
-
             
         post.save()
 
-
         return redirect('deals_app:post', slug = post.slug)
-
-
 
     user = request.user
     post = get_object_or_404(Post, slug=slug)
