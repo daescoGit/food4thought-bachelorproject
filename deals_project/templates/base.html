@@ -195,16 +195,32 @@
 
             let rType = null;
             if (type == 'comment') {
-                rType = e.is_quote == true ? ' replied ' : ' commented ';
+                rType = e.is_quote == true ? ' replied:' : ' commented:';
             } else {
-                rType = ' ' + e.status + ' collection for '
+                rType = ' ' + e.status + ' collection for:'
             }
             const stylable = document.createElement("span");
-            //stylable.setAttribute("class", 'notification-instance');
-            const text = document.createTextNode(e.user + rType + e.body);
+            if (type == 'comment') {
+                stylable.setAttribute("class", 'notification-text-comment');
+            } else if (e.status == 'accepted') {
+                stylable.setAttribute("class", 'notification-text-accepted');
+            } else {
+                stylable.setAttribute("class", 'notification-text-cancelled');
+            }
+            const text = document.createTextNode(e.user + rType);
             stylable.appendChild(text)
 
+            const linebreak = document.createElement('br');
+            stylable.appendChild(linebreak);
+
+            const stylable2 = document.createElement("span");
+            stylable2.setAttribute("class", 'notification-text2');
+            type == 'comment' ? stylable2.setAttribute("class", 'notification-text-comment-body') : null;
+            const text2 = document.createTextNode(e.body);
+            stylable2.appendChild(text2)
+
             element.appendChild(stylable);
+            element.appendChild(stylable2);
             document.querySelector('#notification-list').prepend(element);
 
             // attaching event listener dynamically
@@ -214,7 +230,9 @@
                 element.setAttribute("class", 'hidden')
                 // send back comment id to be updated in db
                 NotifierSocket.send(JSON.stringify({
-                    'id': e.id
+                    'id': e.id,
+                    'type': type,
+                    'status': type == 'frozen_status' ? e.status : null,
                 }));
                 const postURL = "/post/" + e.slug
                 location.href = postURL + "#body-" + e.id;
@@ -785,5 +803,25 @@
 
     .row-space-1 {
         row-gap: 0.5em;
+    }
+
+    .notification-text-comment,
+    .notification-text-accepted,
+    .notification-text-cancelled {
+        font-size: 0.8em;
+    }
+
+    .notification-text-accepted {
+        color: #4ED530;
+    }
+
+    .notification-text-cancelled {
+        color: #ef7272;
+    }
+
+    .notification-text-comment-body {
+        font-size: 0.9em;
+        opacity: 0.6;
+        font-style: italic;
     }
 </style>

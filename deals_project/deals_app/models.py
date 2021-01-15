@@ -39,8 +39,10 @@ class Post(models.Model):
     address_line_2 = models.CharField(max_length=200)
     postcode = models.ForeignKey(Postcode, on_delete=models.PROTECT)
     frozen_to = models.ForeignKey(User, related_name="frozen_to", on_delete=models.PROTECT, null=True)
+    frozen_read = models.BooleanField(default=False)
     thumbnail = models.ImageField(upload_to='images/')
     date_created = models.DateTimeField(auto_now_add=True)
+    latest_update = models.DateTimeField(auto_now=True)
     category = models.ForeignKey(Category, on_delete=models.PROTECT, null=True)
     staff_picked = models.BooleanField(default=False)
     expiration_date = models.DateField()
@@ -122,6 +124,18 @@ class PostImage(models.Model):
 
     def __str__(self):
         return self.post.title
+
+class CancelledFrozenTo(models.Model):
+    post = models.ForeignKey(Post,on_delete=models.CASCADE, related_name='cancelledPoster')    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cancelledUser')
+    time = models.DateTimeField(auto_now=True)
+    frozen_read = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = [['post', 'user', 'time']]
+
+    def __str__(self):
+        return '{} was cancelled to collect {}'.format(self.user, self.post)
 
 class Comment(models.Model):
     post = models.ForeignKey(Post,on_delete=models.CASCADE,related_name='comments')    
