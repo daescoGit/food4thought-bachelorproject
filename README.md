@@ -14,4 +14,4 @@ Local install instructions:
 - python manage.py makemigrations
 - python manage.py migrate
 - python manage.py rqworker (for email processes)
-- python manage.py runserver (in settings.py dir) (rq modified?)
+- python manage.py runserver (in settings.py dir) (new terminal)
