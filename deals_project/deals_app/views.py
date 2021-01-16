@@ -109,6 +109,12 @@ def base(request, base='all', order='newest', page=0, location=0):
     filters = models.Q()
     isCategory = Category.objects.filter(slug=base).exists()
 
+    # todo: for live post section stuff
+    if base == 'live':
+        order = None
+        page = 0
+        location = 0
+
     if base == 'our-picks':
         filters &= models.Q(
             staff_picked=True,
@@ -130,6 +136,11 @@ def base(request, base='all', order='newest', page=0, location=0):
 
         filters &= models.Q(
             postcode=postcode,
+        )
+
+    if order != 'expired':
+        filters &= models.Q(
+            frozen_to = None,
         )
     
     posts = Post.objects.filter(filters).order_by('-date_created').annotate(num_comments=Count('comments'))
@@ -285,7 +296,7 @@ def edit(request, slug):
                 print('frozen status transaction error')
                 messages.error(request,'Something went wrong with selecting user, please try again')    
 
-        print(post)
+        #print(post)
         post.save()
         return redirect('deals_app:post', slug = post.slug)
 

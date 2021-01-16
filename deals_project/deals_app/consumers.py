@@ -108,21 +108,21 @@ class NotificationConsumer(JsonWebsocketConsumer):
 
     def receive_json(self, content, **kwargs):
         #print(f"Received event: {content}")
-        #try:
-        if content['type'] == 'comment':
-            comment = get_object_or_404(Comment, id=content['id'])
-            comment.read_by_author = True
-            comment.save()
-        elif content['status'] == 'cancelled':
-            cancelled = get_object_or_404(CancelledFrozenTo, user=self.scope["user"], post__id=content['id'])
-            cancelled.frozen_read = True
-            cancelled.save()
-        else:
-            cancelled = get_object_or_404(Post, id=content['id'])
-            cancelled.frozen_read = True
-            cancelled.save()
-        #except:
-            #print('error updating notification read status')
+        try:
+            if content['type'] == 'comment':
+                comment = get_object_or_404(Comment, id=content['id'])
+                comment.read_by_author = True
+                comment.save()
+            elif content['status'] == 'cancelled':
+                cancelled = get_object_or_404(CancelledFrozenTo, user=self.scope["user"], post__id=content['id'])
+                cancelled.frozen_read = True
+                cancelled.save()
+            else:
+                cancelled = get_object_or_404(Post, id=content['id'])
+                cancelled.frozen_read = True
+                cancelled.save()
+        except:
+            print('error updating notification read status')
 
     def events_alarm(self, event):
         self.send_json(event['data'])

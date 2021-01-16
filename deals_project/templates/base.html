@@ -4,7 +4,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>{% block title %}FoodForThought{% endblock %}</title>
+    <title>{% block title %}food4thought{% endblock %}</title>
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
         integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
     <link
@@ -25,6 +25,8 @@
             </a>
             <a class="{% if currentCategory == 'All' %} activeCategory {% endif %}"
                 href="{% url 'deals_app:base' 'all' %}">All</a>
+            <a class="{% if currentCategory == 'Live' %} activeCategory {% endif %}"
+                href="{% url 'deals_app:base' 'live' %}">Live</a>
             <a class="{% if currentCategory == 'Our Picks' %} activeCategory {% endif %}"
                 href="{% url 'deals_app:base' 'our-picks' %}">Our Picks</a>
             <div class="genericDropdown">
@@ -170,6 +172,7 @@
             // incomming
             else {
                 handleQuery(jMessage[0], jData.type)
+                notifyMe(JSON.stringify([0].body))
             }
 
             counterDiv.innerHTML = counter;
@@ -244,6 +247,30 @@
         const counterDiv = document.querySelector('#notification-counter') || null;
         if (counterDiv != null) {
             counterDiv.innerHTML = counter;
+        }
+
+        // Desktop notifications
+        function notifyMe(user, type, msg) {
+            // Let's check if the browser supports notifications
+            if (!("Notification" in window)) {
+                alert("This browser does not support desktop notification");
+            }
+
+            // Let's check whether notification permissions have already been granted
+            else if (Notification.permission === "granted") {
+                // If it's okay let's create a notification
+                var notification = new Notification(msg);
+            }
+
+            // Otherwise, we need to ask the user for permission
+            else if (Notification.permission !== "denied") {
+                Notification.requestPermission().then(function (permission) {
+                    // If the user accepts, let's create a notification
+                    if (permission === "granted") {
+                        var notification = new Notification("Hi there!");
+                    }
+                });
+            }
         }
     </script>
     {% endif %}

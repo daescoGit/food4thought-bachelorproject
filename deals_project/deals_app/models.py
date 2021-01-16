@@ -178,7 +178,16 @@ def create_slug(instance, new_slug=None):
     return slug
 
 def pre_save_slug_receiver(sender, instance, *args, **kwargs):
-    instance.slug = create_slug(instance)
+    # if already exist  
+    old = Post.objects.filter(id=instance.id)
+    # update
+    if old.exists():
+        old = old.first()
+        if old.title != instance.title:
+            instance.slug = create_slug(instance)  
+    # create
+    else:
+        instance.slug = create_slug(instance)  
 
 def update_post_votes(sender, instance, *args, **kwargs):
 
