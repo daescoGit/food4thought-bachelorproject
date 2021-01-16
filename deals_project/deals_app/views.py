@@ -1,10 +1,11 @@
 from django.shortcuts import render, get_object_or_404, reverse, redirect
 from profile_app.models import UserProfile
 from django.contrib.auth.models import User
-from .models import Post, Comment, PostImage, Category, Quote, Postcode
+from .models import Post, Comment, PostImage, Category, Quote, Postcode, CancelledFrozenTo
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from datetime import datetime
+from django.utils import timezone
 from .serializers import CommentSerializer
 from django.core.serializers import serialize
 from django.contrib import messages
@@ -15,7 +16,7 @@ import json
 import base64
 from django.db.models import Sum
 from django.core.files.base import ContentFile
-from django.db import models
+from django.db import models, transaction
 from .utils.images import get_image_from_data_url
 import string
 from django.db.models import Count
@@ -26,10 +27,9 @@ def addPost(request):
     if request.method == "POST":
         form = PostForm(request.POST)
         if form.is_valid():
-
             post = Post()
-
             postcodeExists = Postcode.objects.filter(code=form.cleaned_data['postcode_code'])
+
             if(postcodeExists.exists()):
                 post.postcode = postcodeExists[0]
 
@@ -109,6 +109,12 @@ def base(request, base='all', order='newest', page=0, location=0):
     filters = models.Q()
     isCategory = Category.objects.filter(slug=base).exists()
 
+    # todo: for live post section stuff
+    if base == 'live':
+        order = None
+        page = 0
+        location = 0
+
     if base == 'our-picks':
         filters &= models.Q(
             staff_picked=True,
@@ -130,6 +136,11 @@ def base(request, base='all', order='newest', page=0, location=0):
 
         filters &= models.Q(
             postcode=postcode,
+        )
+
+    if order != 'expired':
+        filters &= models.Q(
+            frozen_to = None,
         )
     
     posts = Post.objects.filter(filters).order_by('-date_created').annotate(num_comments=Count('comments'))
@@ -260,23 +271,34 @@ def edit(request, slug):
 
             messages.success(request,'Post updated')
 
-        print(request.POST)
+        # freeze post
+        # multiple table operations, so should be with a transaction
         if request.POST.get("toggleFrozen"):
-            if request.POST["toggleFrozen"] != "False": 
-                userId = request.POST.get('toggleFrozen')
-                user = User.objects.get(pk=userId)
-                post.frozen_to = user
-                
-            else:
-                post.frozen_to = None
+            old_frozen = post.frozen_to
+            try:
+                with transaction.atomic():
+                    # old frozen: create if not exist 
+                    if old_frozen != None:
+                        # update or create to store latest time (insert defaults on update)
+                        old, created = CancelledFrozenTo.objects.update_or_create(
+                            user=old_frozen, post=post, defaults=None,
+                        )   
+                    # new frozen 
+                    if request.POST["toggleFrozen"] != "False": 
+                        userId = request.POST.get('toggleFrozen')
+                        user = User.objects.get(pk=userId)
+                        post.frozen_to = user # needs own table with time stamp?
+                        messages.success(request,f'{user} selected for collection, post is now locked')
+                    else:
+                        post.frozen_to = None
+                        messages.success(request,f'{old_frozen} cancelled for collection, post is now re-opened')              
+            except:
+                print('frozen status transaction error')
+                messages.error(request,'Something went wrong with selecting user, please try again')    
 
-            
+        #print(post)
         post.save()
-
-
         return redirect('deals_app:post', slug = post.slug)
-
-
 
     user = request.user
     post = get_object_or_404(Post, slug=slug)

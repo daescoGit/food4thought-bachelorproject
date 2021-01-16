@@ -2,7 +2,7 @@ import json
 import channels.layers
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer, JsonWebsocketConsumer
-from .models import Post, Comment, Quote
+from .models import Post, Comment, Quote, new_frozen_to, CancelledFrozenTo
 from django.contrib.auth.models import User
 from django.db.models import signals
 from django.dispatch import receiver
@@ -24,45 +24,78 @@ class NotificationConsumer(JsonWebsocketConsumer):
     def connect(self):
         personal_group = 'personal_group_'+str(self.scope["user"].id)
         async_to_sync(self.channel_layer.group_add)(personal_group, self.channel_name)
-        payload = []
+        comment_payload = []
+        frozen_to_payload = []
 
-        def loop_handler(query_set, is_quote):
+        def loop_handler(query_set, otype, payload):
             for obj in query_set:
-                if is_quote:
+                data = {}
+                if otype == 'comment':
+                    data['is_quote'] = False
+                if otype == 'quote':
                     obj = obj.quoter
-                data = {
-                    "id": obj.id,
-                    "body": obj.body,
-                    "user": obj.user.username,
-                    "is_quote": is_quote,
-                    "slug": obj.post.slug
-                }
-                # comment may already be in payload from quotes
+                    data['is_quote'] = True
+                if otype == 'post':
+                    data['status'] = 'accepted'
+                if otype == 'cancelled':
+                    obj = obj.post
+                    data['status'] = 'cancelled'
+                if otype == 'comment' or otype == 'quote':
+                    body = obj.body
+                    slug = obj.post.slug
+                if otype == 'post' or otype == 'cancelled':
+                    body = obj.title
+                    slug = obj.slug
+
+                data['id'] = obj.id
+                data['body'] = body
+                data['user'] = obj.user.username
+                data['slug'] = slug
+
                 if payload == []:
                     payload.append(data)
                 else:
-                    # if obj id is already in payload
+                    # comment may already be in payload from quotes
                     if any(item['id'] == obj.id for item in payload):
                         print('in already')
                     else:
                         payload.append(data)
 
-
         # all unread replies from own comments
         unread_from_replies = Quote.objects.exclude(quoter__user=self.scope["user"]).filter(quotee__user=self.scope["user"]).filter(quoter__read_by_author=False).order_by('quotee__date_created')
-        loop_handler(unread_from_replies, True)
+        loop_handler(unread_from_replies, 'quote', comment_payload)
 
         # all unread comments from own post
         unread_from_OP = Comment.objects.exclude(user=self.scope["user"]).filter(post__user=self.scope["user"]).filter(read_by_author=False).order_by('date_created')
-        loop_handler(unread_from_OP, False)
+        loop_handler(unread_from_OP, 'comment', comment_payload)
+
+        # all cancelled 
+        unread_cancelled = CancelledFrozenTo.objects.filter(user=self.scope["user"]).filter(frozen_read=False).order_by('time')
+        loop_handler(unread_cancelled, 'cancelled', frozen_to_payload)
+
+        # all frozen_to
+        unread_collections = Post.objects.filter(frozen_to=self.scope["user"]).filter(frozen_read=False).order_by('latest_update')
+        loop_handler(unread_collections, 'post', frozen_to_payload)
+
         
         # no need to use group for initial on-load payload
         async_to_sync(self.channel_layer.send)(self.channel_name, {
             'type': 'events.alarm',
             'data': {
+                'type': 'comment',
                 'multi': True,
-                'data': payload,
+                'data': comment_payload,
             }})
+
+        # todo: dry
+        async_to_sync(self.channel_layer.send)(self.channel_name, {
+            'type': 'events.alarm',
+            'data': {
+                'type': 'frozen_status',
+                'multi': True,
+                'data': frozen_to_payload,
+            }})
+
         self.accept()
 
     def disconnect(self, close_code):
@@ -74,11 +107,22 @@ class NotificationConsumer(JsonWebsocketConsumer):
         self.close()
 
     def receive_json(self, content, **kwargs):
-        print(f"Received event: {content}")
-        comment = get_object_or_404(Comment, id=content["id"])
-        print(comment)
-        comment.read_by_author = True
-        comment.save()
+        #print(f"Received event: {content}")
+        try:
+            if content['type'] == 'comment':
+                comment = get_object_or_404(Comment, id=content['id'])
+                comment.read_by_author = True
+                comment.save()
+            elif content['status'] == 'cancelled':
+                cancelled = get_object_or_404(CancelledFrozenTo, user=self.scope["user"], post__id=content['id'])
+                cancelled.frozen_read = True
+                cancelled.save()
+            else:
+                cancelled = get_object_or_404(Post, id=content['id'])
+                cancelled.frozen_read = True
+                cancelled.save()
+        except:
+            print('error updating notification read status')
 
     def events_alarm(self, event):
         self.send_json(event['data'])
@@ -93,18 +137,19 @@ class NotificationConsumer(JsonWebsocketConsumer):
         # if comment on user's post // send to the group of comment-post-user
         # group is useful here for sync if user is connected on multiple devices
         
-        def typeHandler(post, target):
+        def typeHandler(comment, target):
             payload = [{
-                "id": post.id,
-                "body": post.body,
-                "user": post.user.username,
-                "is_quote": post.is_quote,
-                "slug": post.post.slug
+                "id": comment.id,
+                "body": comment.body,
+                "user": comment.user.username,
+                "is_quote": comment.is_quote,
+                "slug": comment.post.slug
             }]
 
             async_to_sync(layer.group_send)('personal_group_'+str(target), {
                 'type': 'events.alarm',
                 'data': {
+                    'type': 'comment',
                     'multi': False,
                     'data': payload
                 }
@@ -114,6 +159,39 @@ class NotificationConsumer(JsonWebsocketConsumer):
             typeHandler(instance.quoter, instance.quotee.user.id)
         if sender == Comment and instance.is_quote == False and instance.read_by_author == False and instance.user != instance.post.user:
             typeHandler(instance, instance.post.user.id)
+
+    # custom signal needed for custom (old value) arg
+    @receiver(new_frozen_to)
+    def new_frozen_signal(sender, old, **kwargs):
+        layer = channels.layers.get_channel_layer()
+
+        # if frozen to u changes (also notify cancelled)
+        # unlike in init load, we get all occurences live to see latest status
+        def statusHandler(status, target):
+            payload = [{
+                "id": sender.id,
+                "body": sender.title,
+                "user": sender.user.username,
+                "slug": sender.slug,
+                "status": status,
+            }]
+
+            async_to_sync(layer.group_send)('personal_group_'+str(target), {
+                'type': 'events.alarm',
+                'data': {
+                    'type': 'frozen_status',
+                    'multi': False,
+                    'data': payload
+                }
+            })
+
+        if sender.frozen_to != None:
+            statusHandler('accepted', sender.frozen_to.id)
+
+        if old != None:
+            statusHandler('cancelled', old.id)
+
+
 
 class LivePostConsumer(JsonWebsocketConsumer):
     def connect(self):
@@ -133,7 +211,7 @@ class LivePostConsumer(JsonWebsocketConsumer):
     @staticmethod
     @receiver(signals.post_save, sender=Post)
     #@receiver(signals.post_delete, sender=Comment)
-    def comment_signal(sender, instance, **kwargs):
+    def post_signal(sender, instance, **kwargs):
         layer = channels.layers.get_channel_layer()
         async_to_sync(layer.group_send)('post_list_group', {
             'type': 'events.alarm',
@@ -145,6 +223,7 @@ class LivePostConsumer(JsonWebsocketConsumer):
                 "category": instance.category.name
             }
         })
+
 
 class SearchConsumer(JsonWebsocketConsumer):
     # echo consumer

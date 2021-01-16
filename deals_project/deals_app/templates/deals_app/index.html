@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}FoodForThought - {{currentCategory}}{% endblock title %}
+{% block title %}food4thought - {{currentCategory}}{% endblock title %}
 {% block content %}
 <div class="mapContentContainer">
     <div class="mapContainer">
@@ -23,8 +23,7 @@
             <div>
                 <span class="active-{{order}} today">
                     <a href="{% url 'deals_app:base' base 'today' '0' currentLocation %}">Today</a>
-                    <a class="cancelButton"
-                        href="{% url 'deals_app:base' base 'nofilter' '0' currentLocation %}">
+                    <a class="cancelButton" href="{% url 'deals_app:base' base 'nofilter' '0' currentLocation %}">
                         <i class="fas fa-times-circle"></i>
                     </a>
                 </span>
@@ -133,6 +132,7 @@
 </div>
 
 {{ jsonPosts|json_script:'jsonPosts' }}
+{{ currentLocation|json_script:'location' }}
 <script>
 
     function getCookie(name) {
@@ -227,6 +227,19 @@
 
 
     let postsArray = JSON.parse(JSON.parse(document.querySelector('#jsonPosts').textContent));
+    let postcodeLocation = JSON.parse(document.querySelector('#location').textContent);
+    let locationLng,
+        locationLat
+    console.log('233', postcodeLocation)
+    if (postcodeLocation != 0) {
+        let locationFilter = document.querySelectorAll('.flyToMap');
+        let locationElem = Array.from(locationFilter)[0]
+        locationLng = locationElem.dataset.lng
+        locationLat = locationElem.dataset.lat
+    } else {
+        locationLng = 12.569177797899329
+        locationLat = 55.69267934271247
+    }
 
     console.log(postsArray)
     // TO MAKE THE MAP APPEAR YOU MUST
@@ -236,7 +249,7 @@
     var map = new mapboxgl.Map({
         container: 'map', // container id
         style: 'mapbox://styles/mapbox/streets-v11', // style URL
-        center: [12.569177797899329, 55.69267934271247], // starting position [lng, lat]
+        center: [locationLng, locationLat], // starting position [lng, lat]
         zoom: 11 // starting zoom
     });
 
@@ -558,7 +571,7 @@
     }
 
     .pageButton.center {
-        margin:0 2em;
+        margin: 0 2em;
     }
 
     .pageButton .fas {

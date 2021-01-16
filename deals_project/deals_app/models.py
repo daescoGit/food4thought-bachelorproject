@@ -9,6 +9,7 @@ from django.dispatch import receiver
 import math
 import json
 import string
+import django.dispatch
 
 from django.utils.text import slugify
 
@@ -37,10 +38,11 @@ class Post(models.Model):
     address_line_1 = models.CharField(max_length=200)
     address_line_2 = models.CharField(max_length=200)
     postcode = models.ForeignKey(Postcode, on_delete=models.PROTECT)
-    description = models.CharField(max_length=200)
     frozen_to = models.ForeignKey(User, related_name="frozen_to", on_delete=models.PROTECT, null=True)
+    frozen_read = models.BooleanField(default=False)
     thumbnail = models.ImageField(upload_to='images/')
     date_created = models.DateTimeField(auto_now_add=True)
+    latest_update = models.DateTimeField(auto_now=True)
     category = models.ForeignKey(Category, on_delete=models.PROTECT, null=True)
     staff_picked = models.BooleanField(default=False)
     expiration_date = models.DateField()
@@ -94,6 +96,13 @@ class Post(models.Model):
             else:
                 return str(years) + " years ago"
 
+    # Override save method for field specific only (frozen_to) logic for notification consumer
+    # custom signal needed for custom (old value) arg
+    def save(self, *args, **kwargs):
+        old = type(self).objects.get(pk=self.pk) if self.pk else None
+        post = super(Post, self).save(*args, **kwargs)
+        if old and old.frozen_to != self.frozen_to: # Field has changed (and post is not new)
+            new_frozen_to.send(sender=self, old=old.frozen_to)
 
     def __str__(self):
         return self.title
@@ -115,6 +124,18 @@ class PostImage(models.Model):
 
     def __str__(self):
         return self.post.title
+
+class CancelledFrozenTo(models.Model):
+    post = models.ForeignKey(Post,on_delete=models.CASCADE, related_name='cancelledPoster')    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cancelledUser')
+    time = models.DateTimeField(auto_now=True)
+    frozen_read = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = [['post', 'user', 'time']]
+
+    def __str__(self):
+        return '{} was cancelled to collect {}'.format(self.user, self.post)
 
 class Comment(models.Model):
     post = models.ForeignKey(Post,on_delete=models.CASCADE,related_name='comments')    
@@ -157,7 +178,16 @@ def create_slug(instance, new_slug=None):
     return slug
 
 def pre_save_slug_receiver(sender, instance, *args, **kwargs):
-    instance.slug = create_slug(instance)
+    # if already exist  
+    old = Post.objects.filter(id=instance.id)
+    # update
+    if old.exists():
+        old = old.first()
+        if old.title != instance.title:
+            instance.slug = create_slug(instance)  
+    # create
+    else:
+        instance.slug = create_slug(instance)  
 
 def update_post_votes(sender, instance, *args, **kwargs):
 
@@ -170,5 +200,5 @@ pre_save.connect(pre_save_slug_receiver, sender=Post)
 pre_save.connect(reformat_category, sender=Category)
 post_save.connect(update_post_votes, sender=Vote)
 post_delete.connect(update_post_votes, sender=Vote)
-
-# for channels consumer
+# custom signal for changing frozen_to state
+new_frozen_to = django.dispatch.Signal()
