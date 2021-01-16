@@ -57,6 +57,7 @@
             {{form.postcode_text.as_hidden}}
             {{form.lng.as_hidden}}
             {{form.lat.as_hidden}}
+            {{form.region_code.as_hidden}}
             <div class="formSingle">
                 <label>Location</label>
                 <div class="mapContainer">
@@ -192,6 +193,7 @@
             let addressLine2Input = document.querySelector('#id_address_line_2')
             let postcodeCodeInput = document.querySelector('#id_postcode_code')
             let postcodeTextInput = document.querySelector('#id_postcode_text')
+            let regionCodeInput = document.querySelector('#id_region_code')
 
             lngInput.value = center.lng
             latInput.value = center.lat
@@ -221,13 +223,17 @@
                         switch (node.place_type[0]) {
                             case "address":
                                 addressLine1Input.value = node.address;
-                                addressLine2Input.value = node.text
+                                addressLine2Input.value = node.text;
                                 break;
                             case "postcode":
                                 postcodeCodeInput.value = node.text;
                                 break;
                             case "place":
                                 postcodeTextInput.value = node.text;
+                                break;
+                            case "region":
+                                regionCodeInput.value = node.properties.short_code.substring(3);
+                                break;
                         }
 
 

@@ -48,6 +48,7 @@ class Post(models.Model):
     expiration_date = models.DateField()
     lng = models.FloatField()
     lat = models.FloatField()
+    region_code = models.IntegerField()
 
     def when_published(self):
         now = timezone.now()
