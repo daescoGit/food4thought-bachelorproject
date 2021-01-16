@@ -20,6 +20,7 @@ from django.db import models, transaction
 from .utils.images import get_image_from_data_url
 import string
 from django.db.models import Count
+from django.contrib.gis.geoip2 import GeoIP2
 
 # Create your views here.
 def addPost(request):
@@ -45,6 +46,7 @@ def addPost(request):
             post.expiration_date = form.cleaned_data['expiration_date']
             post.lng = form.cleaned_data['lng']
             post.lat = form.cleaned_data['lat']
+            post.region_code = form.cleaned_data['region_code']
             post.address_line_1 = form.cleaned_data['address_line_1']
             post.address_line_2 = form.cleaned_data['address_line_2']
             category = get_object_or_404(Category, pk=form.cleaned_data['category'])
@@ -77,37 +79,31 @@ def addPost(request):
         return render(request, 'deals_app/add.html', {'form':form})
     return render(request, 'deals_app/add.html', {'form':form})
 
-
-# def newest(request):
-#     posts = Post.objects.all()
-    
-#     for post in posts:
-#         post.voteCount = (-post.voter.filter(vote=-1).count() + post.voter.filter(vote=1).count())
-#         if request.user.is_authenticated:
-#             if post.voter.filter(user=request.user).exists():
-#                 post.voteStatus = post.voter.get(user=request.user).vote
-            
-#     posts = reversed(sorted(posts, key=lambda a: a.date_created))
-
-#     return render(request, 'deals_app/hottest.html', {'posts':posts})
-
-# def hottest(request):
-#     posts = Post.objects.all()
-    
-#     for post in posts:
-#         post.voteCount = (-post.voter.filter(vote=-1).count() + post.voter.filter(vote=1).count())
-#         if request.user.is_authenticated:
-#             if post.voter.filter(user=request.user).exists():
-#                 post.voteStatus = post.voter.get(user=request.user).vote
-            
-#     posts = reversed(sorted(posts, key=lambda a: a.voteCount))
-
-#     return render(request, 'deals_app/hottest.html', {'posts':posts})
-
 def base(request, base='all', order='newest', page=0, location=0):
+
+    # initial geo location filter
+    # initial default location = copenhagen
+    initialMapLocationLng = 12.569177797899329
+    initialMapLocationLat = 55.69267934271247
+
+    client_ip = request.META.get('REMOTE_ADDR')
+    if client_ip == '127.0.0.1':
+        dummy_ip = '80.71.142.159' #77.243.60.216' jylland example - '185.107.15.210' other copenhagen
+        
+        g = GeoIP2()
+        #g.country('jysk.dk')
+        geo_ip_location = g.city(dummy_ip)
+
+        initialMapLocationLng = geo_ip_location['longitude']
+        initialMapLocationLat = geo_ip_location['latitude']
 
     filters = models.Q()
     isCategory = Category.objects.filter(slug=base).exists()
+
+    if location == 0:
+        filters &= models.Q(
+            region_code=geo_ip_location['region']
+        )
 
     # todo: for live post section stuff
     if base == 'live':
@@ -161,7 +157,7 @@ def base(request, base='all', order='newest', page=0, location=0):
     category = string.capwords(category)
 
     postcodes = Postcode.objects.all()
-    return render(request, 'deals_app/index.html', {'posts':posts, 'postcodes':postcodes, 'jsonPosts':jsonPosts, 'base':base, 'currentCategory':category, 'currentPage':page, 'currentLocation': location, 'order': order, 'nextPage': nextPage, 'previousPage': previousPage, 'lastPage': lastPage})
+    return render(request, 'deals_app/index.html', {'posts':posts, 'postcodes':postcodes, 'jsonPosts':jsonPosts, 'base':base, 'currentCategory':category, 'currentPage':page, 'currentLocation': location, 'order': order, 'nextPage': nextPage, 'previousPage': previousPage, 'lastPage': lastPage, 'initialMapLocationLat': initialMapLocationLat, 'initialMapLocationLng': initialMapLocationLng})
     
 
 def post(request, slug):
@@ -227,6 +223,7 @@ def edit(request, slug):
             post.expiration_date = form.cleaned_data['expiration_date']
             post.lng = form.cleaned_data['lng']
             post.lat = form.cleaned_data['lat']
+            post.region_code = form.cleaned_data['region_code']
             category = get_object_or_404(Category, pk=form.cleaned_data['category'])
             post.category = category
 

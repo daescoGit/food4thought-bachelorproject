@@ -133,6 +133,8 @@
 
 {{ jsonPosts|json_script:'jsonPosts' }}
 {{ currentLocation|json_script:'location' }}
+{{ initialMapLocationLng|json_script:'initialMapLocationLng' }}
+{{ initialMapLocationLat|json_script:'initialMapLocationLat' }}
 <script>
 
     function getCookie(name) {
@@ -228,17 +230,20 @@
 
     let postsArray = JSON.parse(JSON.parse(document.querySelector('#jsonPosts').textContent));
     let postcodeLocation = JSON.parse(document.querySelector('#location').textContent);
+    let initialMapLocationLng = JSON.parse(document.querySelector('#initialMapLocationLng').textContent);
+    let initialMapLocationLat = JSON.parse(document.querySelector('#initialMapLocationLat').textContent);
+
     let locationLng,
         locationLat
-    console.log('233', postcodeLocation)
-    if (postcodeLocation != 0) {
-        let locationFilter = document.querySelectorAll('.flyToMap');
+
+    let locationFilter = document.querySelectorAll('.flyToMap');
+    if (postcodeLocation == 0) {
+        locationLng = initialMapLocationLng
+        locationLat = initialMapLocationLat
+    } else if (Array.from(locationFilter).length > 0) {
         let locationElem = Array.from(locationFilter)[0]
         locationLng = locationElem.dataset.lng
         locationLat = locationElem.dataset.lat
-    } else {
-        locationLng = 12.569177797899329
-        locationLat = 55.69267934271247
     }
 
     console.log(postsArray)

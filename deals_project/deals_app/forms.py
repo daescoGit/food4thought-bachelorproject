@@ -24,4 +24,5 @@ class PostForm(forms.Form):
     expiration_date = forms.DateField(widget=DateInput)
     lng = forms.FloatField()
     lat = forms.FloatField()    
+    region_code = forms.IntegerField()
 
