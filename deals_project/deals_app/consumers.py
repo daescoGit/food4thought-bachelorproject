@@ -43,6 +43,7 @@ class NotificationConsumer(JsonWebsocketConsumer):
                 if otype == 'comment' or otype == 'quote':
                     body = obj.body
                     slug = obj.post.slug
+                    data['post'] = obj.post.title
                 if otype == 'post' or otype == 'cancelled':
                     body = obj.title
                     slug = obj.slug
@@ -56,8 +57,13 @@ class NotificationConsumer(JsonWebsocketConsumer):
                     payload.append(data)
                 else:
                     # comment may already be in payload from quotes
-                    if any(item['id'] == obj.id for item in payload):
-                        print('in already')
+                    original = next((item for item in payload if item['id'] == obj.id), None)
+                    if original != None:
+                        print('60 already in', original)
+                        # if frozen status change
+                        if data['status']:
+                            print('64 status change attempt', data['id'], data['status'])
+                            original['status'] = data['status']
                     else:
                         payload.append(data)
 
@@ -118,9 +124,9 @@ class NotificationConsumer(JsonWebsocketConsumer):
                 cancelled.frozen_read = True
                 cancelled.save()
             else:
-                cancelled = get_object_or_404(Post, id=content['id'])
-                cancelled.frozen_read = True
-                cancelled.save()
+                accepted = get_object_or_404(Post, id=content['id'])
+                accepted.frozen_read = True
+                accepted.save()
         except:
             print('error updating notification read status')
 
@@ -143,7 +149,8 @@ class NotificationConsumer(JsonWebsocketConsumer):
                 "body": comment.body,
                 "user": comment.user.username,
                 "is_quote": comment.is_quote,
-                "slug": comment.post.slug
+                "slug": comment.post.slug,
+                "post": comment.post.title
             }]
 
             async_to_sync(layer.group_send)('personal_group_'+str(target), {

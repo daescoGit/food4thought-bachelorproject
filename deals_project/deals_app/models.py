@@ -103,6 +103,7 @@ class Post(models.Model):
         old = type(self).objects.get(pk=self.pk) if self.pk else None
         post = super(Post, self).save(*args, **kwargs)
         if old and old.frozen_to != self.frozen_to: # Field has changed (and post is not new)
+            # pass when_created (modify) time here?
             new_frozen_to.send(sender=self, old=old.frozen_to)
 
     def __str__(self):
