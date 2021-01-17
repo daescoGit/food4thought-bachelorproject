@@ -59,10 +59,10 @@ class NotificationConsumer(JsonWebsocketConsumer):
                     # comment may already be in payload from quotes
                     original = next((item for item in payload if item['id'] == obj.id), None)
                     if original != None:
-                        print('60 already in', original)
+                        print('62 already in', original)
                         # if frozen status change
                         if data['status']:
-                            print('64 status change attempt', data['id'], data['status'])
+                            print('65 status change attempt', data['id'], data['status'])
                             original['status'] = data['status']
                     else:
                         payload.append(data)
@@ -217,7 +217,8 @@ class LivePostConsumer(JsonWebsocketConsumer):
 
     @staticmethod
     @receiver(signals.post_save, sender=Post)
-    #@receiver(signals.post_delete, sender=Comment)
+    # pre save for created logic?
+    # slug/category/postcode logic for categories?
     def post_signal(sender, instance, **kwargs):
         layer = channels.layers.get_channel_layer()
         async_to_sync(layer.group_send)('post_list_group', {
@@ -227,6 +228,7 @@ class LivePostConsumer(JsonWebsocketConsumer):
                 "username": instance.user.username,
                 "commentCount": instance.comments.count(),
                 "areaCode": instance.postcode.code,
+                "areaName": instance.postcode.text,
                 "category": instance.category.name
             }
         })

@@ -11,6 +11,7 @@ urlpatterns = [
     path('browse/<slug:base>/<slug:order>/', views.base, name='base'),
     path('browse/<slug:base>/<slug:order>/<int:page>/', views.base, name='base'),
     path('browse/<slug:base>/<slug:order>/<int:page>/<int:location>/', views.base, name='base'),
+    path('browse/<slug:base>/<slug:order>/<int:page>/<int:location>/<slug:live>', views.base, name='base'),
     path('post/<slug:slug>', views.post, name='post'),
     path('add', views.addPost, name='addPost'),
     path('post/<int:post_id>/vote', votePost, name='votePost'),

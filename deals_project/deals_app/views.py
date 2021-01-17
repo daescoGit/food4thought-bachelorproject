@@ -79,10 +79,9 @@ def addPost(request):
         return render(request, 'deals_app/add.html', {'form':form})
     return render(request, 'deals_app/add.html', {'form':form})
 
-def base(request, base='all', order='newest', page=0, location=0):
-
+def base(request, base='all', order='newest', page=0, location=0, live=0):
     # initial geo location filter
-    # initial default location = copenhagen
+    # initial default location (in no valid ip) = copenhagen
     initialMapLocationLng = 12.569177797899329
     initialMapLocationLat = 55.69267934271247
 
@@ -99,17 +98,15 @@ def base(request, base='all', order='newest', page=0, location=0):
 
     filters = models.Q()
     isCategory = Category.objects.filter(slug=base).exists()
+    category = base.replace("-", " ")
+    category = string.capwords(category)
+    postcodes = Postcode.objects.all()
 
+    # location is postcode filter 
     if location == 0:
         filters &= models.Q(
             region_code=geo_ip_location['region']
         )
-
-    # todo: for live post section stuff
-    if base == 'live':
-        order = None
-        page = 0
-        location = 0
 
     if base == 'our-picks':
         filters &= models.Q(
@@ -138,28 +135,32 @@ def base(request, base='all', order='newest', page=0, location=0):
         filters &= models.Q(
             frozen_to = None,
         )
+
+    if live != 'live':
+        # query based on url params
+        posts = Post.objects.filter(filters).order_by('-date_created').annotate(num_comments=Count('comments'))
+
+        for post in posts:
+            if request.user.is_authenticated:
+                if post.voter.filter(user=request.user).exists():
+                    post.voteStatus = post.voter.get(user=request.user).vote
+        # posts = reversed(sorted(posts, key=lambda a: a.voteCount))
+        nextPage = page + 1
+        previousPage = page - 1
+        lastPage = posts.count() // 10
+        posts = posts[(int(page) * 10): (int(page) * 10 + 10)]
+
+        jsonPosts = serialize('json', posts)  # the fields needed for products
+
+        return render(request, 'deals_app/index.html', {'posts':posts, 'postcodes':postcodes, 'jsonPosts':jsonPosts, 'base':base, 'currentCategory':category, 'currentPage':page, 'currentLocation': location, 'order': order, 'nextPage': nextPage, 'previousPage': previousPage, 'lastPage': lastPage, 'initialMapLocationLat': initialMapLocationLat, 'initialMapLocationLng': initialMapLocationLng, 'live': live})
+    else:
+        posts = []
+        nextPage = 0
+        previousPage = 0
+        lastPage = 0
+        jsonPosts = 0
+        return render(request, 'deals_app/index.html', {'posts':posts, 'postcodes':postcodes, 'jsonPosts':jsonPosts, 'base':base, 'currentCategory':category, 'currentPage':page, 'currentLocation': location, 'order': order, 'nextPage': nextPage, 'previousPage': previousPage, 'lastPage': lastPage, 'initialMapLocationLat': initialMapLocationLat, 'initialMapLocationLng': initialMapLocationLng, 'live': live})
     
-    posts = Post.objects.filter(filters).order_by('-date_created').annotate(num_comments=Count('comments'))
-
-
-    for post in posts:
-        if request.user.is_authenticated:
-            if post.voter.filter(user=request.user).exists():
-                post.voteStatus = post.voter.get(user=request.user).vote
-    # posts = reversed(sorted(posts, key=lambda a: a.voteCount))
-    nextPage = page + 1
-    previousPage = page - 1
-    lastPage = posts.count() // 10
-    posts = posts[(int(page) * 10): (int(page) * 10 + 10)]
-
-    jsonPosts = serialize('json', posts)  # the fields needed for products
-    category = base.replace("-", " ")
-    category = string.capwords(category)
-
-    postcodes = Postcode.objects.all()
-    return render(request, 'deals_app/index.html', {'posts':posts, 'postcodes':postcodes, 'jsonPosts':jsonPosts, 'base':base, 'currentCategory':category, 'currentPage':page, 'currentLocation': location, 'order': order, 'nextPage': nextPage, 'previousPage': previousPage, 'lastPage': lastPage, 'initialMapLocationLat': initialMapLocationLat, 'initialMapLocationLng': initialMapLocationLng})
-    
-
 def post(request, slug):
     post = get_object_or_404(Post, slug=slug)
     post.voteCount = (-post.voter.filter(vote=-1).count() + post.voter.filter(vote=1).count())
@@ -278,7 +279,7 @@ def edit(request, slug):
                     if old_frozen != None:
                         # update or create to store latest time (insert defaults on update)
                         old, created = CancelledFrozenTo.objects.update_or_create(
-                            user=old_frozen, post=post, defaults=None,
+                            user=old_frozen, post=post, defaults={'frozen_read': False},
                         )   
                     # new frozen 
                     if request.POST["toggleFrozen"] != "False": 
@@ -286,9 +287,13 @@ def edit(request, slug):
                         user = User.objects.get(pk=userId)
                         post.frozen_to = user # needs own table with time stamp?
                         messages.success(request,f'{user} selected for collection, post is now locked')
+                        post.frozen_read = False
                     else:
                         post.frozen_to = None
-                        messages.success(request,f'{old_frozen} cancelled for collection, post is now re-opened')              
+                        post.frozen_read = False
+                        messages.success(request,f'{old_frozen} cancelled for collection, post is now re-opened') 
+                    
+                    
             except:
                 print('frozen status transaction error')
                 messages.error(request,'Something went wrong with selecting user, please try again')    
