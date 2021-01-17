@@ -43,6 +43,7 @@ class NotificationConsumer(JsonWebsocketConsumer):
                 if otype == 'comment' or otype == 'quote':
                     body = obj.body
                     slug = obj.post.slug
+                    data['post'] = obj.post.title
                 if otype == 'post' or otype == 'cancelled':
                     body = obj.title
                     slug = obj.slug
@@ -56,8 +57,13 @@ class NotificationConsumer(JsonWebsocketConsumer):
                     payload.append(data)
                 else:
                     # comment may already be in payload from quotes
-                    if any(item['id'] == obj.id for item in payload):
-                        print('in already')
+                    dupe = next((item for item in payload if item['id'] == obj.id), None)
+                    if dupe != None:
+                        print('60 already in', dupe)
+                        # if frozen status change
+                        if data['status']:
+                            print('64 status change attempt', data['id'], data['status'])
+                            dupe['status'] = data['status']
                     else:
                         payload.append(data)
 
@@ -75,6 +81,7 @@ class NotificationConsumer(JsonWebsocketConsumer):
 
         # all frozen_to
         unread_collections = Post.objects.filter(frozen_to=self.scope["user"]).filter(frozen_read=False).order_by('latest_update')
+        print('78', unread_collections)
         loop_handler(unread_collections, 'post', frozen_to_payload)
 
         
@@ -88,6 +95,7 @@ class NotificationConsumer(JsonWebsocketConsumer):
             }})
 
         # todo: dry
+        print(frozen_to_payload)
         async_to_sync(self.channel_layer.send)(self.channel_name, {
             'type': 'events.alarm',
             'data': {
@@ -118,9 +126,9 @@ class NotificationConsumer(JsonWebsocketConsumer):
                 cancelled.frozen_read = True
                 cancelled.save()
             else:
-                cancelled = get_object_or_404(Post, id=content['id'])
-                cancelled.frozen_read = True
-                cancelled.save()
+                accepted = get_object_or_404(Post, id=content['id'])
+                accepted.frozen_read = True
+                accepted.save()
         except:
             print('error updating notification read status')
 
@@ -143,7 +151,8 @@ class NotificationConsumer(JsonWebsocketConsumer):
                 "body": comment.body,
                 "user": comment.user.username,
                 "is_quote": comment.is_quote,
-                "slug": comment.post.slug
+                "slug": comment.post.slug,
+                "post": comment.post.title
             }]
 
             async_to_sync(layer.group_send)('personal_group_'+str(target), {

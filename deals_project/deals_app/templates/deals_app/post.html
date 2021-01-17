@@ -111,7 +111,7 @@
             </div>
             <div class="commentsContainer">
                 {% for commentquote in commentquotes reversed %}
-                {% if commentquote.comment.private is False or commentquote.comment.user == user or post.user == user %}
+                {% if commentquote.comment.private is False or commentquote.comment.user == user or commentquote.quote.quotee.user == user or post.user == user %}
                 <div class="comment" id="{{commentquote.comment.id}}">
                     <div class="commentHeader">
                         <div class="commentProfileImage"><img src="{{commentquote.comment.user.profile.image.url}}">

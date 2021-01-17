@@ -172,7 +172,7 @@
             // incomming
             else {
                 handleQuery(jMessage[0], jData.type)
-                notifyMe(JSON.stringify([0].body))
+                notifyMe(jMessage[0].user, responseType, jMessage[0].body)
             }
 
             counterDiv.innerHTML = counter;
@@ -198,10 +198,12 @@
 
             let rType = null;
             if (type == 'comment') {
-                rType = e.is_quote == true ? ' replied:' : ' commented:';
+                rType = e.is_quote == true ? ' replied on ' + e.post : ' commented on ' + e.post;
             } else {
-                rType = ' ' + e.status + ' collection for:'
+                rType = ' ' + e.status + ' collection for'
             }
+            responseType = rType
+
             const stylable = document.createElement("span");
             if (type == 'comment') {
                 stylable.setAttribute("class", 'notification-text-comment');
@@ -243,6 +245,7 @@
             counter += 1
         }
 
+        // Counter
         let counter = 0;
         const counterDiv = document.querySelector('#notification-counter') || null;
         if (counterDiv != null) {
@@ -250,6 +253,7 @@
         }
 
         // Desktop notifications
+        let responseType = null
         function notifyMe(user, type, msg) {
             // Let's check if the browser supports notifications
             if (!("Notification" in window)) {
@@ -259,7 +263,7 @@
             // Let's check whether notification permissions have already been granted
             else if (Notification.permission === "granted") {
                 // If it's okay let's create a notification
-                var notification = new Notification(msg);
+                var notification = new Notification(user + ' ' + type, { body: msg });
             }
 
             // Otherwise, we need to ask the user for permission
@@ -267,7 +271,7 @@
                 Notification.requestPermission().then(function (permission) {
                     // If the user accepts, let's create a notification
                     if (permission === "granted") {
-                        var notification = new Notification("Hi there!");
+                        var notification = new Notification(user + ' ' + type, { body: msg });
                     }
                 });
             }
