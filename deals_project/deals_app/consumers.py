@@ -57,13 +57,13 @@ class NotificationConsumer(JsonWebsocketConsumer):
                     payload.append(data)
                 else:
                     # comment may already be in payload from quotes
-                    dupe = next((item for item in payload if item['id'] == obj.id), None)
-                    if dupe != None:
-                        print('60 already in', dupe)
+                    original = next((item for item in payload if item['id'] == obj.id), None)
+                    if original != None:
+                        print('60 already in', original)
                         # if frozen status change
                         if data['status']:
                             print('64 status change attempt', data['id'], data['status'])
-                            dupe['status'] = data['status']
+                            original['status'] = data['status']
                     else:
                         payload.append(data)
 
@@ -81,7 +81,6 @@ class NotificationConsumer(JsonWebsocketConsumer):
 
         # all frozen_to
         unread_collections = Post.objects.filter(frozen_to=self.scope["user"]).filter(frozen_read=False).order_by('latest_update')
-        print('78', unread_collections)
         loop_handler(unread_collections, 'post', frozen_to_payload)
 
         
@@ -95,7 +94,6 @@ class NotificationConsumer(JsonWebsocketConsumer):
             }})
 
         # todo: dry
-        print(frozen_to_payload)
         async_to_sync(self.channel_layer.send)(self.channel_name, {
             'type': 'events.alarm',
             'data': {
