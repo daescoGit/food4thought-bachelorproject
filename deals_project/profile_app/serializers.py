@@ -1,7 +1,7 @@
 from rest_framework import serializers
-from .models import Subscription
+from .models import Vote
 
-class SubscriptionSerializer(serializers.ModelSerializer):
+class VoteSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Subscription    
-        fields = ['subscriber', 'subscribee']
+        model = Vote  
+        fields = ['user', 'profile', 'vote']
