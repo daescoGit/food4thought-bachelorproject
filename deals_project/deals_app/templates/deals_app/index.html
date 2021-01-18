@@ -12,18 +12,26 @@
         </div>
         <div class="quickButtons">
             <div>
+                <span class="active-{{live}}">
+                    <a href="{% url 'deals_app:base' base order '0' currentLocation 'live' %}">Live Posts</a>
+                    <a class="cancelButton" href="{% url 'deals_app:base' base order '0' currentLocation %}">
+                        <i class="fas fa-times-circle"></i>
+                    </a>
+                </span>
+            </div>
+            <div>
                 <span class="active-{{order}} expired">
-                    <a href="{% url 'deals_app:base' base 'expired' '0' currentLocation %}">Awaiting
+                    <a href="{% url 'deals_app:base' base 'expired' '0' currentLocation live %}">Awaiting
                         Collection</a>
-                    <a class="cancelButton" href="{% url 'deals_app:base' base 'newest' '0' currentLocation %}">
+                    <a class="cancelButton" href="{% url 'deals_app:base' base 'newest' '0' currentLocation live %}">
                         <i class="fas fa-times-circle"></i>
                     </a>
                 </span>
             </div>
             <div>
                 <span class="active-{{order}} today">
-                    <a href="{% url 'deals_app:base' base 'today' '0' currentLocation %}">Today</a>
-                    <a class="cancelButton" href="{% url 'deals_app:base' base 'nofilter' '0' currentLocation %}">
+                    <a href="{% url 'deals_app:base' base 'today' '0' currentLocation live %}">Today</a>
+                    <a class="cancelButton" href="{% url 'deals_app:base' base 'nofilter' '0' currentLocation live %}">
                         <i class="fas fa-times-circle"></i>
                     </a>
                 </span>
@@ -37,15 +45,15 @@
                     {% for postcode in postcodes %}
                     {% ifequal postcode.code currentLocation %}
                     <span class="activePostcode genericDropdownItem">
-                        <a href="{% url 'deals_app:base' base order '0' postcode.code %}">{{postcode.code}} -
+                        <a href="{% url 'deals_app:base' base order '0' postcode.code live %}">{{postcode.code}} -
                             {{postcode.text}}</a>
-                        <a class="cancelButton" href="{% url 'deals_app:base' base order '0' '0' %}">
+                        <a class="cancelButton" href="{% url 'deals_app:base' base order '0' '0' live %}">
                             <i class="fas fa-times-circle"></i>
                         </a>
                     </span>
                     {% else %}
                     <a class="genericDropdownItem"
-                        href="{% url 'deals_app:base' base order '0' postcode.code %}">{{postcode.code}} -
+                        href="{% url 'deals_app:base' base order '0' postcode.code live %}">{{postcode.code}} -
                         {{postcode.text}}</a>
                     {% endifequal  %}
                     {% endfor %}
@@ -54,13 +62,13 @@
             {% if user.is_authenticated %}
             <div>
                 <a href="{% url 'deals_app:addPost' %}">
-                    <span>Add post</span>
+                    <span>Add Post</span>
                     <i class="fas fa-plus-circle"></i>
                 </a>
             </div>
             {% endif %}
         </div>
-
+        {% if live != 'live' %}
         <div class="content" id="posts-container">
             <div id="posts">
                 {% for post in posts %}
@@ -100,6 +108,7 @@
                 {% endfor %}
             </div>
         </div>
+
         <div class="pageButtonsContainer">
             {% if currentPage != 0 %}
             <div class="pageButton"><a href="{% url 'deals_app:base' base order '0' currentLocation %}">1</a></div>
@@ -127,6 +136,12 @@
             </div>
             {% endif %}
         </div>
+        {% else %}
+        <div class="content" id="live-posts-container">
+            <div id="live-posts">
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 </div>
@@ -136,7 +151,6 @@
 {{ initialMapLocationLng|json_script:'initialMapLocationLng' }}
 {{ initialMapLocationLat|json_script:'initialMapLocationLat' }}
 <script>
-
     function getCookie(name) {
         var cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -227,8 +241,6 @@
 
     })
 
-
-    let postsArray = JSON.parse(JSON.parse(document.querySelector('#jsonPosts').textContent));
     let postcodeLocation = JSON.parse(document.querySelector('#location').textContent);
     let initialMapLocationLng = JSON.parse(document.querySelector('#initialMapLocationLng').textContent);
     let initialMapLocationLat = JSON.parse(document.querySelector('#initialMapLocationLat').textContent);
@@ -246,7 +258,6 @@
         locationLat = locationElem.dataset.lat
     }
 
-    console.log(postsArray)
     // TO MAKE THE MAP APPEAR YOU MUST
     // ADD YOUR ACCESS TOKEN FROM
     // https://account.mapbox.com
@@ -269,50 +280,52 @@
         })
     }
 
-    postsArray.forEach(post => {
-        post.coordinates = {
-            "lng": post.fields.lng,
-            "lat": post.fields.lat
-        }
-        let el = document.createElement('a');
-        el.className = `marker postId-${post.pk}`
-        el.innerHTML = `<i class="fas fa-map-marker"></i>`
-        el.href = `#mapId-${post.pk}`
+    let postsArray = JSON.parse(JSON.parse(document.querySelector('#jsonPosts').textContent));
+    if (postsArray != 0) {
+        postsArray.forEach(post => {
+            post.coordinates = {
+                "lng": post.fields.lng,
+                "lat": post.fields.lat
+            }
+            let el = document.createElement('a');
+            el.className = `marker postId-${post.pk}`
+            el.innerHTML = `<i class="fas fa-map-marker"></i>`
+            el.href = `#mapId-${post.pk}`
 
-        new mapboxgl.Marker(el).setLngLat(post.coordinates).addTo(map);
+            new mapboxgl.Marker(el).setLngLat(post.coordinates).addTo(map);
 
 
-        el.addEventListener('click', function () {
-            removeActiveClassFromProperty()
-            let activeElements = document.querySelectorAll(`.postId-${post.pk}`)
-            activeElements.forEach((element) => {
-                console.log(activeElements)
-                element.classList.add('active');
+            el.addEventListener('click', function () {
+                removeActiveClassFromProperty()
+                let activeElements = document.querySelectorAll(`.postId-${post.pk}`)
+                activeElements.forEach((element) => {
+                    console.log(activeElements)
+                    element.classList.add('active');
+                })
             })
-        })
-    })
+        });
 
-    let postsElem = document.querySelector('#posts')
+        let postsElem = document.querySelector('#posts')
 
-    postsElem.addEventListener('click', function (e) {
-        console.log(e.target)
-        if (e.target.classList.contains("flyToMap")) {
-            removeActiveClassFromProperty()
+        postsElem.addEventListener('click', function (e) {
+            console.log(e.target)
+            if (e.target.classList.contains("flyToMap")) {
+                removeActiveClassFromProperty()
 
-            let activeElements = document.querySelectorAll(`.postId-${e.target.dataset.id}`)
-            activeElements.forEach((element) => {
-                console.log(activeElements)
-                element.classList.add('active');
-            })
+                let activeElements = document.querySelectorAll(`.postId-${e.target.dataset.id}`)
+                activeElements.forEach((element) => {
+                    console.log(activeElements)
+                    element.classList.add('active');
+                })
 
-            map.flyTo({
-                center: [e.target.dataset.lng, e.target.dataset.lat],
-                essential: true, // this animation is considered essential with respect to prefers-reduced-motion
-                zoom: 14
-            });
-        }
-    })
-
+                map.flyTo({
+                    center: [e.target.dataset.lng, e.target.dataset.lat],
+                    essential: true, // this animation is considered essential with respect to prefers-reduced-motion
+                    zoom: 14
+                });
+            }
+        });
+    }
 
     // Live post socket
     let postListEndpoint = (location.protocol == 'https:' ? 'wss://' : 'ws://') + location.host + "/ws/postList/"
@@ -321,6 +334,9 @@
 
     postListSocket.onopen = function (message) {
         console.log("post list open", message);
+        currentPosts = document.querySelector('#live-posts')
+        currentPosts.insertAdjacentHTML("afterbegin",
+            `<div id="empty-livepost-text">New posts will show up when created</div>`)
     }
 
     postListSocket.onmessage = function (e) {
@@ -328,35 +344,48 @@
         let jFull = JSON.parse(jData.data)
         jPost = jFull[0].fields
         const jUsername = jData.username
-        const jCommentCount = e.commentCount
-        const jPostCode = e.areaCode
-        const jCategory = e.category
+        const jCommentCount = jData.commentCount
+        const jPostCode = jData.areaCode
+        const jPostCodeName = jData.areaName
+        const jCategory = jData.category
 
-        currentPosts = document.querySelector('#posts')
+        console.log(jData)
+        console.log(jFull)
+        console.log(jFull.pk)
+        console.log(jPost)
+
+        currentPosts = document.querySelector('#live-posts')
+        currentPosts.innerHTML = ''
         currentPosts.insertAdjacentHTML("afterbegin",
-            `<div class="postAnchor" id="mapId-${jPost.id}">
-                <div class="post postId-${jPost.id}">
-                    <div class="postImage">
-                        <a href="/post/${jPost.slug}">
-                            <img src="/media/${jPost.thumbnail}">
-                        </a>
-                    </div>
-                    <div class="postLeft">
-                        <div class="postTitle"><a href="/post/${jPost.slug}">${jPost.title}</a>
+            `<div class="postAnchor"
+                    id="mapId-${jFull[0].pk}">
+                    <div class="post postId-${jFull[0].pk}">
+                        <div class="postImage">
+                            <a href="/post/${jPost.slug}">
+	                            <img src="/media/${jPost.thumbnail}">
+	                        </a>
                         </div>
-                        <div class="postSecondaryDetails">
-                            <div class="postAuthor"><a href="/post/${jPost.user}">${jUsername}</a></div>
-                            <div class="postTimestamp">${jPost.date_created}</div>
+                        <div class="postLeft">
+                            <div class="postTitle">
+                                <a href="/post/${jPost.slug}">${jPost.title}</a>
+                            </div>
+                            <div class="postSecondaryDetails">
+                                <div class="postAuthor">
+                                    <a href="/users/${jPost.user}/profile">${jUsername}</a>
+                                </div>
+                                <div class="postExpiredDate">Collect by: ${jPost.expiration_date}</div>
+                            </div>
+                        </div>
+                        <div class="postRight">
+                            <div class="postRightContainer">
+                                <div class="postCategory postTag">${jCategory}</div>
+                                <div class="postPostcode">${jPostCodeName} - ${jPostCode} <i
+                                        class="flyToMap fas fa-map-marked" data-lng="${jPost.lng}"
+                                        data-lat="${jPost.lat}" data-id="${jFull[0].pk}"></i></div>
+                            </div>
                         </div>
                     </div>
-                    <div class="postRight">
-                        <div class="postCommentCount"><i class="fas fa-comment"></i> ${jCommentCount}</div>
-                        <div class="postExpiredDate">Pickup time: ${jPost.expiration_date}</div>
-                        <div class="postCategory postTag">${jCategory}</div>
-                        <div class="postPostcode">${jPostCode}</div>
-                    </div>
-                </div>
-            </div>`);
+                </div>`);
 
         // map stuff
         jPost.coordinates = {
@@ -364,21 +393,41 @@
             "lat": jPost.lat
         }
         let el = document.createElement('a');
-        el.className = `marker postId-${jPost.id}`
-        el.style.height = "20px";
-        el.style.width = "20px";
-        el.href = `#mapId-${jPost.id}`
+        el.className = `marker postId-${jFull[0].pk}`
+        el.innerHTML = `<i class="fas fa-map-marker"></i>`
+        el.href = `#mapId-${jFull[0].pk}`
 
         new mapboxgl.Marker(el).setLngLat(jPost.coordinates).addTo(map);
 
         el.addEventListener('click', function () {
             removeActiveClassFromProperty()
-            let activeElements = document.querySelectorAll(`.postId-${jPost.id}`)
+            let activeElements = document.querySelectorAll(`.postId-${jFull[0].pk}`)
             activeElements.forEach((element) => {
                 console.log(activeElements)
                 element.classList.add('active');
             })
         })
+
+        let postsElem = document.querySelector('#live-posts')
+
+        postsElem.addEventListener('click', function (e) {
+            console.log(e.target)
+            if (e.target.classList.contains("flyToMap")) {
+                removeActiveClassFromProperty()
+
+                let activeElements = document.querySelectorAll(`.postId-${e.target.dataset.id}`)
+                activeElements.forEach((element) => {
+                    console.log(activeElements)
+                    element.classList.add('active');
+                })
+
+                map.flyTo({
+                    center: [e.target.dataset.lng, e.target.dataset.lat],
+                    essential: true, // this animation is considered essential with respect to prefers-reduced-motion
+                    zoom: 14
+                });
+            }
+        });
     }
 
     postListSocket.onerror = function (message) {
@@ -388,7 +437,6 @@
     postListSocket.onclose = function (message) {
         console.log("post list close", message);
     }
-
 </script>
 
 <style>
@@ -434,7 +482,9 @@
         display: flex;
         font-weight: 500;
         margin: 0 2em;
-
+        flex-wrap: wrap;
+        row-gap: 1em;
+        column-gap: 2em;
     }
 
     .main .quickButtons span,
@@ -443,7 +493,7 @@
     }
 
     .main .quickButtons div {
-        margin-right: 2em;
+        white-space: nowrap;
     }
 
     .main .categoryTitle {
@@ -627,11 +677,13 @@
         display: none;
     }
 
+    .active-live,
     .active-expired.expired,
     .active-today.today,
     .activePostcode,
     .activePostcodeDropdown,
-    .activeCategory {
+    .activeCategory,
+    .active-live.live {
         background: #4ED530;
         border-radius: 3em;
         padding: .2em .4em;
@@ -639,14 +691,27 @@
         align-items: center;
     }
 
+    .active-live .cancelButton,
     .active-expired.expired .cancelButton,
     .active-today.today .cancelButton,
-    .activePostcode .cancelButton {
+    .activePostcode .cancelButton,
+    .active-live.live {
         display: inline;
     }
 
     .hidden {
         display: none;
+    }
+
+    #live-posts-container {
+        margin-bottom: 2em;
+    }
+
+    #empty-livepost-text {
+        text-align: center;
+        color: #acacac;
+        font-weight: 500;
+        padding: 1em;
     }
 </style>
 {% endblock content %}
