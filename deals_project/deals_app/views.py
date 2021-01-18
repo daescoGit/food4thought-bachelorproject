@@ -78,32 +78,6 @@ def addPost(request):
     return render(request, 'deals_app/add.html', {'form':form})
 
 
-# def newest(request):
-#     posts = Post.objects.all()
-    
-#     for post in posts:
-#         post.voteCount = (-post.voter.filter(vote=-1).count() + post.voter.filter(vote=1).count())
-#         if request.user.is_authenticated:
-#             if post.voter.filter(user=request.user).exists():
-#                 post.voteStatus = post.voter.get(user=request.user).vote
-            
-#     posts = reversed(sorted(posts, key=lambda a: a.date_created))
-
-#     return render(request, 'deals_app/hottest.html', {'posts':posts})
-
-# def hottest(request):
-#     posts = Post.objects.all()
-    
-#     for post in posts:
-#         post.voteCount = (-post.voter.filter(vote=-1).count() + post.voter.filter(vote=1).count())
-#         if request.user.is_authenticated:
-#             if post.voter.filter(user=request.user).exists():
-#                 post.voteStatus = post.voter.get(user=request.user).vote
-            
-#     posts = reversed(sorted(posts, key=lambda a: a.voteCount))
-
-#     return render(request, 'deals_app/hottest.html', {'posts':posts})
-
 def base(request, base='all', order='newest', page=0, location=0):
 
     filters = models.Q()
@@ -134,11 +108,6 @@ def base(request, base='all', order='newest', page=0, location=0):
     
     posts = Post.objects.filter(filters).order_by('-date_created').annotate(num_comments=Count('comments'))
 
-
-    for post in posts:
-        if request.user.is_authenticated:
-            if post.voter.filter(user=request.user).exists():
-                post.voteStatus = post.voter.get(user=request.user).vote
     # posts = reversed(sorted(posts, key=lambda a: a.voteCount))
     nextPage = page + 1
     previousPage = page - 1
@@ -155,10 +124,6 @@ def base(request, base='all', order='newest', page=0, location=0):
 
 def post(request, slug):
     post = get_object_or_404(Post, slug=slug)
-    post.voteCount = (-post.voter.filter(vote=-1).count() + post.voter.filter(vote=1).count())
-    if request.user.is_authenticated:
-        if post.voter.filter(user=request.user).exists():
-            post.voteStatus = post.voter.get(user=request.user).vote
     comments = Comment.objects.filter(post=post)
     postImages = PostImage.objects.filter(post=post)
     profile = UserProfile.objects.get(user=post.user)

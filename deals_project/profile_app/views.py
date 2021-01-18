@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 from deals_app.models import Post
 from .models import UserProfile, Subscription, Subscription_Email
-from .serializers import SubscriptionSerializer
+from .serializers import VoteSerializer
 from django.core import serializers
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -27,6 +27,10 @@ def profile(request, user_id):
     user = get_object_or_404(User, pk=user_id)
     posts = Post.objects.filter(user=user_id)
     subscriptions = Subscription.objects.filter(subscribee=user_id).count()
+
+    if request.user.is_authenticated:
+        if user.profile.voteForUser.filter(user=request.user).exists():
+            user.profile.voteStatus = user.profile.voteForUser.get(user=request.user).vote
 
     if request.user.is_authenticated:
         subscriptionStatus = Subscription.objects.filter(subscriber=request.user, subscribee=user_id).count()

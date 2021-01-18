@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
-from .models import Comment, Vote, Post
+from .models import Comment, Post
 from django.http import HttpResponse, JsonResponse
-from .serializers import CommentSerializer, QuoteSerializer, VoteSerializer
+from .serializers import CommentSerializer, QuoteSerializer
 from rest_framework.parsers import JSONParser
 from rest_framework import generics, permissions
 import requests
@@ -51,38 +51,6 @@ def deleteComment(request, post_id):
             return JsonResponse({'message': 'Comment was deleted successfully!'}, status=200)
     return JsonResponse({'message': 'Could not delete comment'}, status=400)
 
-
-
-def votePost(request, post_id):
-    if request.method == "POST":
-        data = JSONParser().parse(request)
-        if Vote.objects.filter(user=request.user, post=post_id).exists():
-            vote = Vote.objects.get(user=request.user, post=post_id)
-            vote.vote = int(data['vote'])
-            vote.save()
-            post = Post.objects.get(pk=post_id)
-            count = -post.voter.filter(vote=-1).count() + post.voter.filter(vote=1).count()
-            return JsonResponse({'message': 'vote updated', 'count':count}, status=200)
-        else: 
-            data['user'] = request.user.id
-            data['post'] = post_id
-
-            voteSerializer = VoteSerializer(data=data)
-            if voteSerializer.is_valid():
-                voteSerializer.save()
-                post = Post.objects.get(pk=post_id)
-                count = -post.voter.filter(vote=-1).count() + post.voter.filter(vote=1).count()        
-                return JsonResponse({'message': 'vote successful', 'count':count}, status=200)
-            return JsonResponse(voteSerializer.errors, status=400)
-
-    if request.method == "DELETE":
-        if Vote.objects.filter(user=request.user, post=post_id).exists():
-            vote = Vote.objects.get(user=request.user, post=post_id)
-            vote.delete()
-            post = Post.objects.get(pk=post_id)
-            count = -post.voter.filter(vote=-1).count() + post.voter.filter(vote=1).count()
-            return JsonResponse({'message': 'vote deleted', 'count': count}, status=200)
-        return JsonResponse({'message': 'vote does not exist'}, status=400)
 
 
 def getAddress(request, slug=""):

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Post, Comment, Category, Quote, PostImage, Vote, Postcode
+from .models import Post, Comment, Category, Quote, PostImage, Postcode
 
 
 # Register your models here.
@@ -22,4 +22,3 @@ admin.site.register(Postcode)
 admin.site.register(Comment)
 admin.site.register(Category)
 admin.site.register(Quote)
-admin.site.register(Vote)
