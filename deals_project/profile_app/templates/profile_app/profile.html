@@ -32,7 +32,19 @@
                     {{profileUser.profile.summary}}
                 </div>
             </div>
-
+            <div class="voteComponent" data-id="{{profileUser.profile.id}}" data-votestatus="{{profileUser.profile.voteStatus}}">
+                <div class="upVote color{{profileUser.profile.voteStatus}}" data-vote=1>
+                    <i class="fas fa-thumbs-up" data-vote=1></i>
+                    <div data-vote=1>Recommend (<span class="profileUpScore">{{profileUser.profile.votes_up}}</span>)</div>
+                </div>
+                <i class="fas fa-caret-up" data-vote=1></i>
+                <div class="profileUser.profileScore">{% if profileUser.profile.vote_score %}{{profileUser.profile.vote_score}} {% else %} 0 {% endif %}</div>
+                <i class="fas fa-caret-down" data-vote=-1></i>
+                <div class="downVote color{{profileUser.profile.voteStatus}}" data-vote=-1>
+                    <i class="fas fa-thumbs-down" data-vote=-1></i>
+                    <div data-vote=-1>Not Recommend (<span class="profileDownScore">{{profileUser.profile.votes_down}}</span>)</div>
+                </div>
+            </div>
         </div>
         <div class="line"></div>
         <div class="subHeader">Freebies by {{profileUser}}</div>
@@ -109,6 +121,54 @@
 </div>
 </div>
 <style>
+
+    /* vote component */
+
+    .voteComponent {
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        flex-direction:column;
+        color: #545454;
+    }
+
+    .upVote, .downVote {
+        align-items:center;
+        display:flex;
+        flex-direction:column;
+        cursor:pointer;
+    }
+
+    .upVote.color1, .upVote:hover{
+        color:#9DC86C;
+    }
+
+    .downVote.color-1, .downVote:hover { 
+        color:#EF7C43;
+    }
+
+    .upVote div, .downVote div{
+        white-space: nowrap;
+        font-size:.6em;
+        padding:.2em;
+        width:100%;
+    }
+
+    .postScore {
+        padding: 0 .25em;
+    }
+
+    .authorHeader {
+        display:flex;
+        flex-direction:row;
+        align-items:center;
+        margin: 1em 0;
+    }
+
+    .authorHeader div {
+        margin: 0 .25em;
+    }
+
     .main .quickButtons,
     .subHeader {
         color: #4ED530;
@@ -297,58 +357,74 @@
     }
     var csrftoken = getCookie('csrftoken');
 
+    let voteContainer = document.querySelector('.voteComponent')
 
-    function Subscribe() {
-        let elem = event.target
-        let user_id = elem.dataset.id
+    voteContainer.addEventListener('click', (e)=>{
+    let pk = voteContainer.dataset.id
+    let voteOption = e.target.dataset.vote
+    console.log(voteOption)
+    console.log(voteContainer.dataset.votestatus)
+    if (Number(voteOption) != Number(voteContainer.dataset.votestatus)) {
 
-        if (elem.className == 'subscriptionStatus-1') {
-            console.log('deleting...')
-            fetch(`http://127.0.0.1:8000/users/${user_id}/profile/subscribe`, {
-                method: "DELETE",
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken,
-                },
+        fetch(`/users/${pk}/vote`, {
+            method: "POST",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+            },
 
-                //make sure to serialize your JSON body
-                body: JSON.stringify({})
+            //make sure to serialize your JSON body
+            body: JSON.stringify({
+                "vote": voteOption
             })
-                .then((response) => {
-                    elem.className = 'subscriptionStatus-0'
-                    totalSubscriptions = document.querySelector(`[data-id=totalSubscribers]`)
-                    let number = totalSubscriptions.innerHTML
-                    number = parseInt(number) - 1
-                    totalSubscriptions.innerHTML = number
-                })
-        }
+        })
+        .then((response) => {                
+            return response.clone().json()
+        }).then(function(data) {
+                    console.log(data.count)
+                    console.log(data.upCount)
+                    console.log(data.downCount)
+                    voteContainer.children[0].children[1].children[0].innerHTML = data.upCount
+                    voteContainer.children[4].children[1].children[0].innerHTML = data.downCount
+                    voteContainer.children[2].innerHTML = data.count
+                if (voteOption == 1) {
+                    voteContainer.dataset.votestatus = 1
+                    voteContainer.children[0].classList.add('color1')
+                    voteContainer.children[4].classList.remove('color-1')
+                } else {
+                    voteContainer.dataset.votestatus = -1
+                    voteContainer.children[0].classList.remove('color1')
+                    voteContainer.children[4].classList.add('color-1')
 
-        else if (elem.className == 'subscriptionStatus-0') {
-            console.log('adding...')
-
-            fetch(`http://127.0.0.1:8000/users/subscriptions`, {
-                method: "POST",
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken,
-                },
-
-                //make sure to serialize your JSON body
-                body: JSON.stringify({
-                    "subscriber": "{{user.id}}",
-                    "subscribee": user_id
-                })
-            })
-                .then((response) => {
-                    elem.className = 'subscriptionStatus-1'
-                    totalSubscriptions = document.querySelector(`[data-id=totalSubscribers]`)
-                    let number = totalSubscriptions.innerHTML
-                    number = parseInt(number) + 1
-                    totalSubscriptions.innerHTML = number
-                })
-        }
+                }
+            
+        })
     }
+
+    else {
+        fetch(`/users/${pk}/vote`, {
+            method: "DELETE",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+            }
+        })
+        .then((response) => {        
+        return response.clone().json()
+
+        }).then(function(data) {
+
+            voteContainer.children[2].innerHTML = data.count
+            voteContainer.children[0].children[1].children[0].innerHTML = data.upCount
+            voteContainer.children[4].children[1].children[0].innerHTML = data.downCount
+            
+            voteContainer.dataset.votestatus = "";
+            voteContainer.children[0].classList.remove('color1')
+            voteContainer.children[4].classList.remove('color-1')
+        })
+    }   
+})
 </script>
 {% endblock %}

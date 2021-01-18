@@ -109,17 +109,6 @@ class Post(models.Model):
     def __str__(self):
         return self.title
 
-class Vote(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='voter')
-    vote = models.IntegerField()
-
-    class Meta:
-        unique_together = [['user', 'post']]
-        
-    def __str__(self):
-        return f"{self.user.username}, {self.post.title}"
-
 class PostImage(models.Model):
     post = models.ForeignKey(Post, default=None, on_delete=models.CASCADE)
     image = models.ImageField(upload_to = 'images/')
@@ -191,16 +180,8 @@ def pre_save_slug_receiver(sender, instance, *args, **kwargs):
     else:
         instance.slug = create_slug(instance)  
 
-def update_post_votes(sender, instance, *args, **kwargs):
-
-    post = Post.objects.get(id=instance.post.id)
-    if post:
-        post.vote_score = (-post.voter.filter(vote=-1).count() + post.voter.filter(vote=1).count())
-        post.save(update_fields=['vote_score'])
-
 pre_save.connect(pre_save_slug_receiver, sender=Post)
 pre_save.connect(reformat_category, sender=Category)
-post_save.connect(update_post_votes, sender=Vote)
-post_delete.connect(update_post_votes, sender=Vote)
+
 # custom signal for changing frozen_to state
 new_frozen_to = django.dispatch.Signal()
