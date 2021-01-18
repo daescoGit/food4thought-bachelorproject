@@ -1,10 +1,11 @@
 from django.shortcuts import render, get_object_or_404, reverse, redirect
 from profile_app.models import UserProfile
 from django.contrib.auth.models import User
-from .models import Post, Comment, PostImage, Category, Quote, Postcode
+from .models import Post, Comment, PostImage, Category, Quote, Postcode, CancelledFrozenTo
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from datetime import datetime
+from django.utils import timezone
 from .serializers import CommentSerializer
 from django.core.serializers import serialize
 from django.contrib import messages
@@ -15,10 +16,11 @@ import json
 import base64
 from django.db.models import Sum
 from django.core.files.base import ContentFile
-from django.db import models
+from django.db import models, transaction
 from .utils.images import get_image_from_data_url
 import string
 from django.db.models import Count
+from django.contrib.gis.geoip2 import GeoIP2
 
 # Create your views here.
 def addPost(request):
@@ -26,10 +28,9 @@ def addPost(request):
     if request.method == "POST":
         form = PostForm(request.POST)
         if form.is_valid():
-
             post = Post()
-
             postcodeExists = Postcode.objects.filter(code=form.cleaned_data['postcode_code'])
+
             if(postcodeExists.exists()):
                 post.postcode = postcodeExists[0]
 
@@ -45,6 +46,7 @@ def addPost(request):
             post.expiration_date = form.cleaned_data['expiration_date']
             post.lng = form.cleaned_data['lng']
             post.lat = form.cleaned_data['lat']
+            post.region_code = form.cleaned_data['region_code']
             post.address_line_1 = form.cleaned_data['address_line_1']
             post.address_line_2 = form.cleaned_data['address_line_2']
             category = get_object_or_404(Category, pk=form.cleaned_data['category'])
@@ -77,11 +79,37 @@ def addPost(request):
         return render(request, 'deals_app/add.html', {'form':form})
     return render(request, 'deals_app/add.html', {'form':form})
 
-
 def base(request, base='all', order='newest', page=0, location=0):
+
+    # initial geo location filter
+    # initial default location = copenhagen
+    initialMapLocationLng = 12.569177797899329
+    initialMapLocationLat = 55.69267934271247
+
+    client_ip = request.META.get('REMOTE_ADDR')
+    if client_ip == '127.0.0.1':
+        dummy_ip = '80.71.142.159' #77.243.60.216' jylland example - '185.107.15.210' other copenhagen
+        
+        g = GeoIP2()
+        #g.country('jysk.dk')
+        geo_ip_location = g.city(dummy_ip)
+
+        initialMapLocationLng = geo_ip_location['longitude']
+        initialMapLocationLat = geo_ip_location['latitude']
 
     filters = models.Q()
     isCategory = Category.objects.filter(slug=base).exists()
+
+    if location == 0:
+        filters &= models.Q(
+            region_code=geo_ip_location['region']
+        )
+
+    # todo: for live post section stuff
+    if base == 'live':
+        order = None
+        page = 0
+        location = 0
 
     if base == 'our-picks':
         filters &= models.Q(
@@ -105,6 +133,11 @@ def base(request, base='all', order='newest', page=0, location=0):
         filters &= models.Q(
             postcode=postcode,
         )
+
+    if order != 'expired':
+        filters &= models.Q(
+            frozen_to = None,
+        )
     
     posts = Post.objects.filter(filters).order_by('-date_created').annotate(num_comments=Count('comments'))
 
@@ -119,7 +152,7 @@ def base(request, base='all', order='newest', page=0, location=0):
     category = string.capwords(category)
 
     postcodes = Postcode.objects.all()
-    return render(request, 'deals_app/index.html', {'posts':posts, 'postcodes':postcodes, 'jsonPosts':jsonPosts, 'base':base, 'currentCategory':category, 'currentPage':page, 'currentLocation': location, 'order': order, 'nextPage': nextPage, 'previousPage': previousPage, 'lastPage': lastPage})
+    return render(request, 'deals_app/index.html', {'posts':posts, 'postcodes':postcodes, 'jsonPosts':jsonPosts, 'base':base, 'currentCategory':category, 'currentPage':page, 'currentLocation': location, 'order': order, 'nextPage': nextPage, 'previousPage': previousPage, 'lastPage': lastPage, 'initialMapLocationLat': initialMapLocationLat, 'initialMapLocationLng': initialMapLocationLng})
     
 
 def post(request, slug):
@@ -181,6 +214,7 @@ def edit(request, slug):
             post.expiration_date = form.cleaned_data['expiration_date']
             post.lng = form.cleaned_data['lng']
             post.lat = form.cleaned_data['lat']
+            post.region_code = form.cleaned_data['region_code']
             category = get_object_or_404(Category, pk=form.cleaned_data['category'])
             post.category = category
 
@@ -225,23 +259,34 @@ def edit(request, slug):
 
             messages.success(request,'Post updated')
 
-        print(request.POST)
+        # freeze post
+        # multiple table operations, so should be with a transaction
         if request.POST.get("toggleFrozen"):
-            if request.POST["toggleFrozen"] != "False": 
-                userId = request.POST.get('toggleFrozen')
-                user = User.objects.get(pk=userId)
-                post.frozen_to = user
-                
-            else:
-                post.frozen_to = None
+            old_frozen = post.frozen_to
+            try:
+                with transaction.atomic():
+                    # old frozen: create if not exist 
+                    if old_frozen != None:
+                        # update or create to store latest time (insert defaults on update)
+                        old, created = CancelledFrozenTo.objects.update_or_create(
+                            user=old_frozen, post=post, defaults=None,
+                        )   
+                    # new frozen 
+                    if request.POST["toggleFrozen"] != "False": 
+                        userId = request.POST.get('toggleFrozen')
+                        user = User.objects.get(pk=userId)
+                        post.frozen_to = user # needs own table with time stamp?
+                        messages.success(request,f'{user} selected for collection, post is now locked')
+                    else:
+                        post.frozen_to = None
+                        messages.success(request,f'{old_frozen} cancelled for collection, post is now re-opened')              
+            except:
+                print('frozen status transaction error')
+                messages.error(request,'Something went wrong with selecting user, please try again')    
 
-            
+        #print(post)
         post.save()
-
-
         return redirect('deals_app:post', slug = post.slug)
-
-
 
     user = request.user
     post = get_object_or_404(Post, slug=slug)

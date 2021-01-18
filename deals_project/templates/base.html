@@ -4,7 +4,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>{% block title %}FoodForThought{% endblock %}</title>
+    <title>{% block title %}food4thought{% endblock %}</title>
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
         integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
     <link
@@ -25,6 +25,8 @@
             </a>
             <a class="{% if currentCategory == 'All' %} activeCategory {% endif %}"
                 href="{% url 'deals_app:base' 'all' %}">All</a>
+            <a class="{% if currentCategory == 'Live' %} activeCategory {% endif %}"
+                href="{% url 'deals_app:base' 'live' %}">Live</a>
             <a class="{% if currentCategory == 'Our Picks' %} activeCategory {% endif %}"
                 href="{% url 'deals_app:base' 'our-picks' %}">Our Picks</a>
             <div class="genericDropdown">
@@ -160,18 +162,19 @@
         NotifierSocket.onmessage = function (e) {
             const jData = JSON.parse(e.data);
             console.log(jData)
-            const jComments = jData.data;
+            const jMessage = jData.data;
             // initial unreads
             if (jData.multi == true) {
-                jComments.forEach(elem => {
-                    handleQuery(elem)
+                jMessage.forEach(elem => {
+                    handleQuery(elem, jData.type)
                 });
             }
             // incomming
             else {
-
-                handleQuery(jComments[0])
+                handleQuery(jMessage[0], jData.type)
+                notifyMe(jMessage[0].user, responseType, jMessage[0].body)
             }
+
             counterDiv.innerHTML = counter;
             if (counter != 0) {
                 const notifLabel = document.querySelector('#notification-group');
@@ -188,18 +191,41 @@
             console.log("notif close", message);
         }
 
-        handleQuery = (e) => {
+        handleQuery = (e, type) => {
             // creating new div for incomming comment
             const element = document.createElement("div");
             element.setAttribute("id", 'comment-' + e.id);
 
-            const rType = e.is_quote == true ? ' replied ' : ' commented ';
+            let rType = null;
+            if (type == 'comment') {
+                rType = e.is_quote == true ? ' replied on ' + e.post : ' commented on ' + e.post;
+            } else {
+                rType = ' ' + e.status + ' collection for'
+            }
+            responseType = rType
+
             const stylable = document.createElement("span");
-            //stylable.setAttribute("class", 'notification-instance');
-            const text = document.createTextNode(e.user + rType + e.body);
+            if (type == 'comment') {
+                stylable.setAttribute("class", 'notification-text-comment');
+            } else if (e.status == 'accepted') {
+                stylable.setAttribute("class", 'notification-text-accepted');
+            } else {
+                stylable.setAttribute("class", 'notification-text-cancelled');
+            }
+            const text = document.createTextNode(e.user + rType);
             stylable.appendChild(text)
 
+            const linebreak = document.createElement('br');
+            stylable.appendChild(linebreak);
+
+            const stylable2 = document.createElement("span");
+            stylable2.setAttribute("class", 'notification-text2');
+            type == 'comment' ? stylable2.setAttribute("class", 'notification-text-comment-body') : null;
+            const text2 = document.createTextNode(e.body);
+            stylable2.appendChild(text2)
+
             element.appendChild(stylable);
+            element.appendChild(stylable2);
             document.querySelector('#notification-list').prepend(element);
 
             // attaching event listener dynamically
@@ -209,7 +235,9 @@
                 element.setAttribute("class", 'hidden')
                 // send back comment id to be updated in db
                 NotifierSocket.send(JSON.stringify({
-                    'id': e.id
+                    'id': e.id,
+                    'type': type,
+                    'status': type == 'frozen_status' ? e.status : null,
                 }));
                 const postURL = "/post/" + e.slug
                 location.href = postURL + "#body-" + e.id;
@@ -217,10 +245,36 @@
             counter += 1
         }
 
+        // Counter
         let counter = 0;
         const counterDiv = document.querySelector('#notification-counter') || null;
         if (counterDiv != null) {
             counterDiv.innerHTML = counter;
+        }
+
+        // Desktop notifications
+        let responseType = null
+        function notifyMe(user, type, msg) {
+            // Let's check if the browser supports notifications
+            if (!("Notification" in window)) {
+                alert("This browser does not support desktop notification");
+            }
+
+            // Let's check whether notification permissions have already been granted
+            else if (Notification.permission === "granted") {
+                // If it's okay let's create a notification
+                var notification = new Notification(user + ' ' + type, { body: msg });
+            }
+
+            // Otherwise, we need to ask the user for permission
+            else if (Notification.permission !== "denied") {
+                Notification.requestPermission().then(function (permission) {
+                    // If the user accepts, let's create a notification
+                    if (permission === "granted") {
+                        var notification = new Notification(user + ' ' + type, { body: msg });
+                    }
+                });
+            }
         }
     </script>
     {% endif %}
@@ -230,24 +284,22 @@
         let searchEndpoint = (location.protocol == 'https:' ? 'wss://' : 'ws://') + location.host + "/ws/search/"
         searchSocket = new WebSocket(searchEndpoint);
 
-        document.querySelector('#search-input').focus();
-
         const searchInputDom = document.querySelector('#search-input');
         const resultsContainer = document.querySelector('#search-result-container');
         let search = searchInputDom.value;
 
-        document.querySelector('#search-input').onkeyup = function (e) { // alt: #search-submit .onclick
+        searchInputDom.onkeyup = function (e) { // alt: #search-submit .onclick
             search = searchInputDom.value;
             ////// SANITIZE INPUT !!!!
-            if (search != '') {
+            if (search == '' || e.keyCode === 27) { // 27 = escape
+                clearResults();
+            }
+            else {
                 resultsContainer.style.cssText = "display: flex";
                 searchSocket.send(JSON.stringify({
                     'search': search
                 }));
-            } else {
-                resultsContainer.style.cssText = "display: none";
             }
-            //searchInputDom.value = '';
         };
 
         searchSocket.onopen = function (message) {
@@ -255,14 +307,14 @@
         }
 
         searchSocket.onmessage = function (e) {
-            console.log(e)
+            //console.log(e)
             const jData = JSON.parse(e.data);
             let resultCount = 0
 
             resultsContainer.innerHTML = ''
             resultsContainer.insertAdjacentHTML("afterbegin",
                 `<div id="search-result-menu">
-                    <div id="search-result-info"><span id="resultCount">No </span> results found for ${search}</div>
+                    <div id="search-result-info"><span id="resultCount">No </span> results found for: ${search}</div>
                     <button onclick="clearResults()">Clear <i class="fas fa-times-circle"></i></botton>
                 </div>`
             );
@@ -364,6 +416,7 @@
 
     .navContainer a {
         text-decoration: none;
+        color: #646464;
     }
 
     .navContainer a:visited {
@@ -423,8 +476,8 @@
     }
 
     .messagesContainer {
-        position:relative;
-        z-index:9999;
+        position: relative;
+        z-index: 9999;
         pointer-events: none;
         animation: fadeout 2s forwards;
         animation-delay: 5s;
@@ -649,6 +702,10 @@
         overflow-y: auto;
     }
 
+    #search-result-container a:last-child {
+        padding-bottom: 1em;
+    }
+
     .postImage.search-image img {
         height: 4em;
         width: 4em;
@@ -675,15 +732,25 @@
         flex-direction: column;
     }
 
+    .search-left {
+        max-width: 20em;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
     .search-right {
         display: flex;
         flex-direction: column;
         row-gap: 0.3em;
         justify-content: center;
+        margin-left: auto;
+        align-items: end;
     }
 
     .search-right>div {
         width: max-content;
+        color: #fff;
     }
 
     .submitForm {
@@ -744,7 +811,7 @@
         font-weight: 500;
     }
 
-    .postAuthor a{
+    .postAuthor a {
         color: #4ED530;
     }
 
@@ -767,5 +834,25 @@
 
     .row-space-1 {
         row-gap: 0.5em;
+    }
+
+    .notification-text-comment,
+    .notification-text-accepted,
+    .notification-text-cancelled {
+        font-size: 0.8em;
+    }
+
+    .notification-text-accepted {
+        color: #4ED530;
+    }
+
+    .notification-text-cancelled {
+        color: #ef7272;
+    }
+
+    .notification-text-comment-body {
+        font-size: 0.9em;
+        opacity: 0.6;
+        font-style: italic;
     }
 </style>
