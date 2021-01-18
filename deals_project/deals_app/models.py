@@ -183,22 +183,5 @@ def pre_save_slug_receiver(sender, instance, *args, **kwargs):
 pre_save.connect(pre_save_slug_receiver, sender=Post)
 pre_save.connect(reformat_category, sender=Category)
 
-# for channels consumer
-
-
-def create_slug(instance, new_slug=None):
-    slug = slugify(instance.title)  # sadsf-asdfsadf-asdfa
-    if new_slug is not None:
-        slug = new_slug
-    qs = Post.objects.filter(slug=slug).order_by("-id") 
-    exists = qs.exists()
-    if exists:
-        new_slug = "%s-%s" %(slug, qs.first().id)
-        return create_slug(instance, new_slug=new_slug)
-    return slug
-def pre_save_slug_receiver(sender, instance, *args, **kwargs):
-    # if already exist      
-    instance.slug = create_slug(instance)
-
 # custom signal for changing frozen_to state
 new_frozen_to = django.dispatch.Signal()
