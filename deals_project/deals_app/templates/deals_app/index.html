@@ -249,13 +249,13 @@
         locationLat
 
     let locationFilter = document.querySelectorAll('.flyToMap');
-    if (Array.from(locationFilter).length > 0) {
+    if (postcodeLocation == 0) {
+        locationLng = initialMapLocationLng
+        locationLat = initialMapLocationLat
+    } else if (Array.from(locationFilter).length > 0) {
         let locationElem = Array.from(locationFilter)[0]
         locationLng = locationElem.dataset.lng
         locationLat = locationElem.dataset.lat
-    } else {
-        locationLng = initialMapLocationLng
-        locationLat = initialMapLocationLat
     }
 
     // TO MAKE THE MAP APPEAR YOU MUST
