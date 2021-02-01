@@ -1,4 +1,4 @@
-# Food4Thought
+# food4thought
 ### Web development bachelor project by Lewis Burtt-Smith and Dan Eskildsen
 
 Required installations:
