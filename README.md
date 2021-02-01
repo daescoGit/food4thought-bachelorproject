@@ -14,7 +14,7 @@ Local install instructions:
 - pip install -r requirements.txt
 - docker run -p 6379:6379 -d redis:5
 - python manage.py makemigrations
-- (enter your current region code when prompted https://da.wikipedia.org/wiki/ISO_3166-2:DK (eg. 84))
+- Enter your current region code when prompted https://da.wikipedia.org/wiki/ISO_3166-2:DK (eg. 84)
 - python manage.py migrate
 - python manage.py rqworker (for email processes)
 - python manage.py runserver (in settings.py dir) (new terminal)
