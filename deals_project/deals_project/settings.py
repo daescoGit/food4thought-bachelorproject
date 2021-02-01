@@ -71,12 +71,10 @@ EMAIL_USE_TLS = True
 # EMAIL_USE_SSL = True ### <--- DON'T USE THIS - USE EMAIL_USE_TLS
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = 'charityfindertest@gmail.com'
-EMAIL_HOST_PASSWORD = 'Password123+'
+EMAIL_HOST_USER = #
+EMAIL_HOST_PASSWORD = #
 
 # GeoIP2
-# maxmind password = Strongpassword123456
-# https://www.maxmind.com/en/accounts/481394/geoip/downloads
 GEOIP_PATH = './geopath'
 
 ROOT_URLCONF = 'deals_project.urls'
