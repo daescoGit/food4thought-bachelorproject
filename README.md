@@ -1,8 +1,8 @@
 # food4thought
-### Web development bachelor project by Lewis Burtt-Smith and Dan Eskildsen
 
 <img src="https://github.com/daescoGit/food4thought-bachelorproject/blob/main/deals_project/static/f4t.svg" width="400" />
 
+### Web development bachelor project by Lewis Burtt-Smith and Dan Eskildsen
 Required installations:
 - Python
 - Django
